@@ -1,0 +1,10 @@
+.bar{height:var(--topbar-h);flex:none;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid var(--ln);background:var(--p1);min-width:0}
+.back{height:28px;padding:0 8px;border:none;background:none;color:var(--tx2);cursor:pointer;font-size:13px;flex:none}
+.back:hover{color:var(--tx)}
+.name{height:32px;min-width:280px;padding:0 8px;border-radius:var(--radius-md);border:1px solid transparent;background:transparent;color:var(--tx);font-size:15px;font-weight:600;outline:none}
+.name:hover{border-color:var(--ln2)}
+.name:focus{border-color:var(--acc)}
+.spacer{flex:1}
+.unsaved{font-size:12px;color:var(--warn);white-space:nowrap}
+.deploy{padding:0 14px}
+@media (max-width:760px){.name{min-width:0;flex:1}.spacer{display:none}}

@@ -1,0 +1,14 @@
+name: smoke
+description: Tooling smoke test — 1 route, ~1k events at 100 ev/s; proves loadgen, runner, sampling, knee and cleanup end to end.
+target: local
+sampleInterval: 2s
+criteria: {warmup: 0s, minSamples: 2}
+cases:
+  - name: one
+    partitions: 3
+    routes: {count: 1}
+    load:
+      steps: [{rate: 100, duration: 10s}]
+      lanes: 1
+      streams: 8
+    drain: {timeout: 60s}

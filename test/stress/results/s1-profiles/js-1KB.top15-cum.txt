@@ -1,0 +1,24 @@
+File: js-1KB.test
+Build ID: 5d60e87e16ba553e2fdf92cfc262ae17534161dc
+Type: cpu
+Time: 2026-10-17 04:25:30 -02
+Duration: 15.68s, Total samples = 15.60s (99.49%)
+Showing nodes accounting for 5.88s, 37.69% of 15.60s total
+Dropped 624 nodes (cum <= 0.08s)
+Showing top 15 nodes out of 221
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%      8.75s 56.09%  github.com/eventrouter/router/pkg/engine_test.pipelineCase.Run
+         0     0%     0%      8.75s 56.09%  testing.(*B).runN
+         0     0%     0%      7.62s 48.85%  testing.(*B).launch
+     5.84s 37.44% 37.44%      5.84s 37.44%  runtime._ExternalCode
+         0     0% 37.44%      5.84s 37.44%  runtime._System
+     0.02s  0.13% 37.56%      4.56s 29.23%  github.com/eventrouter/router/pkg/engine/compile.(*branch).run
+         0     0% 37.56%      4.56s 29.23%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Process
+         0     0% 37.56%      4.51s 28.91%  github.com/eventrouter/router/pkg/engine/step.(*StepChain).Run
+         0     0% 37.56%      4.51s 28.91%  github.com/eventrouter/router/pkg/engine/step.(*StepChain).runStep
+     0.01s 0.064% 37.63%      4.50s 28.85%  github.com/eventrouter/router/pkg/engine/step.(*StepChain).applyAll
+         0     0% 37.63%      4.49s 28.78%  github.com/eventrouter/router/pkg/engine/step.(*jsStep).Apply
+         0     0% 37.63%      4.32s 27.69%  github.com/eventrouter/router/pkg/sandbox/enginebind.scriptModule.Call
+     0.01s 0.064% 37.69%      4.30s 27.56%  github.com/eventrouter/router/pkg/sandbox.(*pooledModule).Call
+         0     0% 37.69%      3.55s 22.76%  github.com/eventrouter/router/pkg/engine/compile.(*PipelineCompiler).Compile
+         0     0% 37.69%      3.55s 22.76%  github.com/eventrouter/router/pkg/engine/compile.(*PipelineCompiler).branch

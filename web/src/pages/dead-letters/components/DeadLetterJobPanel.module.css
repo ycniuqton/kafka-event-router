@@ -1,0 +1,8 @@
+.panel{display:flex;flex-direction:column;gap:6px;padding:8px 14px;border-bottom:1px solid var(--ln)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;align-items:center;gap:10px;font-size:12px;color:var(--tx2)}
+.text{display:flex;flex-direction:column;min-width:0}
+.error{color:var(--err)}
+.track{height:6px;border-radius:var(--radius-sm, 3px);background:var(--ln);overflow:hidden}
+.fill{height:100%;width:var(--p);background:var(--acc);transition:width .3s}
+.row[data-status="failed"] .fill{background:var(--err)}
+.row[data-status="cancelled"] .fill{background:var(--tx3)}

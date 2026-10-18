@@ -1,0 +1,4 @@
+.chip{height:30px;padding:0 10px;border-radius:var(--radius-md);border:1px solid var(--ln);background:transparent;color:var(--tx);cursor:pointer;font-size:12px;display:inline-flex;align-items:center;gap:6px}
+.chip:hover{border-color:var(--ln2)}
+.active{background:var(--p3);border-color:var(--ln2)}
+.count{color:var(--tx3);font-family:var(--font-mono)}

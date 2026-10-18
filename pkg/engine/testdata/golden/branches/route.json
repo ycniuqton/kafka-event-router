@@ -1,0 +1,28 @@
+{
+  "apiVersion": "router/v1",
+  "name": "branches",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [
+    {
+      "id": "high-value",
+      "filter": { "type": "cond", "field": "value.amount", "op": "gte", "value": 1000 },
+      "transform": { "steps": [
+        { "id": "tag", "kind": "set", "field": "value.tier", "source": { "from": "constant", "value": "gold" } }
+      ] },
+      "destination": { "connectionId": "c1", "topic": "orders-high", "key": { "mode": "field", "field": "value.orderId" } }
+    },
+    {
+      "id": "audit",
+      "transform": { "steps": [
+        { "id": "mask", "kind": "mask", "field": "value.email", "style": "email" },
+        { "id": "drop-test", "kind": "drop_if", "condition": { "type": "cond", "field": "value.test", "op": "eq", "value": true } }
+      ] },
+      "destination": { "connectionId": "c2", "topic": "orders-audit", "headers": { "mode": "drop_all" } }
+    },
+    {
+      "id": "refunds",
+      "filter": { "type": "cond", "field": "value.type", "op": "eq", "value": "refund" },
+      "destination": { "connectionId": "c1", "topic": "orders-refunds" }
+    }
+  ]
+}

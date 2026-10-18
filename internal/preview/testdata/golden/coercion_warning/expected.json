@@ -1,0 +1,149 @@
+{
+ "summary": {
+  "loaded": 3,
+  "processed": 3,
+  "passed": 1,
+  "filtered": 2,
+  "errors": 0,
+  "dropped": 0,
+  "incomplete": false,
+  "durationMs": 0,
+  "branches": [
+   {
+    "branch": "main",
+    "passed": 1,
+    "filtered": 2,
+    "errors": 0,
+    "dropped": 0
+   }
+  ]
+ },
+ "issues": [
+  {
+   "path": "/branches/0/filter/children/0",
+   "severity": "warning",
+   "code": "coerced_string_to_number",
+   "message": "coerced_string_to_number"
+  },
+  {
+   "path": "/branches/0/filter/children/0",
+   "severity": "warning",
+   "code": "incomparable_types",
+   "message": "incomparable_types"
+  }
+ ],
+ "results": [
+  {
+   "seq": 0,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": true,
+       "warning": "coerced_string_to_number"
+      },
+      {
+       "path": "/branches/0/filter/children/1",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": true
+      }
+     ],
+     "steps": [
+      {
+       "index": 0,
+       "id": "c1",
+       "kind": "convert_type",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/amount",
+         "value": 150
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "payments-eur",
+       "key": null,
+       "value": {
+        "amount": 150,
+        "currency": "EUR"
+       },
+       "headers": [],
+       "sizeBytes": 31,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "seq": 1,
+   "status": "filtered",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": false,
+       "warning": "incomparable_types"
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 2,
+   "status": "filtered",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter/children/1",
+       "result": false
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  }
+ ],
+ "masked": false
+}

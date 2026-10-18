@@ -1,0 +1,13 @@
+{
+  "apiVersion": "router/v1",
+  "name": "filter-only",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "filter": { "type": "and", "children": [
+      { "type": "cond", "field": "value.eventType", "op": "eq", "value": "OrderPaid" },
+      { "type": "cond", "field": "value.amount", "op": "gt", "value": 100 }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "orders-paid" }
+  }]
+}

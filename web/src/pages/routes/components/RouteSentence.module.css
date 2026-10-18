@@ -1,0 +1,5 @@
+.sentence{display:flex;align-items:center;gap:6px;font:12px var(--font-mono);min-width:0;flex-wrap:wrap}
+.topic{color:var(--tx)}
+.arrow{color:var(--tx3)}
+.filter{padding:1px 6px;border:1px solid var(--ln2);border-radius:var(--radius-sm);color:var(--tx2);font-family:var(--font-sans)}
+.transform{padding:1px 6px;border:1px solid var(--ln2);border-radius:var(--radius-sm);color:var(--tone)}

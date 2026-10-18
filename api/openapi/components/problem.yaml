@@ -1,0 +1,62 @@
+FieldError:
+  type: object
+  required: [path, code, message]
+  properties:
+    path: { type: string, description: JSON Pointer (RFC 6901) of the offending field, example: /bootstrapServers/0 }
+    code: { type: string, example: host_port }
+    message: { type: string, example: "Use host:port, e.g. kafka-1:9092." }
+Problem:
+  type: object
+  description: RFC 7807 problem document.
+  required: [type, title, status]
+  properties:
+    type: { type: string, format: uri, example: "https://eventrouter.dev/problems/validation" }
+    title: { type: string }
+    status: { type: integer }
+    detail: { type: string, description: "What happened, why, and what to do." }
+    instance: { type: string }
+    path: { type: string, description: JSON Pointer of the first offending field }
+    request_id: { type: string }
+    current_etag: { type: string, description: Present on 412 responses }
+    code: { type: string, description: "Machine-readable reason, e.g. last_admin, role_not_assignable, missing_permission" }
+    missingPermission: { type: string, description: Present on 403 responses denied by access control, example: route.write }
+    retry_after: { type: integer, description: "Seconds to wait before retrying (429/503; also sent as Retry-After)" }
+    errors:
+      type: array
+      items: { $ref: "#/FieldError" }
+responses:
+  BadRequest:
+    description: Malformed body, header or cursor.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  Unauthenticated:
+    description: No valid session or credential.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  Forbidden:
+    description: Missing permission or CSRF token.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  NotFound:
+    description: Resource does not exist.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  Conflict:
+    description: Unique or state conflict; `path` names the conflicting field.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  PreconditionFailed:
+    description: Stale If-Match; `current_etag` carries the current version.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  PayloadTooLarge:
+    description: Body exceeds the route limit.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  ValidationFailed:
+    description: Domain validation failed; see `errors[]`.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  PreconditionRequired:
+    description: If-Match header missing on a versioned mutation.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  Unavailable:
+    description: A dependency (database, Redis, secret store) is unavailable.
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }
+  RateLimited:
+    description: Too many requests for this principal; retry after `Retry-After` seconds.
+    headers:
+      Retry-After: { schema: { type: integer, minimum: 1 }, description: Seconds to wait. }
+    content: { application/problem+json: { schema: { $ref: "#/Problem" } } }

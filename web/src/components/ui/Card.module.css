@@ -1,0 +1,11 @@
+.card{background:var(--p1);border:1px solid var(--ln);border-radius:var(--radius-xl);min-width:0}
+.clip{overflow:hidden}
+.scroll{overflow:auto}
+.pad-md{padding:14px 16px}
+.pad-sm{padding:12px 14px}
+.interactive{cursor:pointer}
+.interactive:hover{border-color:var(--ln2)}
+.header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--ln);min-height:45px}
+.title{font-weight:600}
+.meta{flex:1;min-width:0;color:var(--tx2);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.actions{display:flex;gap:6px;align-items:center;margin-left:auto}

@@ -1,0 +1,5 @@
+.item{padding:8px 12px;font:11px/1.5 var(--font-mono);color:var(--tx2);word-break:break-all;border-bottom:1px solid var(--ln);display:flex;flex-direction:column;gap:2px}
+.item[data-dim]{opacity:.55}
+.meta{display:flex;gap:8px;color:var(--tx3)}
+.headers{color:var(--tx3)}
+.value{color:var(--tx)}

@@ -1,0 +1,2 @@
+{"offset":1,"type":"decode","path":"/source/format","message":"malformed payload: jsontext: unexpected EOF within \"/broken\" after offset 10"}
+{"offset":2,"type":"decode","path":"/source/format","message":"malformed payload: trailing data"}

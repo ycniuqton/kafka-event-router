@@ -1,0 +1,4 @@
+.banner{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-lg);background:color-mix(in oklch, var(--acc) 12%, transparent);font-size:12px}
+.text{flex:1}
+.clear{border:none;background:none;color:var(--acc);cursor:pointer;font-size:12px}
+.clear:hover{text-decoration:underline}

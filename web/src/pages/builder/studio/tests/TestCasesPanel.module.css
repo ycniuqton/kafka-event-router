@@ -1,0 +1,22 @@
+.panel{display:flex;flex-direction:column;gap:6px;margin-top:6px;padding:10px;border:1px solid var(--ln);border-radius:var(--radius-md, 8px);background:var(--p1)}
+.head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.title{font-size:12px;font-weight:600}
+.summary{font:11px var(--font-mono);color:var(--ok)}
+.summary[data-failing="true"]{color:var(--err)}
+.spacer{flex:1}
+.hint{font-size:11.5px;color:var(--tx2)}
+.error{font-size:11.5px;color:var(--err)}
+.row{display:flex;flex-direction:column;gap:4px;padding:6px 0;border-top:1px solid var(--ln)}
+.line{display:flex;align-items:center;gap:6px;min-width:0}
+.name{flex:1;min-width:80px}
+.expects{font-size:11px;color:var(--tx3);white-space:nowrap}
+.message{font-size:11px;color:var(--err);padding-left:4px}
+.diff{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:6px;background:var(--p2);font:11px var(--font-mono)}
+.op{color:var(--tx2)}
+.op[data-op="add"]{color:var(--ok)}
+.op[data-op="remove"]{color:var(--err)}
+.op[data-op="replace"]{color:var(--warn)}
+.opName{text-transform:uppercase;font-size:10px}
+.path{font-weight:600}
+.value{color:var(--tx1, inherit)}
+.actions{display:flex;gap:6px;margin-top:4px}

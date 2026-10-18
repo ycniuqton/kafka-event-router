@@ -1,0 +1,4 @@
+.spark{display:flex;align-items:flex-end;gap:1px;flex:none;width:var(--spark-w);height:var(--spark-h)}
+.bar{flex:1;border-radius:1px;opacity:.75;background:var(--tone);height:var(--h)}
+.wide{gap:2px}
+.wide .bar{opacity:.7}

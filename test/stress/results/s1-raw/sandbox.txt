@@ -1,0 +1,15 @@
+goos: linux
+goarch: amd64
+pkg: github.com/eventrouter/router/pkg/sandbox
+cpu: Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz
+BenchmarkS1SandboxCall/payload=1KB         	    3175	   1171327 ns/op	       853.7 events/s	   29158 B/op	     522 allocs/op
+BenchmarkS1SandboxCall/payload=1KB         	    3067	   1126294 ns/op	       887.9 events/s	   29151 B/op	     522 allocs/op
+BenchmarkS1SandboxCall/payload=1KB         	    3298	   1116819 ns/op	       895.4 events/s	   29145 B/op	     522 allocs/op
+BenchmarkS1SandboxCall/payload=10KB        	     532	   7330850 ns/op	       136.4 events/s	  173455 B/op	    2536 allocs/op
+BenchmarkS1SandboxCall/payload=10KB        	     532	   6853542 ns/op	       145.9 events/s	  173450 B/op	    2536 allocs/op
+BenchmarkS1SandboxCall/payload=10KB        	     510	   6976312 ns/op	       143.3 events/s	  173461 B/op	    2536 allocs/op
+BenchmarkS1SandboxCall/payload=100KB       	      48	  65796310 ns/op	        15.20 events/s	 1572381 B/op	   22327 allocs/op
+BenchmarkS1SandboxCall/payload=100KB       	      51	  65302346 ns/op	        15.31 events/s	 1571558 B/op	   22326 allocs/op
+BenchmarkS1SandboxCall/payload=100KB       	      55	  64742584 ns/op	        15.45 events/s	 1570686 B/op	   22326 allocs/op
+PASS
+ok  	github.com/eventrouter/router/pkg/sandbox	67.776s

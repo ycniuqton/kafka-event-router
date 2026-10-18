@@ -1,0 +1,520 @@
+dashboardSummary:
+  get:
+    tags: [monitoring]
+    operationId: getDashboardSummary
+    summary: Health cards — route counts (Postgres) plus throughput, total lag and DLQ (metrics store).
+    description: |
+      Requires `metrics.read`. When the metrics store is unreachable the answer is still 200 with
+      `metricsAvailable=false` and the metric cards `null`.
+    responses:
+      "200":
+        description: The summary.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DashboardSummary" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+dashboardAttention:
+  get:
+    tags: [monitoring]
+    operationId: getDashboardAttention
+    summary: Needs-attention rows (routes in error, growing lag, failing connections, zero-match filters), most severe first.
+    description: A failing detector (e.g. metrics store down) only omits its own rows.
+    responses:
+      "200":
+        description: The rows.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/AttentionItem" } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+activity:
+  get:
+    tags: [monitoring]
+    operationId: listActivity
+    summary: Recent route changes (created, edited, deployed, paused, resumed, rolled back) from the audit log, newest first.
+    parameters:
+      - name: limit
+        in: query
+        schema: { type: integer, minimum: 1, maximum: 200, default: 10 }
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/ActivityItem" } }
+                next_cursor: { type: [string, "null"] }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+onboarding:
+  get:
+    tags: [monitoring]
+    operationId: getOnboarding
+    summary: First-run checklist (add connection → create route → deploy), derived from data.
+    responses:
+      "200":
+        description: The checklist; the UI hides it when `allDone`.
+        content: { application/json: { schema: { $ref: "#/components/schemas/Onboarding" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+onboardingDemo:
+  post:
+    tags: [monitoring]
+    operationId: createDemoData
+    summary: "Try with demo data: creates the caller's team in-memory demo connection (kind=demo) whose generator feeds `order-events`."
+    responses:
+      "201":
+        description: Demo connection created.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DemoSeed" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+  delete:
+    tags: [monitoring]
+    operationId: deleteDemoData
+    summary: Removes the caller's team demo connection (no-op when none; 409 while routes still use it).
+    responses:
+      "204": { description: Removed. }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeTail:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [monitoring]
+    operationId: routeLiveTail
+    summary: >-
+      WebSocket live tail (≤ 20 records/s). Client ops {op: pause|resume|filter, outcomes?, text?}; server frames
+      {type: record, record: TailRecord, masked} and {type: status, state: live|paused|throttled, masked}.
+      Closes 4409 "route not running", 1011 "live tail unavailable". Opening is audited (livetail.opened, masked flag).
+    responses:
+      "101": { description: Switching protocols. }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeMetrics:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [monitoring]
+    operationId: getRouteMetrics
+    summary: Route overview — pipeline counts per branch and the four charts for a range.
+    parameters:
+      - name: range
+        in: query
+        schema: { $ref: "#/components/schemas/TimeRange" }
+    responses:
+      "200":
+        description: The metrics.
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteMetrics" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+flowMap:
+  get:
+    tags: [monitoring]
+    operationId: getFlowMap
+    summary: Flow map — topics as nodes, deployed route branches as edges weighted by events/sec.
+    description: Requires `metrics.read`. Throughput is 0 and `metricsAvailable=false` when the metrics store is down.
+    parameters:
+      - { name: connection, in: query, schema: { type: string }, description: Source or destination connection id. }
+      - { name: team, in: query, schema: { type: string }, description: Team id or team name. }
+      - { name: tag, in: query, schema: { type: string }, description: Route tag or connection env tag. }
+    responses:
+      "200":
+        description: The map.
+        content: { application/json: { schema: { $ref: "#/components/schemas/FlowMap" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+alertRules:
+  get:
+    tags: [monitoring]
+    operationId: listAlertRules
+    summary: Alert rules of a route (all rules without `routeId`). Requires `alert.read`.
+    parameters:
+      - { name: routeId, in: query, schema: { type: string, format: uuid } }
+    responses:
+      "200":
+        description: The rules; webhook URLs are never returned (`secretSet` only).
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/AlertRule" } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+  post:
+    tags: [monitoring]
+    operationId: createAlertRule
+    summary: Create an alert rule (editor on the route's team). Channel `secret` is write-only.
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/AlertRuleDraft" } } }
+    responses:
+      "201":
+        description: Created.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/AlertRule" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+alertRule:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  patch:
+    tags: [monitoring]
+    operationId: patchAlertRule
+    summary: Partially update an alert rule; omitted channel secrets keep the stored URL.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/AlertRulePatch" } } }
+    responses:
+      "200":
+        description: Updated.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/AlertRule" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+  delete:
+    tags: [monitoring]
+    operationId: deleteAlertRule
+    summary: Delete an alert rule, its history and its channel secrets.
+    responses:
+      "204": { description: Deleted. }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+alertRuleTest:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [monitoring]
+    operationId: testAlertRule
+    summary: Send a test notification to every channel of the rule.
+    responses:
+      "200":
+        description: One result per channel.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [results]
+              properties:
+                results: { type: array, items: { $ref: "#/components/schemas/ChannelResult" } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+alerts:
+  get:
+    tags: [monitoring]
+    operationId: listAlerts
+    summary: Bell feed — alert history newest first, with the caller's unread (not acknowledged) count.
+    parameters:
+      - { name: state, in: query, schema: { $ref: "#/components/schemas/AlertState" } }
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor, unread]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/AlertFeedItem" } }
+                next_cursor: { type: [string, "null"] }
+                unread: { type: integer }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+alertAck:
+  parameters:
+    - { name: id, in: path, required: true, schema: { type: integer } }
+  post:
+    tags: [monitoring]
+    operationId: ackAlert
+    summary: Acknowledge an alert for the caller (idempotent).
+    responses:
+      "204": { description: Acknowledged. }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+events:
+  get:
+    tags: [monitoring]
+    operationId: pushEvents
+    summary: "WebSocket: push frames {type, at, payload} — route.state_changed, deployment.status_changed, connection.health_changed, alert.fired, alert.resolved (+ hello, resync)."
+    responses:
+      "101": { description: Switching protocols. }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+components:
+  schemas:
+    Tone:
+      type: string
+      enum: [ok, warn, err]
+    TimeRange:
+      type: string
+      enum: [15m, 1h, 24h, 7d]
+      default: 1h
+    Point:
+      type: array
+      description: "[unixSeconds, value]"
+      minItems: 2
+      maxItems: 2
+      items: { type: number }
+    Thresholds:
+      type: object
+      required: [routeLagWarn, routeLagError, totalLagWarn, totalLagError]
+      properties:
+        routeLagWarn: { type: integer, example: 2000 }
+        routeLagError: { type: integer, example: 20000 }
+        totalLagWarn: { type: integer, example: 10000 }
+        totalLagError: { type: integer, example: 40000 }
+    DashboardSummary:
+      type: object
+      required: [routes, eventsLastHour, totalLag, dlq24h, thresholds, metricsAvailable]
+      properties:
+        routes:
+          type: object
+          required: [running, paused, error, draft]
+          properties:
+            running: { type: integer }
+            paused: { type: integer }
+            error: { type: integer }
+            draft: { type: integer }
+        eventsLastHour:
+          type: [object, "null"]
+          required: [total, spark]
+          properties:
+            total: { type: number }
+            spark: { type: array, items: { type: number }, description: "12 five-minute points (events/s)." }
+        totalLag:
+          type: [object, "null"]
+          required: [value, tone]
+          properties:
+            value: { type: number }
+            tone: { $ref: "#/components/schemas/Tone" }
+        dlq24h:
+          type: [object, "null"]
+          required: [value]
+          properties:
+            value: { type: number }
+        thresholds: { $ref: "#/components/schemas/Thresholds" }
+        metricsAvailable: { type: boolean }
+    ActionIntent:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [routeDetail, routeEdit, testConnection, togglePause] }
+        routeId: { type: string }
+        connectionId: { type: string }
+        tab: { type: string, example: dead }
+        step: { type: string, example: filter }
+    AttentionItem:
+      type: object
+      required: [id, kind, tone, title, detail, action]
+      properties:
+        id: { type: string, example: "route_error:6f1c…" }
+        kind: { type: string, enum: [route_error, lag_growing, connection_unhealthy, zero_match] }
+        tone: { $ref: "#/components/schemas/Tone" }
+        title: { type: string }
+        detail: { type: string }
+        action:
+          type: object
+          required: [label, intent]
+          properties:
+            label: { type: string, enum: [Open, Pause, Test, Retry] }
+            intent: { $ref: "#/components/schemas/ActionIntent" }
+    ActivityItem:
+      type: object
+      required: [id, actor, verb, routeId, routeName, detail, at]
+      properties:
+        id: { type: string }
+        actor: { type: string }
+        verb: { type: string, enum: [created, edited, deployed, paused, resumed, rolled_back] }
+        routeId: { type: string }
+        routeName: { type: string }
+        detail: { type: string }
+        at: { type: string, format: date-time }
+    Onboarding:
+      type: object
+      required: [steps, allDone, demoAvailable]
+      properties:
+        steps:
+          type: array
+          items:
+            type: object
+            required: [id, done, href]
+            properties:
+              id: { type: string, enum: [connection, route, deploy] }
+              done: { type: boolean }
+              href: { type: string }
+        allDone: { type: boolean }
+        demoAvailable: { type: boolean }
+        demo:
+          oneOf:
+            - $ref: "#/components/schemas/DemoSeed"
+            - type: "null"
+    DemoSeed:
+      type: object
+      required: [connectionId, topic]
+      properties:
+        connectionId: { type: string, format: uuid }
+        topic: { type: string }
+    PipelineRow:
+      type: object
+      required: [branch, read, passed, sent, dlq]
+      properties:
+        branch: { type: string }
+        read: { type: number }
+        passed: { type: number }
+        sent: { type: number }
+        dlq: { type: number }
+    RouteMetrics:
+      type: object
+      required: [range, step, pipeline, series]
+      properties:
+        range: { $ref: "#/components/schemas/TimeRange" }
+        step: { type: string, example: 30s }
+        pipeline: { type: array, items: { $ref: "#/components/schemas/PipelineRow" } }
+        series:
+          type: object
+          required: [eventsIn, eventsOut, lagByPartition, latencyP50, latencyP95, errorsPerMin]
+          properties:
+            eventsIn: { type: array, items: { $ref: "#/components/schemas/Point" } }
+            eventsOut: { type: array, items: { $ref: "#/components/schemas/Point" } }
+            lagByPartition:
+              type: object
+              description: Top 50 partitions by lag; the rest summed under `other`.
+              additionalProperties: { type: array, items: { $ref: "#/components/schemas/Point" } }
+            latencyP50: { type: array, items: { $ref: "#/components/schemas/Point" } }
+            latencyP95: { type: array, items: { $ref: "#/components/schemas/Point" } }
+            errorsPerMin: { type: array, items: { $ref: "#/components/schemas/Point" } }
+    FlowNode:
+      type: object
+      required: [id, type, label, connectionId]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [connection, topic] }
+        label: { type: string }
+        connectionId: { type: string }
+        envTag: { type: string }
+    FlowEdge:
+      type: object
+      required: [id, routeId, routeName, teamName, branch, from, to, eventsPerSec, status]
+      properties:
+        id: { type: string }
+        routeId: { type: string }
+        routeName: { type: string }
+        teamName: { type: string }
+        branch: { type: string }
+        from: { type: string }
+        to: { type: string }
+        eventsPerSec: { type: number }
+        status: { type: string }
+    FlowMap:
+      type: object
+      required: [nodes, edges, metricsAvailable]
+      properties:
+        nodes: { type: array, items: { $ref: "#/components/schemas/FlowNode" } }
+        edges: { type: array, items: { $ref: "#/components/schemas/FlowEdge" } }
+        metricsAvailable: { type: boolean }
+    AlertRuleKind:
+      type: string
+      enum: [lag_above, error_rate_above, throughput_zero, match_rate_change]
+    ChannelType:
+      type: string
+      enum: [email, slack, teams, webhook]
+    AlertState:
+      type: string
+      enum: [firing, resolved]
+    ChannelInput:
+      type: object
+      required: [type]
+      properties:
+        type: { $ref: "#/components/schemas/ChannelType" }
+        target: { type: string, description: Comma-separated email recipients (email channels). }
+        secret: { type: string, writeOnly: true, description: "Incoming-webhook URL (slack, teams, webhook); omit to keep the stored one." }
+    ChannelView:
+      type: object
+      required: [type, secretSet]
+      properties:
+        type: { $ref: "#/components/schemas/ChannelType" }
+        target: { type: string }
+        secretSet: { type: boolean }
+    AlertRuleDraft:
+      type: object
+      required: [routeId, name, kind, threshold, windowMinutes]
+      properties:
+        routeId: { type: string, format: uuid }
+        name: { type: string, maxLength: 120 }
+        kind: { $ref: "#/components/schemas/AlertRuleKind" }
+        threshold: { type: number, description: "lag (messages), error rate (%), match change (points); 0 for throughput_zero" }
+        windowMinutes: { type: integer, minimum: 1, maximum: 1440 }
+        channels: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/ChannelInput" } }
+        enabled: { type: boolean, default: true }
+    AlertRulePatch:
+      type: object
+      properties:
+        name: { type: string, maxLength: 120 }
+        kind: { $ref: "#/components/schemas/AlertRuleKind" }
+        threshold: { type: number }
+        windowMinutes: { type: integer, minimum: 1, maximum: 1440 }
+        channels: { type: array, maxItems: 10, items: { $ref: "#/components/schemas/ChannelInput" } }
+        enabled: { type: boolean }
+    AlertRule:
+      type: object
+      required: [id, routeId, name, kind, threshold, windowMinutes, channels, enabled, version, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        routeId: { type: string, format: uuid }
+        name: { type: string }
+        kind: { $ref: "#/components/schemas/AlertRuleKind" }
+        threshold: { type: number }
+        windowMinutes: { type: integer }
+        channels: { type: array, items: { $ref: "#/components/schemas/ChannelView" } }
+        enabled: { type: boolean }
+        version: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ChannelResult:
+      type: object
+      required: [channel, ok]
+      properties:
+        channel: { $ref: "#/components/schemas/ChannelType" }
+        ok: { type: boolean }
+        error: { type: string }
+    AlertFeedItem:
+      type: object
+      required: [id, ruleId, ruleName, routeId, routeName, kind, threshold, windowMinutes, state, value, firedAt, resolvedAt, acked, intent]
+      properties:
+        id: { type: integer }
+        ruleId: { type: string, format: uuid }
+        ruleName: { type: string }
+        routeId: { type: string, format: uuid }
+        routeName: { type: string }
+        kind: { $ref: "#/components/schemas/AlertRuleKind" }
+        threshold: { type: number }
+        windowMinutes: { type: integer }
+        state: { $ref: "#/components/schemas/AlertState" }
+        value: { type: [number, "null"] }
+        firedAt: { type: string, format: date-time }
+        resolvedAt: { type: [string, "null"], format: date-time }
+        acked: { type: boolean }
+        intent: { $ref: "#/components/schemas/ActionIntent" }

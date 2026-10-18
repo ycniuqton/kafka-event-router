@@ -1,0 +1,37 @@
+# platform-core PC-54/55/57: integration tests on the shared testkit harness (external provider,
+# GitHub service containers). Locally: ROUTER_TEST_PROVIDER=container (docker) or ROUTER_TEST_DATABASE_URL.
+name: integration
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  go-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: testkit
+          POSTGRES_PASSWORD: testkit
+          POSTGRES_DB: testkit
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U testkit" --health-interval 2s --health-timeout 5s --health-retries 30
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      ROUTER_TEST_PROVIDER: external
+      ROUTER_TEST_DATABASE_URL: postgres://testkit:testkit@127.0.0.1:5432/testkit?sslmode=disable
+      ROUTER_TEST_REDIS_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Integration tests
+        run: go test -count=1 ./internal/testkit/ ./internal/store/... ./internal/audit/...

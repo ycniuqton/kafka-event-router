@@ -1,0 +1,12 @@
+.body{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.area{min-height:180px;font:12px/1.5 var(--font-mono)}
+.file{font-size:12px;color:var(--tx2)}
+.summary{font-size:12px;color:var(--tx2)}
+.results{display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:var(--radius-md,8px);max-height:240px;overflow:auto}
+.item{display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-bottom:1px solid var(--bd)}
+.item:last-child{border-bottom:none}
+.head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.name{font:13px var(--font-mono);color:var(--tx)}
+.issue{font-size:12px;color:var(--tone)}
+.error{font-size:12px;color:var(--err)}

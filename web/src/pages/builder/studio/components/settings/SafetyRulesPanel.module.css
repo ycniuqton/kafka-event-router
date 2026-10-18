@@ -1,0 +1,7 @@
+.panel{padding:8px 10px;border-radius:var(--radius-md);border:1px solid var(--ln);background:var(--p2);color:var(--tx2);font-size:11.5px}
+.title{font-weight:600;color:var(--tx);margin-bottom:4px}
+.list{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:3px}
+.limits{margin:6px 0 8px;color:var(--tx)}
+.helpers{margin:0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.doc{display:block;color:var(--tx3)}
+.status{display:flex;align-items:center;gap:8px}

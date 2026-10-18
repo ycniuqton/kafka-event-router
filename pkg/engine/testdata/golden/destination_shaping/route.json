@@ -1,0 +1,18 @@
+{
+  "apiVersion": "router/v1",
+  "name": "destination-shaping",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "h1", "kind": "set", "field": "headers.traceId", "source": { "from": "field", "path": "value.trace" } },
+      { "id": "h2", "kind": "set", "field": "headers.internal", "source": { "from": "constant", "value": "drop-me" } }
+    ] },
+    "destination": {
+      "connectionId": "c2", "topic": "partner-orders",
+      "key": { "mode": "field", "field": "value.orderId" },
+      "headers": { "mode": "keep_selected", "keep": ["traceId"], "add": [{ "key": "source", "value": "router" }] },
+      "format": { "type": "json" }
+    }
+  }]
+}

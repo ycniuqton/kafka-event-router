@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Staging Deploy</title>
+<style>:root{--bg:#fff;--fg:#1b1f24;--mut:#57606a;--line:#d0d7de;--ok:#1a7f37}@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6edf3;--mut:#8b949e;--line:#30363d;--ok:#3fb950}}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;max-width:900px;margin:24px auto;padding:0 16px}h1{font-size:22px}h2{font-size:17px;margin-top:28px}
+table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}code{font-size:13px}.ok{color:var(--ok)}.mut{color:var(--mut)}</style></head><body>
+<h1>Event Router staging deploy (2026-10-14)</h1>
+<p>URL <code>http://104.234.195.126</code>. Log in with SSO using <code>STAGING_LOGIN_EMAIL</code> / <code>STAGING_LOGIN_PASSWORD</code> from <code>~/.secrets/event-router-staging.env</code>. To redeploy, run <code>deploy/staging/deploy.sh</code>.</p>
+<h2>Containers</h2><table><tr><th>Service</th><th>State</th></tr>
+<tr><td>postgres, redis, kafka, prometheus, vault, vault-init, dex</td><td class="ok">running, healthy</td></tr>
+<tr><td>api, worker, preview, web</td><td class="ok">running, healthy</td></tr><tr><td>migrate</td><td>exited 0 (8/8 applied)</td></tr></table>
+<h2>Verified end to end</h2><ul>
+<li>Public ports are 22 and 80 only (ufw is on, and the other ports are closed from outside).</li>
+<li>OIDC login through Dex works with curl and with headless Chromium.</li>
+<li>/healthz and /readyz return 200 for api, worker and preview.</li>
+<li>Connection kafka:19092 was created and passed every test step. The route (filter OrderPaid, mask email) was deployed at v1, then v2 was rolled out. orders-public received only filtered, masked events, and the bad JSON event landed in the DLQ topic. The preview samples and run endpoints return 200.</li>
+<li>Vault transit wraps and unwraps secrets. The NOTIFY trigger fires. Migrations run up, down and up again cleanly.</li></ul>
+<h2>Fixes</h2><ul>
+<li><code>internal/platform/config</code>: static_token workload auth and ROUTER_COOKIE_SECURE=false are now allowed in staging.</li>
+<li><code>internal/metrics/instruments</code> and <code>internal/runtime/runner</code>: event counters start at 0, so dashboard increase() counts a runner's first events.</li>
+<li><code>deploy/docker</code>: the web build now includes testdata/rbac, and there is a RUNTIME_IMAGE argument plus a /var/lib/router directory owned by nonroot.</li>
+<li><code>web</code>: new drafts start on a real connection, the builder loads topics over REST, and the connection dropdown shows names.</li></ul>
+<h2>Not yet on the real API</h2><ul class="mut"><li>The Transform library and Audit log pages still use mock services, and the factory falls back to mock with a console warning.</li>
+<li>The builder's live sample counts come from the local evaluator. Sample rows show undefined fields.</li>
+<li>The UI shows connection and route ids instead of names in the route list and detail, the builder rail and summaries, and the activity feed.</li>
+<li>The DLQ counter is not set to 0 at startup, because its error_type labels vary, so the dashboard's DLQ 24h can miss a route's first dead letters.</li></ul></body></html>

@@ -1,0 +1,7 @@
+16:24:42 pinned worker (pid 1733517) to CPUs 0-5
+16:24:42 pinned kafka (pid 1699610) to CPUs 6-9
+16:24:42 case soak-20m: 1 route(s), 12 partition(s), 1 step(s)
+16:44:54 case soak-20m: max sustainable 0 ev/s, knee 45000 (p99_over_limit), lost 0, error ""
+16:44:59 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+16:44:59 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s8-mini-soak/s8-mini-soak.json

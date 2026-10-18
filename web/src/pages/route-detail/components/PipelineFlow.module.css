@@ -1,0 +1,11 @@
+.flow{display:flex;align-items:center;padding:18px;border-radius:var(--radius-xl);background:var(--p1);border:1px solid var(--ln);overflow:auto}
+.node{padding:10px 14px;border-radius:8px;border:1px solid var(--ln2);background:var(--p2);font:12px var(--font-mono);white-space:nowrap}
+.label{font:10.5px var(--font-mono);color:var(--tx3);letter-spacing:.06em}
+.arrow{flex:1;min-width:110px;text-align:center;font:12px var(--font-mono);color:var(--tx2)}
+.line{height:2px;background:var(--acc);opacity:.5;margin:4px 8px}
+.note{color:var(--err);font-size:11px}
+@media (max-width:760px){
+  .flow{flex-direction:column;align-items:stretch}
+  .node{white-space:normal;overflow-wrap:anywhere}
+  .arrow{min-width:0;padding:6px 0}
+}

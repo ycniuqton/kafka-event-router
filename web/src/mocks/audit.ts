@@ -1,0 +1,12 @@
+import { AuditCategory, type AuditEntry } from '../domain';
+
+/** Design `AUDIT`; raw-sample access is flagged `sensitive`. Actions are catalog keys (labels via `AuditActions`). */
+export const AUDIT: AuditEntry[] = [
+  { id: 'au1', at: '2026-10-13T09:44:00Z', actor: 'Quincy N.', actorId: 'u-quincy', action: 'sample.viewed_raw', category: AuditCategory.Access, object: 'orders-prod / order-events', objectType: 'sample_session', objectId: 's1', ip: '10.4.12.8', requestId: 'r1', sensitive: true, teamId: 'team-payments', diff: { connectionId: 'orders-prod', topics: ['order-events'], masked: false } },
+  { id: 'au2', at: '2026-10-13T09:32:00Z', actor: 'Minh N.', actorId: 'u-minh', action: 'route.deployed', category: AuditCategory.Change, object: 'Order paid → partner-gateway v4', objectType: 'route_version', objectId: 'v4', ip: '10.4.12.31', requestId: 'r2', sensitive: false, teamId: 'team-payments', diff: null },
+  { id: 'au3', at: '2026-10-13T09:03:00Z', actor: 'Quincy N.', actorId: 'u-quincy', action: 'transform.saved', category: AuditCategory.Change, object: 'Order totals → analytics', objectType: 'transform', objectId: 't1', ip: '10.4.12.8', requestId: 'r3', sensitive: false, teamId: 'team-payments', diff: null },
+  { id: 'au4', at: '2026-10-13T07:40:00Z', actor: 'Hoa L.', actorId: 'u-hoa', action: 'route.paused', category: AuditCategory.Change, object: 'Stock changes → warehouse', objectType: 'route', objectId: 'r4', ip: '10.4.9.77', requestId: 'r4', sensitive: false, teamId: 'team-logistics', diff: { status: 'paused' } },
+  { id: 'au5', at: '2026-10-12T18:12:00Z', actor: 'Admin', actorId: 'u-admin', action: 'connection.secret_replaced', category: AuditCategory.Change, object: 'partner-kafka (mTLS cert)', objectType: 'connection', objectId: 'c2', ip: '10.4.1.2', requestId: 'r5', sensitive: true, teamId: 'team-payments', diff: null },
+  { id: 'au6', at: '2026-10-12T16:20:00Z', actor: 'Duc V.', actorId: 'u-duc', action: 'route.rolled_back', category: AuditCategory.Change, object: 'Shipment updates → partner → v8', objectType: 'route', objectId: 'r6', ip: '10.4.9.14', requestId: 'r6', sensitive: false, teamId: 'team-logistics', diff: { activeVersion: 8 } },
+  { id: 'au7', at: '2026-10-12T11:05:00Z', actor: 'Mai D.', actorId: 'u-mai', action: 'route.created', category: AuditCategory.Change, object: 'Fraud signals', objectType: 'route', objectId: 'r7', ip: '10.4.12.40', requestId: 'r7', sensitive: false, teamId: 'team-payments', diff: null },
+];

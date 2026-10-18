@@ -1,0 +1,4 @@
+.wrap{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 4px);z-index:var(--z-popover);min-width:220px;padding:4px;border:1px solid var(--ln2);border-radius:8px;background:var(--p1);box-shadow:var(--shadow-pop);display:flex;flex-direction:column}
+.item{height:28px;padding:0 8px;border:none;border-radius:5px;background:none;color:var(--tx);text-align:left;cursor:pointer;font-size:12px;white-space:nowrap}
+.item:hover{background:var(--p3)}

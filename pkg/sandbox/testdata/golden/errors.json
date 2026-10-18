@@ -1,0 +1,78 @@
+{
+  "name": "runtime, contract and host errors are typed",
+  "entry": "transform",
+  "code": "function transform(event, ctx) {\n  ctx.log('start', event.offset);\n  if (event.offset === 1) {\n    throw new Error('Event ' + event.offset + ' has no items');\n  }\n  if (event.offset === 2) {\n    return 42;\n  }\n  if (event.offset === 3) {\n    return ctx.formatDate('not a date', 'date');\n  }\n  return event.value.order.items;\n}\n",
+  "now": "2024-05-01T12:00:00Z",
+  "events": [
+    {
+      "key": null,
+      "value": {},
+      "headers": {},
+      "topic": "in",
+      "partition": 0,
+      "offset": 1,
+      "timestamp": "2024-05-01T11:00:00Z"
+    },
+    {
+      "key": null,
+      "value": {},
+      "headers": {},
+      "topic": "in",
+      "partition": 0,
+      "offset": 2,
+      "timestamp": "2024-05-01T11:00:00Z"
+    },
+    {
+      "key": null,
+      "value": {},
+      "headers": {},
+      "topic": "in",
+      "partition": 0,
+      "offset": 3,
+      "timestamp": "2024-05-01T11:00:00Z"
+    },
+    {
+      "key": null,
+      "value": {},
+      "headers": {},
+      "topic": "in",
+      "partition": 0,
+      "offset": 4,
+      "timestamp": "2024-05-01T11:00:00Z"
+    }
+  ],
+  "expect": [
+    {
+      "logs": [
+        "start 1"
+      ],
+      "error": "runtime",
+      "message": "Error: Event 1 has no items",
+      "line": 4
+    },
+    {
+      "logs": [
+        "start 2"
+      ],
+      "error": "invalid_output",
+      "message": "transform must return an object, null or an array of objects (got number)"
+    },
+    {
+      "logs": [
+        "start 3"
+      ],
+      "error": "host",
+      "message": "HostError: parsing time \"not a date\" as \"2006-01-02T15:04:05.999999999Z07:00\": cannot parse \"not a date\" as \"2006\"",
+      "line": 10
+    },
+    {
+      "logs": [
+        "start 4"
+      ],
+      "error": "runtime",
+      "message": "TypeError: cannot read property 'items' of undefined",
+      "line": 10
+    }
+  ],
+  "limits": {}
+}

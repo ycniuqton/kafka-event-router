@@ -1,0 +1,3 @@
+{"cust_id":"C-1","email":"jane.doe@example.com","card":"4111111111111111","pin":"1234"}
+{"cust_id":"C-2","email":"a@x.com","card":"12","pin":9876}
+{"email":"not-an-email"}

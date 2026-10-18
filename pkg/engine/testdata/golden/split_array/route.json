@@ -1,0 +1,16 @@
+{
+  "apiVersion": "router/v1",
+  "name": "split-array",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "split", "kind": "split_array", "field": "value.items", "to": "value.item" },
+      { "id": "drop-items", "kind": "remove", "fields": ["value.items"] },
+      { "id": "key", "kind": "set_key", "source": { "from": "field", "path": "value.item.sku" } },
+      { "id": "flat", "kind": "flatten", "field": "value", "separator": "_" }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "order-lines" }
+  }],
+  "limits": { "maxOutputsPerEvent": 3 }
+}

@@ -1,0 +1,5 @@
+.group{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.label{font-size:12px;color:var(--tx2)}
+.env{font-weight:500}
+[aria-checked="true"] > .env{color:var(--tone)}
+.error{font-size:12px;color:var(--err)}

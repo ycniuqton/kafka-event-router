@@ -1,0 +1,21 @@
+# Recording rules for the monitoring dashboard (monitoring M-BE-18): pre-aggregated 1h/24h increases
+# per route so dashboard and routes-list queries stay fast at 1,000 routes. Raw-metric PromQL from
+# internal/metrics/query keeps working without these rules.
+groups:
+  - name: router-monitoring
+    interval: 1m
+    rules:
+      - record: route:router_events_consumed:increase1h
+        expr: sum by (route_id, branch) (increase(router_events_consumed_total[1h]))
+      - record: route:router_events_filtered:increase1h
+        expr: sum by (route_id, branch) (increase(router_events_filtered_total[1h]))
+      - record: route:router_events_produced:increase1h
+        expr: sum by (route_id, branch) (increase(router_events_produced_total[1h]))
+      - record: route:router_events_dlq:increase1h
+        expr: sum by (route_id, branch) (increase(router_events_dlq_total[1h]))
+      - record: route:router_events_produced:increase24h
+        expr: sum by (route_id, branch) (increase(router_events_produced_total[24h]))
+      - record: route:router_events_dlq:increase24h
+        expr: sum by (route_id, branch) (increase(router_events_dlq_total[24h]))
+      - record: route:router_consumer_lag:sum
+        expr: sum by (route_id) (router_consumer_lag)

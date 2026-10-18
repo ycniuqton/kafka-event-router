@@ -1,0 +1,57 @@
+{
+  "name": "Math.random and Date are seeded and frozen per event",
+  "entry": "transform",
+  "code": "function transform(event, ctx) {\n  const d = new Date();\n  return { value: { r: Math.random(), r2: Math.random(), now: Date.now(), iso: d.toISOString(), same: ctx.now() === d.toISOString(), ts: event.timestamp } };\n}\n",
+  "now": "2024-05-01T12:00:00.25Z",
+  "events": [
+    {
+      "key": null,
+      "value": {},
+      "headers": {},
+      "topic": "in",
+      "partition": 0,
+      "offset": 1,
+      "timestamp": "2024-05-01T11:00:00Z"
+    },
+    {
+      "key": null,
+      "value": {},
+      "headers": {},
+      "topic": "in",
+      "partition": 0,
+      "offset": 2,
+      "timestamp": "2024-05-01T11:00:00Z"
+    }
+  ],
+  "expect": [
+    {
+      "outputs": [
+        {
+          "value": {
+            "iso": "2024-05-01T12:00:00.250Z",
+            "now": 1714564800250,
+            "r": 0.29020411614328623,
+            "r2": 0.934145737439394,
+            "same": true,
+            "ts": "2024-05-01T11:00:00.000Z"
+          }
+        }
+      ]
+    },
+    {
+      "outputs": [
+        {
+          "value": {
+            "iso": "2024-05-01T12:00:00.250Z",
+            "now": 1714564800250,
+            "r": 0.9636366690974683,
+            "r2": 0.8300615132320672,
+            "same": true,
+            "ts": "2024-05-01T11:00:00.000Z"
+          }
+        }
+      ]
+    }
+  ],
+  "limits": {}
+}

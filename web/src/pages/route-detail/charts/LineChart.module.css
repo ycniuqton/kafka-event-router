@@ -1,0 +1,7 @@
+.chart{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px}
+.axis{display:flex;flex-direction:column;justify-content:space-between;height:var(--chart-h);font:10.5px var(--font-mono);color:var(--tx3);text-align:right}
+.plot{display:block;width:100%;height:var(--chart-h);overflow:visible}
+.grid{stroke:var(--ln);stroke-width:1;vector-effect:non-scaling-stroke}
+.line{fill:none;stroke:var(--tone);stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.hit{fill:transparent}
+.hit:hover{fill:color-mix(in oklch, var(--tx) 6%, transparent)}

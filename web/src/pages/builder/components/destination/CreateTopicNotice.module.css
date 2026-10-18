@@ -1,0 +1,5 @@
+.notice{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;border:1px solid color-mix(in oklch, var(--warn) 40%, transparent);background:color-mix(in oklch, var(--warn) 8%, transparent);font-size:12px}
+.text{flex:1}
+.mono{font-family:var(--font-mono)}
+.create{height:28px;padding:0 10px;background:var(--p1);font-size:12px;font-weight:400}
+.toggle{display:flex;align-items:center;gap:6px;color:var(--tx2);white-space:nowrap}

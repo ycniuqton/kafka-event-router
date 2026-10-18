@@ -1,0 +1,71 @@
+{
+  "name": "split an order into one event per item",
+  "entry": "transform",
+  "code": "function transform(event, ctx) {\n  return event.value.items.map((item, i) =\u003e ({\n    key: event.key + '-' + i,\n    value: { sku: item.sku, country: ctx.lookup('countries', item.country), hash: ctx.hash(item.sku).slice(0, 12) },\n    headers: { position: String(i) },\n  }));\n}\n",
+  "now": "2024-05-01T12:00:00Z",
+  "events": [
+    {
+      "key": "o-9",
+      "value": {
+        "items": [
+          {
+            "country": "DE",
+            "sku": "A"
+          },
+          {
+            "country": "XX",
+            "sku": "B"
+          }
+        ]
+      },
+      "headers": {},
+      "topic": "in",
+      "partition": 2,
+      "offset": 5,
+      "timestamp": "2024-05-01T11:00:00Z"
+    },
+    {
+      "key": "o-10",
+      "value": {
+        "items": []
+      },
+      "headers": {},
+      "topic": "in",
+      "partition": 2,
+      "offset": 6,
+      "timestamp": "2024-05-01T11:00:00Z"
+    }
+  ],
+  "expect": [
+    {
+      "outputs": [
+        {
+          "key": "o-9-0",
+          "value": {
+            "country": "Germany",
+            "hash": "4e54df9cd5d0",
+            "sku": "A"
+          },
+          "headers": {
+            "position": "0"
+          }
+        },
+        {
+          "key": "o-9-1",
+          "value": {
+            "country": null,
+            "hash": "bf1480a70e63",
+            "sku": "B"
+          },
+          "headers": {
+            "position": "1"
+          }
+        }
+      ]
+    },
+    {
+      "dropped": true
+    }
+  ],
+  "limits": {}
+}

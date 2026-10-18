@@ -1,0 +1,1 @@
+# taskset -c 10-13 .local/bin/loadgen measure --brokers 127.0.0.1:39092 --topics stress-s2-101706351246-p1-r0-out --from end --seq-source header --interval 5s --drain-idle 5s --track-by stream --stop-on-eof

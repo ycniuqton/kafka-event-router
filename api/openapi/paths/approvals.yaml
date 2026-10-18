@@ -1,0 +1,206 @@
+approvals:
+  get:
+    tags: [access-control]
+    operationId: listApprovals
+    summary: Approval requests (deployments that waited for a second person), newest first.
+    parameters:
+      - { name: status, in: query, schema: { $ref: "#/components/schemas/ApprovalStatus" } }
+      - { name: teamId, in: query, schema: { type: string, format: uuid } }
+      - { name: routeId, in: query, schema: { type: string, format: uuid } }
+      - { name: mine, in: query, schema: { type: boolean }, description: Only requests made by the caller. }
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One keyset page of approvals.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/Approval" } }
+                next_cursor: { type: [string, "null"] }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+approval:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [access-control]
+    operationId: getApproval
+    summary: Review page data — the request, requested and active configurations, comments and what the caller may do.
+    responses:
+      "200":
+        description: The approval detail.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/ApprovalDetail" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+approve:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [access-control]
+    operationId: approveDeployment
+    summary: Approve and activate (re-validated). The requester can never approve (403 self_approval); exactly one decision wins (409 already_decided).
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: false
+      content: { application/json: { schema: { $ref: "#/components/schemas/DecisionInput" } } }
+    responses:
+      "200":
+        description: The approval, now rolling out.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Approval" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+reject:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [access-control]
+    operationId: rejectDeployment
+    summary: Reject with a mandatory note; the version number stays consumed and the draft stays editable.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/DecisionInput" } } }
+    responses:
+      "200":
+        description: The rejected approval.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Approval" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+withdraw:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [access-control]
+    operationId: withdrawApproval
+    summary: Withdraw a pending request (its requester or a workspace admin).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The cancelled approval (cancelReason withdrawn).
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Approval" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+comments:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [access-control]
+    operationId: commentApproval
+    summary: Comment on a request (anyone who may read the route).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [body]
+            properties:
+              body: { type: string, minLength: 1, maxLength: 4000 }
+    responses:
+      "201":
+        description: The comment.
+        content: { application/json: { schema: { $ref: "#/components/schemas/ApprovalComment" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+components:
+  schemas:
+    ApprovalStatus:
+      type: string
+      enum: [pending_approval, rolling_out, active, failed, superseded, rejected, cancelled]
+    Person:
+      type: [object, "null"]
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    Destination:
+      type: object
+      required: [connectionId, name, envTag]
+      properties:
+        connectionId: { type: string }
+        name: { type: string }
+        envTag: { type: string }
+    Approval:
+      type: object
+      required: [id, routeId, routeName, teamId, versionId, versionNo, status, requestedBy, requestedAt, changeNote,
+        decidedBy, decidedAt, decisionNote, destinations, rowVersion]
+      properties:
+        id: { type: string, format: uuid }
+        routeId: { type: string, format: uuid }
+        routeName: { type: string }
+        teamId: { type: string, format: uuid }
+        versionId: { type: string, format: uuid }
+        versionNo: { type: integer }
+        status: { $ref: "#/components/schemas/ApprovalStatus" }
+        requestedBy: { $ref: "#/components/schemas/Person" }
+        requestedAt: { type: string, format: date-time }
+        changeNote: { type: string }
+        decidedBy: { $ref: "#/components/schemas/Person" }
+        decidedAt: { type: [string, "null"], format: date-time }
+        decisionNote: { type: string }
+        cancelReason: { type: string, enum: [withdrawn, superseded] }
+        destinations: { type: array, items: { $ref: "#/components/schemas/Destination" } }
+        rowVersion: { type: integer, description: If-Match token of approve / reject. }
+    VersionConfig:
+      type: object
+      required: [no, config]
+      properties:
+        no: { type: integer }
+        config: { type: object, additionalProperties: true }
+    ApprovalComment:
+      type: object
+      required: [id, approvalId, author, body, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        approvalId: { type: string, format: uuid }
+        author: { $ref: "#/components/schemas/Person" }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+    ApprovalDetail:
+      type: object
+      required: [approval, requested, active, comments, canDecide, canWithdraw, eligibleApprovers]
+      properties:
+        approval: { $ref: "#/components/schemas/Approval" }
+        requested: { $ref: "#/components/schemas/VersionConfig" }
+        active:
+          oneOf:
+            - { $ref: "#/components/schemas/VersionConfig" }
+            - { type: "null" }
+        comments: { type: array, items: { $ref: "#/components/schemas/ApprovalComment" } }
+        canDecide: { type: boolean }
+        canWithdraw: { type: boolean }
+        eligibleApprovers: { type: integer, description: Users other than the requester who may approve. }
+    DecisionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        note: { type: string, maxLength: 4000 }

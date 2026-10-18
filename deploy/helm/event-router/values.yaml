@@ -1,0 +1,224 @@
+# Event Router Helm values.
+#
+# Components: api (control plane, HA), worker (data plane, StatefulSet), preview, web (nginx SPA + proxy)
+# and a migrate pre-install/pre-upgrade hook Job. Backing services (Postgres, Redis, Kafka, Vault/KMS, IdP)
+# are NOT bundled: point the chart at them through `external` (plain endpoints) and `secret` (credentials).
+#
+# Env wiring (keys match internal/platform/config and deploy/staging/docker-compose.staging.yml):
+#   ConfigMap <release>-event-router-env  <- global.*, external.*, workloadIdentity.*, env
+#   Secret    secret.existingSecret        <- every sensitive ROUTER_* key (never rendered by this chart)
+#   per pod   <component>.env              <- component-only overrides (plain values)
+# Sensitive keys (see `secret.keys`) are rejected in `env` / `<component>.env`; the render fails.
+
+global:
+  environment: production         # ROUTER_ENV: local | staging | production (dev login is local-only)
+  workspace: default              # ROUTER_WORKSPACE_NAME
+  publicURL: https://router.example.com  # ROUTER_PUBLIC_URL (also the OIDC redirect base)
+
+image:
+  registry: ghcr.io/eventrouter   # images: <registry>/{api,worker,preview,web}:<tag>
+  tag: ""                         # defaults to .Chart.AppVersion; also sent as ROUTER_WORKER_VERSION
+  pullPolicy: IfNotPresent
+  pullSecrets: []                 # [{ name: regcred }]
+
+# Plain (non-secret) endpoints of the external backing services. Empty values are not rendered,
+# so the binaries fall back to their own defaults. Credentials never go here.
+external:
+  kafkaBootstrap: ""              # ROUTER_KAFKA_BOOTSTRAP (platform Kafka; route clusters come from connections)
+  vault:
+    addr: ""                      # ROUTER_VAULT_ADDR, e.g. https://vault.vault.svc:8200
+    transitKey: event-router      # ROUTER_VAULT_TRANSIT_KEY
+    transitMount: transit         # ROUTER_VAULT_TRANSIT_MOUNT
+  oidc:
+    issuer: ""                    # ROUTER_OIDC_ISSUER
+    clientID: event-router        # ROUTER_OIDC_CLIENT_ID
+    redirectURL: ""               # ROUTER_OIDC_REDIRECT_URL; default <global.publicURL>/auth/oidc/callback
+  metrics:
+    backend: ""                   # ROUTER_METRICS_BACKEND: prometheus | mock
+    url: ""                       # ROUTER_METRICS_URL, e.g. http://prometheus.monitoring:9090
+  tracing:
+    exporter: none                # ROUTER_TRACING_EXPORTER: none | stdout | otlp
+    otlpEndpoint: ""              # ROUTER_TRACING_OTLP_ENDPOINT
+
+# Free-form plain settings for every Go component (api, worker, preview, migrate). Any ROUTER_* key the
+# binaries understand may be added (see deploy/.env.example); sensitive keys are refused.
+env:
+  ROUTER_LOG_LEVEL: info
+  ROUTER_AUTH_MODES: oidc,api_token
+  ROUTER_SECRETS_PROVIDER: vault  # vault | aws_kms | gcp_kms (local is for local/CI only)
+  ROUTER_WORKLOAD_AUTH: k8s_token # k8s_token | mtls (static_token is for compose only)
+
+# Sensitive settings come only from Secrets that already exist in the namespace (created by you,
+# External Secrets, Sealed Secrets, Vault Agent, ...). The chart never renders secret values.
+secret:
+  # Secret loaded with envFrom into every Go pod; each data key is a ROUTER_* variable name.
+  # Expected keys: ROUTER_DATABASE_URL, ROUTER_REDIS_URL, ROUTER_COOKIE_SECRET, ROUTER_CURSOR_SECRET,
+  # ROUTER_PREVIEW_DIRECTIVE_SECRET, plus ROUTER_OIDC_CLIENT_SECRET / ROUTER_VAULT_TOKEN when used.
+  existingSecret: event-router-secrets
+  # Per-key references to other Secrets; they override the same key from existingSecret, e.g.
+  #   ROUTER_DATABASE_URL: { name: router-pg-app, key: uri }   (CloudNativePG / operator secret)
+  keyRefs: {}
+  # Keys that must only come from Secrets (render fails when they appear in env / <component>.env).
+  keys:
+    - ROUTER_DATABASE_URL
+    - ROUTER_REDIS_URL
+    - ROUTER_COOKIE_SECRET
+    - ROUTER_CURSOR_SECRET
+    - ROUTER_PREVIEW_DIRECTIVE_SECRET
+    - ROUTER_OIDC_CLIENT_SECRET
+    - ROUTER_VAULT_TOKEN
+    - ROUTER_WORKLOAD_TOKEN
+    - ROUTER_K8S_REVIEWER_TOKEN
+    - ROUTER_SMTP_PASSWORD
+    - ROUTER_ALERTS_WEBHOOK_SIGNING_KEY
+
+# TLS for every listener; the internal listener also requires client certificates signed by ca.crt (mTLS).
+# Workers/preview present the same tls.crt as client certificate, so issue it with serverAuth + clientAuth
+# usages (cert-manager: usages [server auth, client auth]) and SANs for the api Service names.
+tls:
+  enabled: false
+  secretName: event-router-tls    # kubernetes.io/tls Secret (tls.crt, tls.key) + key ca.crt
+  mountPath: /etc/router/tls
+  requireClientCerts: true        # sets ROUTER_TLS_CLIENT_CA_FILE on the api (needed outside local/staging)
+
+# Workload identity: projected ServiceAccount tokens for k8s_token auth on the api internal listener.
+workloadIdentity:
+  audience: event-router-internal # ROUTER_WORKLOAD_AUDIENCE
+  expirationSeconds: 3600
+  tokenPath: /var/run/secrets/event-router/token  # ROUTER_WORKLOAD_TOKEN_FILE
+
+# Pod placement shared by api, worker, preview and web (a component's own `affinity` replaces the
+# generated anti-affinity; nodeSelector/tolerations are merged per component).
+scheduling:
+  antiAffinity: soft              # soft (preferred) | hard (required, one pod per node) | none
+  spread:                         # topologySpreadConstraints whenUnsatisfiable per topology key
+    hostname: ScheduleAnyway      # ScheduleAnyway | DoNotSchedule
+    zone: ScheduleAnyway          # DoNotSchedule needs nodes labelled topology.kubernetes.io/zone
+  nodeSelector: {}
+  tolerations: []
+
+# Liveness/readiness on the binaries' /healthz and /readyz (port "http" of each Go component).
+probes:
+  readiness: { periodSeconds: 5, failureThreshold: 3 }
+  liveness: { periodSeconds: 10, failureThreshold: 6 }
+  startup: { periodSeconds: 5, failureThreshold: 30 }
+
+api:
+  replicas: 2                     # keep >= 2: scheduler leader election + rolling upgrades without downtime
+  port: 8080                      # public listener (Service <release>-event-router-api)
+  internalPort: 8443              # internal listener for workers/preview (Service <release>-event-router-api-internal)
+  env:
+    ROUTER_SCHEDULER_ENABLED: "true"
+  serviceAccount: { annotations: {} }
+  resources:
+    requests: { cpu: 200m, memory: 256Mi }
+    limits: { memory: 512Mi }
+  pdb: { minAvailable: 1 }
+  hpa: { enabled: true, minReplicas: 2, maxReplicas: 6, targetCPUUtilizationPercentage: 70 }
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+worker:
+  # StatefulSet gives stable pod names (<release>-event-router-worker-0..N) = stable ROUTER_WORKER_ID
+  # (downward API metadata.name) and per-pod cache PVCs. Deployment works too (ids change per pod).
+  kind: StatefulSet               # StatefulSet | Deployment
+  replicas: 2                     # >= 2 so leases fail over and rollouts move one replica at a time
+  port: 8081
+  capacity: 100                   # ROUTER_WORKER_CAPACITY (route replicas per worker)
+  zone:
+    # ROUTER_WORKER_ZONE from the pod's copy of the node topology label (downward API). Kubernetes copies
+    # topology.kubernetes.io/zone onto pods with the PodTopologyLabelsAdmission feature (>= 1.33); without
+    # it the variable is empty and the worker uses "default". Set fromTopologyLabel=false to pin `value`.
+    fromTopologyLabel: true
+    label: topology.kubernetes.io/zone
+    value: default
+  cache:
+    # ROUTER_WORKER_CACHE_DIR: assignments + version docs (never secrets) for control-plane-down mode.
+    mountPath: /var/lib/router/cache
+    sizeLimit: 1Gi                # emptyDir sizeLimit / PVC size
+    persistence:
+      enabled: false              # true: volumeClaimTemplate per pod (StatefulSet only), survives rescheduling
+      storageClassName: ""        # "" = cluster default
+      accessModes: [ReadWriteOnce]
+  terminationGracePeriodSeconds: 60  # time to drain route runners on SIGTERM
+  env: {}
+  serviceAccount: { annotations: {} }
+  resources:
+    requests: { cpu: 500m, memory: 512Mi }
+    limits: { memory: 1Gi }
+  pdb: { maxUnavailable: 1 }
+  hpa: { enabled: false, minReplicas: 2, maxReplicas: 10, targetCPUUtilizationPercentage: 75 }
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+preview:
+  replicas: 1
+  port: 8082
+  env: {}
+  serviceAccount: { annotations: {} }
+  resources:
+    requests: { cpu: 200m, memory: 256Mi }
+    limits: { memory: 512Mi }
+  pdb: { minAvailable: 0 }
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+web:
+  replicas: 2
+  port: 8080
+  verifyUpstreamTLS: true         # tls.enabled: nginx verifies the api certificate against ca.crt
+  serviceAccount: { annotations: {} }
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { memory: 128Mi }
+  pdb: { minAvailable: 1 }
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+migrate:
+  enabled: true                   # pre-install/pre-upgrade hook Job running `api migrate up`
+  backoffLimit: 3
+  activeDeadlineSeconds: 600
+  resources:
+    requests: { cpu: 100m, memory: 128Mi }
+    limits: { memory: 256Mi }
+
+ingress:
+  enabled: true                   # /api, /auth -> api; / -> web
+  className: nginx
+  host: router.example.com
+  annotations: {}
+  tlsSecretName: ""               # ingress TLS (often cert-manager); empty = no TLS block
+
+networkPolicy:
+  enabled: true
+  # Namespace labels of the ingress controller allowed to reach web and the public api port.
+  ingressNamespaceSelector:
+    kubernetes.io/metadata.name: ingress-nginx
+  # Egress allow-list for workers/preview to user Kafka clusters (CIDRs + ports).
+  kafkaEgress:
+    - cidr: 10.0.0.0/8
+      ports: [9092, 9093, 9094]
+  # Egress for the api/migrate to Postgres, Redis, Vault/KMS, the IdP and the Kubernetes API.
+  apiEgress:
+    - cidr: 0.0.0.0/0
+      ports: [443, 5432, 6379, 8200]
+  redisEgress:
+    - cidr: 10.0.0.0/8
+      ports: [6379]
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile: { type: RuntimeDefault }
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: [ALL] }

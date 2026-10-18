@@ -1,0 +1,16 @@
+name: stg-s8
+description: >
+  Staging 40-minute soak at 70% of the staging S2 p12 knee (7000), one route, 12 partitions, 1 KB, default
+  maxInFlight, 15 s samples. Watch RSS / goroutines for growth, lag and p99 drift, loss; host side in watch.csv.
+target: staging
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 2m, minSamples: 6}
+sampleInterval: 15s
+defaults:
+  partitions: 12
+  routes: {count: 1, maxInFlight: 1000}
+  load: {size: 1024, producers: 1, lanes: 4, streams: 512}
+  drain: {timeout: 5m}
+cases:
+  - name: soak-40m
+    load:
+      steps: [{rate: 7000, duration: 40m}]

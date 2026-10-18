@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stress S1–S4 Results</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a65;--line:#e3e1da;--accent:#9a4a1c;--ok:#2f6b3a;--bad:#a12a2a;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#171716;--fg:#ecebe6;--muted:#a3a29b;--line:#34332f;--accent:#e08a52;--ok:#7fc28a;--bad:#ef7d7d;--card:#1f1f1d}}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1100px;margin:0 auto}h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:32px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+p.sub{color:var(--muted);margin:0 0 16px}.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}th{font-weight:600}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}code{font-size:12.5px}.kpi{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.kpi div{background:var(--card);border:1px solid var(--line);padding:10px 14px;border-radius:6px;min-width:180px}.kpi b{display:block;font-size:20px;color:var(--accent)}
+</style></head><body><main>
+<h1>Stress S1–S4 results (local)</h1>
+<p class="sub">2026-10-17 · Kafka 4.4 on cores 6-9 · worker pinned to cores 0-5 · loadgen on cores 10-13 · 1 KB JSON unless noted · zero events lost in every case</p>
+<div class="kpi"><div><b>13–16k ev/s</b>engine, per core, 1 KB (S1)</div><div><b>65k ev/s</b>1 route, 12 partitions, default maxInFlight</div><div><b>80k ev/s</b>with maxInFlight 5000 (CPU-bound)</div><div><b>1000 routes</b>at 10 ev/s each, after the heartbeat fix</div><div><b>~120k out ev/s</b>fan-out ceiling of one worker</div></div>
+<h2>S1 engine only (1 core, GOMAXPROCS=1)</h2><div class="wrap"><table><tr><th>shape</th><th>1 KB</th><th>10 KB</th><th>100 KB</th><th>allocs/op 1 KB</th></tr>
+<tr><td>filter-only</td><td class="n">15.6k</td><td class="n">1.96k</td><td class="n">213</td><td class="n">260</td></tr>
+<tr><td>filter 1/10/50</td><td class="n">14.4k/13.9k/14.0k</td><td class="n">~1.85k</td><td class="n">~203</td><td class="n">260</td></tr>
+<tr><td>steps 1/5/20</td><td class="n">14.1k/13.2k/10.0k</td><td class="n">~1.8k</td><td class="n">~203</td><td class="n">263/278/331</td></tr>
+<tr><td>recipe-5</td><td class="n">13.1k</td><td class="n">1.93k</td><td class="n">208</td><td class="n">276</td></tr>
+<tr><td>mapper</td><td class="n">11.3k</td><td class="n">1.52k</td><td class="n">158</td><td class="n">319</td></tr>
+<tr><td>js / steps-5+js</td><td class="n">814 / 784</td><td class="n">132</td><td class="n">14</td><td class="n">832</td></tr></table></div>
+<p>recipe-5 profile: JSON decode is 47.6 % and encode 39.6 % of CPU (87 % codec). JS costs ~1.2 ms per 1 KB event.</p>
+<h2>S2 single route (5-min confirmation steps)</h2><div class="wrap"><table><tr><th>case</th><th>max sustained ev/s</th><th>p99 at max</th><th>fails at</th><th>worker CPU</th><th>binding resource</th></tr>
+<tr><td>p1</td><td class="n">30 000</td><td class="n">471 ms</td><td>35k (lag)</td><td class="n">1.74</td><td>one lane goroutine, ~1 core of codec</td></tr>
+<tr><td>p3</td><td class="n">≥57 500</td><td class="n">508 ms</td><td>65k (lag)</td><td class="n">3.33</td><td>lanes plus in-flight limit</td></tr>
+<tr><td>p12 (maxInFlight 1000)</td><td class="n">65 000</td><td class="n">291 ms</td><td>80k</td><td class="n">3.77</td><td>maxInFlight ÷ ack latency (~15 ms)</td></tr>
+<tr><td>p48</td><td class="n">≥57 500</td><td class="n">303 ms</td><td>65k (lag)</td><td class="n">3.76</td><td>in-flight limit; Kafka 1.4 cores</td></tr>
+<tr><td>p12 maxInFlight 100</td><td class="n">8 000</td><td class="n">59 ms</td><td>10k</td><td class="n">0.71</td><td>in-flight limit (100 ÷ 12 ms)</td></tr>
+<tr><td>p12 maxInFlight 5000</td><td class="n">80 000</td><td class="n">246 ms</td><td>90k (p99 3.1 s)</td><td class="n">4.60</td><td>worker CPU (codec and GC)</td></tr>
+<tr><td>p12 10 KB</td><td class="n">≥20 000</td><td class="n">754 ms</td><td>25k (producers 16.7k)</td><td class="n">3.49</td><td>broker disk (~400 MB/s)</td></tr></table></div>
+<h2>S3 many routes (10 ev/s per route)</h2><div class="wrap"><table><tr><th>routes</th><th>p50/p99 ms</th><th>worker CPU</th><th>Kafka CPU</th><th>RSS MB</th><th>goroutines</th><th>Kafka conns</th><th>PG conns</th><th>deploy p50/p95 s</th></tr>
+<tr><td>10</td><td>18/19</td><td class="n">0.08</td><td class="n">0.11</td><td class="n">67</td><td class="n">177</td><td class="n">53</td><td class="n">18</td><td>1.2/1.3</td></tr>
+<tr><td>100</td><td>13/20</td><td class="n">0.38</td><td class="n">0.45</td><td class="n">102</td><td class="n">1349</td><td class="n">402</td><td class="n">18</td><td>1.9/3.7</td></tr>
+<tr><td>250</td><td>15/23</td><td class="n">0.79</td><td class="n">0.88</td><td class="n">154</td><td class="n">3302</td><td class="n">1052</td><td class="n">18</td><td>3.3/8.3</td></tr>
+<tr><td>500</td><td>19/39</td><td class="n">1.53</td><td class="n">1.61</td><td class="n">235</td><td class="n">6551</td><td class="n">1645</td><td class="n">18</td><td>5.8/13.9</td></tr>
+<tr><td>1000</td><td>88/244</td><td class="n">3.00</td><td class="n">2.76</td><td class="n">416</td><td class="n">13073</td><td class="n">3042</td><td class="n">18</td><td>10.5/32.5</td></tr></table></div>
+<p class="bad">Before the fix: at ~595 routes every lease of the worker expired at once and it kept restarting all routes. Heartbeats were blocked behind long reconcile passes.</p>
+<h2>S4 fan-out (5k ev/s in, 12 partitions)</h2><div class="wrap"><table><tr><th>N</th><th>out ev/s</th><th>result</th><th>p99</th><th>worker CPU</th><th>RSS max</th></tr>
+<tr><td>1</td><td class="n">5 000</td><td class="ok">sustained</td><td>20 ms</td><td class="n">0.48</td><td>107 MB</td></tr>
+<tr><td>5</td><td class="n">25 000</td><td class="ok">sustained</td><td>28 ms</td><td class="n">1.88</td><td>113 MB</td></tr>
+<tr><td>10</td><td class="n">50 000</td><td class="ok">sustained</td><td>97 ms</td><td class="n">3.60</td><td>165 MB</td></tr>
+<tr><td>25</td><td class="n">117 000 of 125 000</td><td class="bad">lag growing</td><td>15 s</td><td class="n">5.84</td><td>4.8 GB</td></tr>
+<tr><td>50</td><td class="n">121 000 of 250 000</td><td class="bad">lag growing</td><td>38 s</td><td class="n">5.88</td><td>16 GB</td></tr></table></div>
+<h2>Product fixes (each with a unit test)</h2>
+<p><b>Backlog drain stall.</b> A backlog drained at ~185 ev/s per partition because lanes paused on every poll (high-water 512 &lt; poll size 1000) and the re-fetch waited behind a 5 s idle long-poll. The fix sets <code>FetchMaxWait</code> to 500 ms and lane marks to 2048/1024 records with a 2/1 MiB byte cap. Test: <code>TestRunnerDrainsBacklogBehindIdlePartition</code>.</p>
+<p><b>Lease expiry storm.</b> Heartbeats were starved while <code>Reconcile</code> started hundreds of routes, so the leases (30 s TTL) expired and every runner restarted. The heartbeat now runs on its own goroutine. Test: <code>TestHeartbeatsContinueDuringLongReconcile</code>.</p>
+</main></body></html>

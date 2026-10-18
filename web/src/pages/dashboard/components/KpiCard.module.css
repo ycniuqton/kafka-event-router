@@ -1,0 +1,5 @@
+.label{color:var(--tx2);font-size:12px}
+.body{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.value{font-size:26px;font-weight:600;margin-top:4px;letter-spacing:-0.02em;white-space:nowrap}
+.value[data-tone]{color:var(--tone)}
+.footer{display:flex;gap:10px;font-size:12px;color:var(--tx2);margin-top:2px}

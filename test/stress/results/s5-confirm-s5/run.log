@@ -1,0 +1,7 @@
+13:24:36 pinned worker (pid 1666287) to CPUs 0-5
+13:24:36 pinned kafka (pid 1583441) to CPUs 6-9
+13:24:36 case s5: 1 route(s), 12 partition(s), 1 step(s)
+13:29:47 case s5: max sustainable 57500 ev/s, knee 0 (), lost 0, error ""
+13:29:52 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+13:29:52 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s5-confirm-s5/s5-confirm-s5.json

@@ -1,0 +1,369 @@
+connections:
+  get:
+    tags: [connections]
+    operationId: listConnections
+    summary: Saved Kafka connections (every member may read every team's connections).
+    parameters:
+      - { name: env, in: query, schema: { $ref: "#/components/schemas/EnvTag" } }
+      - { name: status, in: query, schema: { $ref: "#/components/schemas/HealthStatus" } }
+      - { name: q, in: query, schema: { type: string }, description: "Matches name, description or bootstrap servers." }
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page ordered by name; `usedBy.routes` is omitted (count only).
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/Connection" } }
+                next_cursor: { type: [string, "null"] }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+  post:
+    tags: [connections]
+    operationId: createConnection
+    summary: Create a connection; secrets are write-only and envelope-encrypted.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/ConnectionInput" } } }
+    responses:
+      "201":
+        description: Created connection (health `unknown` until tested).
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Connection" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+connection:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [connections]
+    operationId: getConnection
+    summary: One connection with the routes using it.
+    responses:
+      "200":
+        description: The connection.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Connection" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+  patch:
+    tags: [connections]
+    operationId: updateConnection
+    summary: JSON merge patch; `secrets` keys present replace stored values, absent keys keep them.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/ConnectionInput" } } }
+    responses:
+      "200":
+        description: Updated connection; brokers/security/secret changes reset health to `unknown`.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Connection" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+  delete:
+    tags: [connections]
+    operationId: deleteConnection
+    summary: Delete an unused connection and its stored secret.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Deleted. }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409":
+        description: "`connection-in-use`: routes (draft or active version) still use it."
+        content: { application/problem+json: { schema: { $ref: "#/components/schemas/ConnectionProblem" } } }
+connectionTest:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [connections]
+    operationId: testConnection
+    summary: Run the live checklist on a saved connection; updates health. Streams NDJSON.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: false
+      content: { application/json: { schema: { $ref: "#/components/schemas/TestOptions" } } }
+    responses:
+      "200":
+        description: One JSON object per line (`StepEvent`…, then `TestResult`).
+        content:
+          application/x-ndjson:
+            schema: { oneOf: [{ $ref: "#/components/schemas/StepEvent" }, { $ref: "#/components/schemas/TestResult" }] }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+connectionDraftTest:
+  post:
+    tags: [connections]
+    operationId: testConnectionDraft
+    summary: Run the checklist on an unsaved draft; `connectionId` reuses stored secrets. No health update.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            allOf:
+              - { $ref: "#/components/schemas/ConnectionInput" }
+              - { $ref: "#/components/schemas/TestOptions" }
+              - { type: object, properties: { connectionId: { type: string, format: uuid } } }
+    responses:
+      "200":
+        description: NDJSON stream as for saved tests.
+        content:
+          application/x-ndjson:
+            schema: { oneOf: [{ $ref: "#/components/schemas/StepEvent" }, { $ref: "#/components/schemas/TestResult" }] }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+connectionTopics:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [connections]
+    operationId: listConnectionTopics
+    summary: Topics with partitions and rate (null until two snapshots ≥ 5 s apart).
+    parameters:
+      - { name: q, in: query, schema: { type: string } }
+      - { name: includeInternal, in: query, schema: { type: boolean, default: false } }
+    responses:
+      "200":
+        description: Topics sorted by name.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/Topic" } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "502":
+        description: "`cluster-unavailable` with `reason` and `hint`."
+        content: { application/problem+json: { schema: { $ref: "#/components/schemas/ConnectionProblem" } } }
+  post:
+    tags: [connections]
+    operationId: createConnectionTopic
+    summary: Create a topic (only when the connection has `allowTopicCreate`).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [name]
+            properties:
+              name: { type: string, pattern: "^[a-zA-Z0-9._-]{1,249}$" }
+              partitions: { type: integer, minimum: 1, maximum: 1000, default: 6 }
+              replicationFactor: { type: integer, minimum: -1, maximum: 32, default: -1, description: "-1 = broker default" }
+              retentionMs: { type: integer, default: 604800000 }
+              configs: { type: object, additionalProperties: { type: string } }
+    responses:
+      "201":
+        description: Created topic.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                partitions: { type: integer }
+                replicationFactor: { type: integer }
+                retentionMs: { type: integer }
+      "403":
+        description: "`topic-create-disabled`."
+        content: { application/problem+json: { schema: { $ref: "#/components/schemas/ConnectionProblem" } } }
+      "409":
+        description: "`topic-exists` (path /name)."
+        content: { application/problem+json: { schema: { $ref: "#/components/schemas/ConnectionProblem" } } }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "502":
+        description: "`cluster-unavailable` with `reason` and `hint`."
+        content: { application/problem+json: { schema: { $ref: "#/components/schemas/ConnectionProblem" } } }
+components:
+  schemas:
+    EnvTag: { type: string, enum: [dev, staging, prod] }
+    HealthStatus: { type: string, enum: [unknown, healthy, degraded, unreachable, auth_failed] }
+    SecurityMode: { type: string, enum: [plaintext, ssl, mtls, sasl_plain, sasl_scram_256, sasl_scram_512, sasl_oauthbearer] }
+    RegistryAuth:
+      type: object
+      properties:
+        mode: { type: string, enum: [none, basic, bearer], default: none }
+        username: { type: string }
+    SchemaRegistry:
+      type: object
+      required: [url, auth]
+      properties:
+        url: { type: string, format: uri }
+        auth: { $ref: "#/components/schemas/RegistryAuth" }
+        secret: { type: string, enum: [set, missing], description: Only for basic/bearer; the password or token is never returned. }
+    SchemaRegistryInput:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri }
+        auth: { $ref: "#/components/schemas/RegistryAuth" }
+    TestStep: { type: string, enum: [brokers_reachable, authenticated, list_topics, can_read, can_write, schema_registry] }
+    StepState: { type: string, enum: [pending, running, passed, failed, skipped] }
+    FailureReason:
+      type: string
+      enum: [unreachable, dns_failure, tls_handshake, tls_untrusted, auth_failed, sasl_mechanism_mismatch, not_authorized, topic_not_found, topic_exists, invalid_config, timeout, unknown]
+    TLS:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        caPem: { type: string }
+        serverName: { type: string }
+        clientCertPem: { type: string }
+    LastFailure:
+      type: object
+      properties:
+        step: { $ref: "#/components/schemas/TestStep" }
+        reason: { $ref: "#/components/schemas/FailureReason" }
+        message: { type: string }
+        hint: { type: string }
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: "#/components/schemas/HealthStatus" }
+        checkedAt: { type: [string, "null"], format: date-time }
+        lastFailure: { oneOf: [{ $ref: "#/components/schemas/LastFailure" }, { type: "null" }] }
+    RouteRef:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+    Connection:
+      type: object
+      required: [id, name, envTag, owner, bootstrapServers, security, health, usedBy, version]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        envTag: { $ref: "#/components/schemas/EnvTag" }
+        owner:
+          type: object
+          properties:
+            teamId: { type: string, format: uuid }
+            teamName: { type: string }
+        bootstrapServers: { type: array, items: { type: string } }
+        security:
+          type: object
+          properties:
+            mode: { $ref: "#/components/schemas/SecurityMode" }
+            tls: { $ref: "#/components/schemas/TLS" }
+            username: { type: string }
+            clientId: { type: string, description: OAuth client id (sasl_oauthbearer). }
+            tokenUrl: { type: string, format: uri, description: OAuth client-credentials token endpoint. }
+            scopes: { type: array, items: { type: string } }
+            secretFields:
+              type: object
+              description: Only "set" or "missing"; secret values are never returned.
+              additionalProperties: { type: string, enum: [set, missing] }
+        schemaRegistry: { oneOf: [{ $ref: "#/components/schemas/SchemaRegistry" }, { type: "null" }] }
+        properties: { type: object, additionalProperties: { type: string } }
+        sensitive: { type: boolean }
+        allowTopicCreate: { type: boolean }
+        probeEnabled: { type: boolean }
+        kind: { type: string, enum: [kafka, demo] }
+        health: { $ref: "#/components/schemas/Health" }
+        usedBy:
+          type: object
+          properties:
+            count: { type: integer }
+            routes: { type: array, items: { $ref: "#/components/schemas/RouteRef" } }
+        version: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ConnectionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, maxLength: 100 }
+        description: { type: string, maxLength: 1000 }
+        envTag: { $ref: "#/components/schemas/EnvTag" }
+        owner: { type: object, properties: { teamId: { type: string, format: uuid } } }
+        bootstrapServers: { type: array, minItems: 1, maxItems: 50, items: { type: string } }
+        security:
+          type: object
+          properties:
+            mode: { $ref: "#/components/schemas/SecurityMode" }
+            tls: { $ref: "#/components/schemas/TLS" }
+            username: { type: string }
+            clientId: { type: string }
+            tokenUrl: { type: string, format: uri }
+            scopes: { type: array, items: { type: string } }
+        schemaRegistry: { oneOf: [{ $ref: "#/components/schemas/SchemaRegistryInput" }, { type: "null" }], description: "null removes the registry (PATCH)." }
+        properties:
+          type: object
+          description: "Allow-list: client.id, request.timeout.ms, metadata.max.age.ms, connections.max.idle.ms, fetch.max.bytes, socket.connection.setup.timeout.ms."
+          additionalProperties: { type: string }
+        sensitive: { type: boolean }
+        allowTopicCreate: { type: boolean, default: false }
+        probeEnabled: { type: boolean, default: true }
+        kind: { type: string, enum: [kafka] }
+        secrets:
+          type: object
+          writeOnly: true
+          properties:
+            password: { type: string }
+            clientKeyPem: { type: string }
+            clientSecret: { type: string }
+            schemaRegistrySecret: { type: string, description: Registry password (basic) or token (bearer). }
+    TestOptions:
+      type: object
+      properties:
+        readTopic: { type: string }
+        writeTopic: { type: string, description: Existing topic; a record with header x-router-test is produced. }
+    StepEvent:
+      type: object
+      required: [type, step, state]
+      properties:
+        type: { type: string, const: step }
+        step: { $ref: "#/components/schemas/TestStep" }
+        state: { $ref: "#/components/schemas/StepState" }
+        durationMs: { type: integer }
+        reason: { $ref: "#/components/schemas/FailureReason" }
+        message: { type: string }
+        hint: { type: string }
+    TestResult:
+      type: object
+      required: [type, ok, health, checkedAt]
+      properties:
+        type: { type: string, const: result }
+        ok: { type: boolean }
+        health: { $ref: "#/components/schemas/HealthStatus" }
+        checkedAt: { type: string, format: date-time }
+        lastFailure: { $ref: "#/components/schemas/LastFailure" }
+    Topic:
+      type: object
+      properties:
+        name: { type: string }
+        partitions: { type: integer }
+        replicationFactor: { type: integer }
+        internal: { type: boolean }
+        ratePerSec: { type: [number, "null"] }
+    ConnectionProblem:
+      allOf:
+        - { $ref: "../components/problem.yaml#/Problem" }
+        - type: object
+          properties:
+            routes: { type: array, items: { $ref: "#/components/schemas/RouteRef" } }
+            reason: { $ref: "#/components/schemas/FailureReason" }
+            hint: { type: string }

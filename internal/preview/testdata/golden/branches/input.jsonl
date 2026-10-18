@@ -1,0 +1,4 @@
+{"orderId":"o-1","amount":1500,"email":"big@spender.com","type":"sale"}
+{"orderId":"o-2","amount":20,"email":"small@buyer.org","type":"refund"}
+{"orderId":"o-3","amount":5,"email":"qa@test.dev","type":"sale","test":true}
+{"amount":2000,"email":"nokey@buyer.org","type":"sale"}

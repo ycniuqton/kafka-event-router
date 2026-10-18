@@ -1,0 +1,22 @@
+{
+  "apiVersion": "router/v1",
+  "name": "if-else",
+  "source": { "connectionId": "c1", "topics": ["tickets"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "route", "kind": "if_else",
+        "condition": { "type": "cond", "field": "value.priority", "op": "in", "values": ["P1", "P2"] },
+        "thenSteps": [
+          { "id": "urgent", "kind": "set", "field": "value.queue", "source": { "from": "constant", "value": "oncall" } },
+          { "id": "page", "kind": "header_add", "header": "x-page", "source": { "from": "constant", "value": "yes" } }
+        ],
+        "elseSteps": [
+          { "id": "normal", "kind": "set", "field": "value.queue", "source": { "from": "constant", "value": "backlog" } },
+          { "id": "spam", "kind": "drop_if", "condition": { "type": "cond", "field": "value.spam", "op": "eq", "value": true } }
+        ] },
+      { "id": "case", "kind": "string_case", "field": "value.title", "case": "title" }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "tickets-routed" }
+  }]
+}

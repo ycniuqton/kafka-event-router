@@ -1,0 +1,3 @@
+.row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.label{font-size:11px;color:var(--tx3)}
+.counts{font:11px var(--font-mono);color:var(--tx2)}

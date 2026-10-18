@@ -1,0 +1,3 @@
+[
+  { "id": "rename", "kind": "rename", "from": "value.cust_id", "to": "value.customerId" }
+]

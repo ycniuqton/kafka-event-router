@@ -1,0 +1,24 @@
+{
+  "apiVersion": "router/v1",
+  "name": "operators-mix",
+  "source": { "connectionId": "c1", "topics": ["events"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "filter": { "type": "or", "children": [
+      { "type": "and", "children": [
+        { "type": "cond", "field": "value.sku", "op": "regex", "value": "^SKU-[0-9]{3}$" },
+        { "type": "cond", "field": "value.qty", "op": "between", "from": 1, "to": 10 }
+      ] },
+      { "type": "and", "children": [
+        { "type": "cond", "field": "value.createdAt", "op": "within_last", "amount": 2, "unit": "days" },
+        { "type": "not", "child": { "type": "cond", "field": "value.status", "op": "in", "values": ["cancelled", "void"] } }
+      ] },
+      { "type": "and", "children": [
+        { "type": "cond", "field": "value.labels", "op": "contains", "value": "vip" },
+        { "type": "cond", "field": "value.note", "op": "is_empty" },
+        { "type": "cond", "field": "value.paidAt", "op": "before", "value": "2025-12-31T00:00:00Z" }
+      ] }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "selected" }
+  }]
+}

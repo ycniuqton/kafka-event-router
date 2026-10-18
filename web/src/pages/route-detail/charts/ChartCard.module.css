@@ -1,0 +1,5 @@
+.head{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.title{font-weight:600;flex:1;min-width:0}
+.legend{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)}
+.swatch{width:8px;height:8px;border-radius:2px;background:var(--tone)}
+.neutral{background:var(--p3);border:1px solid var(--ln2)}

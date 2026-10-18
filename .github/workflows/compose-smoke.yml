@@ -1,0 +1,26 @@
+# platform-core PC-60: `make up` must bring the whole compose stack healthy (/readyz 200 everywhere).
+name: compose-smoke
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare env
+        run: cp deploy/.env.example deploy/.env 2>/dev/null || true
+      - name: Build and start the app profile
+        run: docker compose -f deploy/docker-compose.yml --profile app up -d --build
+      - name: Wait for /readyz
+        run: deploy/docker/smoke.sh 240
+      - name: Logs on failure
+        if: failure()
+        run: docker compose -f deploy/docker-compose.yml --profile app logs --no-color --tail 200
+      - name: Tear down
+        if: always()
+        run: docker compose -f deploy/docker-compose.yml --profile app down -v

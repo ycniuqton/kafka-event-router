@@ -1,0 +1,106 @@
+{
+ "summary": {
+  "loaded": 4,
+  "processed": 4,
+  "passed": 2,
+  "filtered": 0,
+  "errors": 2,
+  "dropped": 0,
+  "incomplete": false,
+  "durationMs": 0,
+  "branches": [
+   {
+    "branch": "main",
+    "passed": 2,
+    "filtered": 0,
+    "errors": 0,
+    "dropped": 0
+   }
+  ]
+ },
+ "issues": [],
+ "results": [
+  {
+   "seq": 0,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [],
+     "steps": [],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "clean",
+       "key": null,
+       "value": {
+        "ok": 1
+       },
+       "headers": [],
+       "sizeBytes": 8,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "seq": 1,
+   "status": "error",
+   "error": {
+    "stepIndex": null,
+    "path": "/source/format",
+    "errorType": "decode",
+    "message": "malformed payload: jsontext: unexpected EOF within \"/broken\" after offset 10"
+   },
+   "branches": []
+  },
+  {
+   "seq": 2,
+   "status": "error",
+   "error": {
+    "stepIndex": null,
+    "path": "/source/format",
+    "errorType": "decode",
+    "message": "malformed payload: trailing data"
+   },
+   "branches": []
+  },
+  {
+   "seq": 3,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [],
+     "steps": [],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "clean",
+       "key": null,
+       "value": [
+        "array",
+        1,
+        2.5,
+        {
+         "nested": null
+        }
+       ],
+       "headers": [],
+       "sizeBytes": 31,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "masked": false
+}

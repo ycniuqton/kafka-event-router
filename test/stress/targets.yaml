@@ -1,0 +1,63 @@
+# Targets of the stress runner (stressrun --target <name>). Placeholders: ${secret:KEY} reads one key of
+# ~/.secrets/event-router-staging.env (never sourced, never printed), ${env:NAME} reads an environment variable.
+#
+# kafka.platformBootstrap  bootstrap stored in the stress connection = address as seen by the worker
+# kafka.runnerBootstrap    used by stressrun for topic admin and consumer-group lag
+# kafka.loadgenBootstrap   used by loadgen (which may run on another host, see loadgen.launch)
+
+local:
+  envTag: dev
+  api:
+    baseURL: http://127.0.0.1:8080
+    login: dev
+  kafka:
+    platformBootstrap: 127.0.0.1:39092
+    runnerBootstrap: 127.0.0.1:39092
+    loadgenBootstrap: 127.0.0.1:39092
+  loadgen:
+    binary: .local/bin/loadgen
+    launch: [taskset, -c, "10-13"]
+  metrics:
+    - name: worker
+      source: {kind: http, url: "http://127.0.0.1:8081/metrics"}
+  processes:
+    - name: worker
+      pid: {kind: file, path: .local/run/worker.pid}
+      cpus: "0-5"
+    - name: kafka
+      pid: {kind: file, path: .local/run/stress-kafka.pid}
+      cpus: "6-9"
+
+# Staging: the platform (worker) reaches Kafka as kafka:19092 inside the compose network; loadgen runs ON the staging
+# host (ssh) against the DEV listener 127.0.0.1:29092; stressrun itself runs here and reaches Kafka through the dev
+# tunnel (deploy/dev/tunnel.sh start, also 127.0.0.1:29092). Copy the binary first (see README).
+staging:
+  envTag: dev
+  api:
+    baseURL: "${secret:STAGING_URL}"
+    login: dex
+    email: "${secret:STAGING_LOGIN_EMAIL}"
+    password: "${secret:STAGING_LOGIN_PASSWORD}"
+  kafka:
+    platformBootstrap: kafka:19092
+    runnerBootstrap: 127.0.0.1:29092
+    loadgenBootstrap: 127.0.0.1:29092
+  loadgen:
+    binary: /opt/event-router/stress/loadgen
+    launch: [ssh, -o, BatchMode=yes, "root@${secret:STAGING_HOST}"]
+  metrics:
+    - name: worker
+      source:
+        kind: command
+        command: "ssh -o BatchMode=yes root@${secret:STAGING_HOST} 'docker exec $(docker ps -q -f label=com.docker.compose.project=event-router-staging -f label=com.docker.compose.service=worker | head -1) /busybox/wget -qO- http://127.0.0.1:8081/metrics'"
+  processes:
+    - name: worker
+      pid:
+        kind: command
+        command: "ssh -o BatchMode=yes root@${secret:STAGING_HOST} 'docker inspect -f {{.State.Pid}} $(docker ps -q -f label=com.docker.compose.project=event-router-staging -f label=com.docker.compose.service=worker | head -1)'"
+      reader: [ssh, -o, BatchMode=yes, "root@${secret:STAGING_HOST}", cat]
+    - name: kafka
+      pid:
+        kind: command
+        command: "ssh -o BatchMode=yes root@${secret:STAGING_HOST} 'docker inspect -f {{.State.Pid}} $(docker ps -q -f label=com.docker.compose.project=event-router-staging -f label=com.docker.compose.service=kafka | head -1)'"
+      reader: [ssh, -o, BatchMode=yes, "root@${secret:STAGING_HOST}", cat]

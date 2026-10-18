@@ -1,0 +1,20 @@
+{
+  "name": "event-router-acceptance",
+  "private": true,
+  "type": "module",
+  "description": "Acceptance suite derived from the product spec (see TEST-CASES.md). ACC_TARGET=local|staging.",
+  "scripts": {
+    "test": "playwright test",
+    "test:local": "ACC_TARGET=local playwright test",
+    "test:staging": "ACC_TARGET=staging playwright test",
+    "catalogue": "node scripts/update-catalogue.mjs",
+    "acc:local": "ACC_TARGET=local playwright test; node scripts/update-catalogue.mjs",
+    "acc:staging": "ACC_TARGET=staging playwright test; node scripts/update-catalogue.mjs",
+    "report": "playwright show-report report/html"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "kafkajs": "2.2.4",
+    "kafkajs-snappy": "1.1.0"
+  }
+}

@@ -1,0 +1,8 @@
+.inner{min-width:var(--table-min-w)}
+.row{display:grid;grid-template-columns:var(--cols);gap:10px;padding:10px 14px;border-bottom:1px solid var(--ln);align-items:center}
+.row:last-child{border-bottom:none}
+.head{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em}
+.clickable{cursor:pointer}
+.clickable:hover{background:var(--p2)}
+.selected,.selected:hover{background:var(--p3)}
+.cell{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

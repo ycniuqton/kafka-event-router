@@ -1,0 +1,7 @@
+.grid{display:grid;grid-template-columns:110px 1fr;gap:8px 12px;font-size:12px;margin-bottom:16px}
+.key{color:var(--tx3)}
+.value{min-width:0;overflow-wrap:anywhere}
+.mono{font-family:var(--font-mono)}
+.sensitive{color:var(--warn)}
+.heading{font-size:12px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px}
+.empty{font-size:12px;color:var(--tx3)}

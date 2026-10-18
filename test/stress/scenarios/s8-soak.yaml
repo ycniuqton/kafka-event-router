@@ -1,0 +1,20 @@
+name: s8-soak
+description: >
+  S8 — soak at 70% of the S2 p12 max sustainable rate (edit the rate after S2; 20000 is a placeholder) for 8 h.
+  Watch for RSS / goroutine growth, lag drift, p99 drift and any loss.
+target: local
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 5m, minSamples: 6}
+sampleInterval: 15s
+defaults:
+  partitions: 12
+  routes: {count: 1}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+  drain: {timeout: 10m}
+cases:
+  - name: soak-8h
+    load:
+      steps: [{rate: 20000, duration: 8h}]

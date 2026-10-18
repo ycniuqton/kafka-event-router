@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Build Status</title>
+<style>:root{--bg:#f4f5f6;--p:#fff;--tx:#16191c;--tx2:#545c64;--ln:#e2e5e8;--ok:#1f8a4c;--warn:#b7791f;--err:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#0c0e10;--p:#121518;--tx:#e6e8eb;--tx2:#a1a8b0;--ln:#242a30;--ok:#4cc38a;--warn:#e0b050;--err:#ef6f5e}}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.5 system-ui,sans-serif}main{max-width:960px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px}h2{font-size:16px;margin-top:28px}section{background:var(--p);border:1px solid var(--ln);border-radius:8px;padding:12px 16px;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 8px;border-bottom:1px solid var(--ln);text-align:left}th{color:var(--tx2);font-weight:500}
+.bar{height:6px;background:var(--ln);border-radius:3px;overflow:hidden;min-width:80px}.bar i{display:block;height:100%;background:var(--ok)}
+.ok{color:var(--ok)}.warn{color:var(--warn)}code{font-family:ui-monospace,monospace;font-size:12px}li{margin:4px 0}</style></head><body><main>
+<h1>Kafka Event Router — build status after wave 3</h1><p style="color:var(--tx2)">2026-10-13 · MVP 447/575 plan items · P2 3/227 · P3 6/127</p>
+<section><h2>Checks</h2><ul><li class="ok">go build / vet / test ./... — 71 packages, 0 failures</li><li class="ok">E2E (kfake + real compiler + QuickJS): filter OrderPaid, mask email → 3 events to orders-public; failing JS step → 1 DLQ record</li><li class="ok">web: build, oxlint, vitest 77 tests; all 11 pages serve 200</li><li class="warn">Never run against real Postgres / Redis / Kafka / Vault (none installed); no browser check of the UI</li></ul></section>
+<section><h2>MVP progress per folder</h2><table><tr><th>Folder</th><th>MVP</th><th></th><th>P2</th><th>P3</th></tr>
+<tr><td>pipeline-engine</td><td>44/47</td><td><div class="bar"><i style="width:94%"></i></div></td><td>0/20</td><td>0/8</td></tr>
+<tr><td>platform-core</td><td>55/60</td><td><div class="bar"><i style="width:92%"></i></div></td><td>0/14</td><td>0/5</td></tr>
+<tr><td>monitoring</td><td>35/37</td><td><div class="bar"><i style="width:95%"></i></div></td><td>0/35</td><td>0/19</td></tr>
+<tr><td>route-runtime</td><td>54/61</td><td><div class="bar"><i style="width:89%"></i></div></td><td>0/6</td><td>0/9</td></tr>
+<tr><td>dead-letters</td><td>60/71</td><td><div class="bar"><i style="width:85%"></i></div></td><td>0/27</td><td>0/9</td></tr>
+<tr><td>js-sandbox</td><td>40/49</td><td><div class="bar"><i style="width:82%"></i></div></td><td>0/12</td><td>0/7</td></tr>
+<tr><td>access-control</td><td>34/42</td><td><div class="bar"><i style="width:81%"></i></div></td><td>0/34</td><td>0/16</td></tr>
+<tr><td>connections</td><td>41/58</td><td><div class="bar"><i style="width:71%"></i></div></td><td>0/15</td><td>0/5</td></tr>
+<tr><td>routes</td><td>38/55</td><td><div class="bar"><i style="width:69%"></i></div></td><td>0/22</td><td>0/7</td></tr>
+<tr><td>live-preview</td><td>43/65</td><td><div class="bar"><i style="width:66%"></i></div></td><td>0/18</td><td>0/6</td></tr>
+<tr><td>transform-studio</td><td>3/30</td><td><div class="bar"><i style="width:10%"></i></div></td><td>3/24</td><td>6/36</td></tr></table></section>
+<section><h2>Remaining MVP gaps</h2><ul><li><b>FE wired to real API</b>: screens run on mock data; plan FE items (builder steps, filter groups/expression parser, studio, history) not yet rebuilt against <code>http</code> services</li>
+<li><b>Infra-dependent tests</b>: Postgres repos, Testcontainers, chaos, Playwright e2e (RR-37/57/58/60/61, CN-58, LP-65, M-T-06/08)</li>
+<li>Worker needs <code>ROUTER_WORKLOAD_TOKEN</code> locally; two DLQ error-type lists in monitoring vs dlq/record; step-duration and JS-memory metrics registered but not recorded</li>
+<li>Engine throughput below 100k ev/s target; <code>-race</code> not run (no C compiler)</li></ul></section>
+</main></body></html>

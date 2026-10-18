@@ -1,0 +1,38 @@
+{
+  "id": "cm91dGVyLmRscS5vcmRlcnN8MHwx",
+  "routeId": "r3",
+  "routeName": "Order totals",
+  "failedAt": "2026-10-13T09:01:00Z",
+  "errorType": "decode_error",
+  "message": "m",
+  "step": "s",
+  "stepLabel": "s",
+  "branch": "main",
+  "versionNo": 1,
+  "source": {
+    "topic": "orders",
+    "partition": 0,
+    "offset": 1
+  },
+  "resolution": null,
+  "stack": "",
+  "key": {
+    "encoding": "utf8",
+    "data": "ord_1"
+  },
+  "value": {
+    "encoding": "avro",
+    "data": {
+      "amount": 19.5,
+      "items": [
+        "a",
+        "b"
+      ],
+      "note": null,
+      "orderId": "ord_1"
+    },
+    "schemaId": 1
+  },
+  "headers": [],
+  "masked": false
+}

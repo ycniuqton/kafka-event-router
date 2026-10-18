@@ -1,0 +1,24 @@
+{
+  "apiVersion": "router/v1",
+  "name": "library-lookup",
+  "source": { "connectionId": "c1", "topics": ["customers"], "format": { "type": "json" } },
+  "branches": [
+    {
+      "id": "recipe",
+      "transform": { "steps": [
+        { "id": "country", "kind": "lookup", "field": "value.country", "to": "value.countryName",
+          "ref": "countries", "version": 2, "defaultValue": "Unknown" },
+        { "id": "label", "kind": "set", "field": "value.label", "source": { "from": "formula", "expr": "lookup(\"countries@2\", value.country, \"n/a\")" } }
+      ] },
+      "destination": { "connectionId": "c1", "topic": "customers-enriched" }
+    },
+    {
+      "id": "js",
+      "transform": { "steps": [
+        { "id": "country", "kind": "js", "code": "golden:lookup-country" },
+        { "id": "label", "kind": "set", "field": "value.label", "source": { "from": "formula", "expr": "lookup(\"countries\", value.country, \"n/a\")" } }
+      ] },
+      "destination": { "connectionId": "c1", "topic": "customers-enriched" }
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+runtimeInfo:
+  get:
+    tags: [sandbox]
+    operationId: getSandboxRuntimeInfo
+    summary: JS sandbox limits, ctx helper docs, editor typings (d.ts) and safety rules for the Studio JS editor.
+    description: |
+      Static per deployment; cache it with `If-None-Match`. Requires `transform.read`.
+    parameters:
+      - name: If-None-Match
+        in: header
+        schema: { type: string }
+        description: ETag of a cached copy; a match answers 304 without a body.
+    responses:
+      "200":
+        description: The runtime info.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RuntimeInfo" } } }
+      "304":
+        description: The cached copy is current.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+check:
+  post:
+    tags: [sandbox]
+    operationId: checkSandboxCode
+    summary: Compile JS step or expression code in the sandbox and return editor diagnostics.
+    description: |
+      Syntax errors and a missing `transform` come back as diagnostics with 1-based line/column; no event
+      is run. Requires `transform.read`. Code above the sandbox source limit (64 KB) is 413.
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/SandboxCheckRequest" } } }
+    responses:
+      "200":
+        description: Diagnostics of the code (empty when it compiles).
+        content: { application/json: { schema: { $ref: "#/components/schemas/SandboxCheckResponse" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "413": { $ref: "../components/problem.yaml#/responses/PayloadTooLarge" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+components:
+  schemas:
+    SandboxCheckRequest:
+      type: object
+      required: [code]
+      additionalProperties: false
+      properties:
+        code: { type: string, example: "function transform(event, ctx) { return event; }" }
+        entry: { type: string, enum: [transform, predicate], default: transform }
+    SandboxDiagnostic:
+      type: object
+      required: [severity, message]
+      properties:
+        severity: { type: string, enum: [error, warning] }
+        message: { type: string, example: "SyntaxError: unexpected token in expression: ';'" }
+        line: { type: integer, minimum: 1, example: 3 }
+        column: { type: integer, minimum: 1, example: 7 }
+        path: { type: string, description: JSON Pointer of the step when known. }
+    SandboxCheckResponse:
+      type: object
+      required: [diagnostics]
+      properties:
+        diagnostics: { type: array, items: { $ref: "#/components/schemas/SandboxDiagnostic" } }
+    SandboxLimits:
+      type: object
+      required: [jsTimeoutMs, jsMemoryMb, jsMaxOutputKb]
+      properties:
+        jsTimeoutMs: { type: integer, example: 50 }
+        jsMemoryMb: { type: integer, example: 64 }
+        jsMaxOutputKb: { type: integer, example: 1024 }
+        logKbPerCall: { type: integer, example: 16 }
+    HelperDoc:
+      type: object
+      description: One `ctx` helper as shown in the editor info panel.
+      required: [name, signature, doc]
+      properties:
+        name: { type: string, example: hash }
+        signature: { type: string, example: "hash(value: string, algo?: 'sha256'): string" }
+        doc: { type: string }
+    SafetyRule:
+      type: object
+      required: [id, text]
+      properties:
+        id: { type: string }
+        text: { type: string }
+    RuntimeInfo:
+      type: object
+      required: [engine, determinismVersion, limits, helpers, typings, safetyRules]
+      properties:
+        engine: { type: string, example: quickjs_wazero }
+        determinismVersion: { type: integer, example: 1 }
+        limits:
+          type: object
+          required: [defaults, maxima]
+          properties:
+            defaults: { $ref: "#/components/schemas/SandboxLimits" }
+            maxima: { $ref: "#/components/schemas/SandboxLimits" }
+        helpers: { type: array, items: { $ref: "#/components/schemas/HelperDoc" } }
+        typings: { type: string, description: "TypeScript declarations of `event`, `ctx` and `transform` for Monaco." }
+        safetyRules: { type: array, items: { $ref: "#/components/schemas/SafetyRule" } }

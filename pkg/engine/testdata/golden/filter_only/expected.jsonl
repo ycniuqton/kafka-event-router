@@ -1,0 +1,2 @@
+{"branch":"main","topic":"orders-paid","key":null,"value":{"amount":150,"eventType":"OrderPaid","id":1},"headers":[]}
+{"branch":"main","topic":"orders-paid","key":null,"value":{"amount":100.5,"eventType":"OrderPaid","id":5},"headers":[]}

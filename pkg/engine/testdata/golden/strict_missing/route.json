@@ -1,0 +1,13 @@
+{
+  "apiVersion": "router/v1",
+  "name": "strict-missing",
+  "source": { "connectionId": "c1", "topics": ["events"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "lenient", "kind": "rename", "from": "value.a", "to": "value.b" },
+      { "id": "strict", "kind": "mask", "field": "value.secret", "style": "full", "strict": true }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "out" }
+  }]
+}

@@ -1,0 +1,23 @@
+{
+  "apiVersion": "router/v1",
+  "name": "avro-roundtrip",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "avro" } },
+  "branches": [
+    {
+      "id": "avro",
+      "transform": { "steps": [
+        { "id": "day", "kind": "set", "field": "value.day", "source": { "from": "formula", "expr": "formatDate(value.at, \"date\")" } },
+        { "id": "mask", "kind": "mask", "field": "value.email", "style": "email" }
+      ] },
+      "destination": { "connectionId": "c1", "topic": "orders-enriched" }
+    },
+    {
+      "id": "json",
+      "filter": { "type": "cond", "field": "value.status", "op": "eq", "value": "PAID" },
+      "transform": { "steps": [
+        { "id": "qty", "kind": "set", "field": "value.qty", "source": { "from": "formula", "expr": "concat(value.qty, \" pcs\")" } }
+      ] },
+      "destination": { "connectionId": "c1", "topic": "orders-paid-json", "format": { "type": "json" } }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+.page{padding:24px 28px 40px;display:flex;flex-direction:column;gap:14px;max-width:var(--page-w)}
+.relaxed{gap:20px}
+.header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.centered{align-items:center}
+.title{margin:0;font-size:20px;font-weight:600;letter-spacing:-0.01em}
+.subtitle{color:var(--tx3);font-size:12px}
+.spacer{flex:1}
+.actions{display:flex;gap:8px;align-items:center}
+.back{border:none;background:none;color:var(--tx2);cursor:pointer;padding:0;font-size:13px}
+.back:hover{color:var(--tx)}

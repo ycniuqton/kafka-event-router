@@ -1,0 +1,58 @@
+{
+  "hide the email, rename cust_id to customerId": [
+    {
+      "field": "value.customer.email",
+      "kind": "mask",
+      "style": "email"
+    },
+    {
+      "from": "value.cust_id",
+      "kind": "rename",
+      "to": "value.customerId"
+    }
+  ],
+  "mask card_number, hash customer.name, set status to 42": [
+    {
+      "field": "value.card_number",
+      "kind": "mask",
+      "style": "last4"
+    },
+    {
+      "field": "value.customer.name",
+      "kind": "hash"
+    },
+    {
+      "field": "value.status",
+      "kind": "set",
+      "source": {
+        "from": "constant",
+        "value": 42
+      }
+    }
+  ],
+  "only keep order_id and status": [
+    {
+      "fields": [
+        "value.order_id",
+        "value.status"
+      ],
+      "kind": "keep_only"
+    }
+  ],
+  "remove country and currency then key by order_id": [
+    {
+      "fields": [
+        "value.country",
+        "value.currency"
+      ],
+      "kind": "remove"
+    },
+    {
+      "kind": "set_key",
+      "source": {
+        "from": "field",
+        "path": "value.order_id"
+      }
+    }
+  ]
+}

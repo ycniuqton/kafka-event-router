@@ -1,0 +1,8 @@
+.tab{display:flex;flex-direction:column;gap:14px;max-width:880px}
+.section{display:flex;flex-direction:column;gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.footer{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.formError{flex:1;color:var(--err);font-size:12px}
+.saved{flex:1;color:var(--tx3);font-size:12px}
+.hint{margin:0;color:var(--tx2);font-size:12px;line-height:1.5}
+.notice{padding:10px 12px;border-radius:var(--radius-lg);background:color-mix(in oklch, var(--tone) 12%, transparent);color:var(--tx);font-size:12px;line-height:1.5;border-left:3px solid var(--tone)}

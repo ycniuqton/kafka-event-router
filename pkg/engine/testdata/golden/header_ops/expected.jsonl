@@ -1,0 +1,2 @@
+{"branch":"main","topic":"events-out","key":null,"value":{"data":{"tenant":"acme","v":1}},"headers":[{"key":"x-day","value":"2026-07-01"}]}
+{"branch":"main","topic":"events-out","key":null,"value":{"data":{"v":2}},"headers":[{"key":"x-day","value":"2026-01-01"}]}

@@ -1,0 +1,3 @@
+.tab{display:flex;flex-direction:column;gap:14px}
+.range{display:flex;justify-content:flex-end}
+.branches{display:flex;flex-direction:column;gap:8px}

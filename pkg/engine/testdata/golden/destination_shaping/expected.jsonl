@@ -1,0 +1,2 @@
+{"branch":"main","topic":"partner-orders","key":"o-77","value":{"amount":1,"orderId":"o-77","trace":"abc"},"headers":[{"key":"traceId","value":"abc"},{"key":"source","value":"router"}]}
+{"branch":"main","topic":"partner-orders","key":null,"value":{"trace":"def"},"headers":[{"key":"traceId","value":"def"},{"key":"source","value":"router"}]}

@@ -1,0 +1,14 @@
+{
+  "apiVersion": "router/v1",
+  "name": "keep-only-remove",
+  "source": { "connectionId": "c1", "topics": ["users"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "k", "kind": "keep_only", "fields": ["value.id", "value.profile.name", "value.tags", "value.missing"] },
+      { "id": "r", "kind": "remove", "fields": ["value.tags[0]"] },
+      { "id": "x", "kind": "remove", "fields": ["value.nothing"], "enabled": false, "strict": true }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "users-slim" }
+  }]
+}

@@ -1,0 +1,2557 @@
+{
+  "scenario": "S1",
+  "title": "engine-only step type x payload matrix",
+  "generatedAt": "2026-10-17T06:25:46.509815+00:00",
+  "env": {
+    "go": "go version go1.27.2 linux/amd64",
+    "cpuModel": "Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz",
+    "pinnedCpu": "0",
+    "gomaxprocs": 1,
+    "benchtime": "3s",
+    "count": "3"
+  },
+  "results": [
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-only/payload=1KB",
+      "shape": "filter-only",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 260.0,
+        "min": 260.0,
+        "max": 260.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 16848.0,
+        "min": 16848.0,
+        "max": 16848.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 15556.333333333334,
+        "min": 15363.0,
+        "max": 15699.0,
+        "stddevPct": 0.9113516553443073
+      },
+      "iterations": {
+        "mean": 57755.666666666664,
+        "min": 56574,
+        "max": 58936,
+        "stddevPct": 1.669590152162452
+      },
+      "mbPerSec": {
+        "mean": 16.366666666666667,
+        "min": 16.16,
+        "max": 16.52,
+        "stddevPct": 0.9270718270257469
+      },
+      "nsPerOp": {
+        "mean": 64286.666666666664,
+        "min": 63697.0,
+        "max": 65091.0,
+        "stddevPct": 0.9161988184233392
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-only/payload=10KB",
+      "shape": "filter-only",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2038.0,
+        "min": 2038.0,
+        "max": 2038.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 121712.0,
+        "min": 121712.0,
+        "max": 121712.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1959.0,
+        "min": 1898.0,
+        "max": 2042.0,
+        "stddevPct": 3.104195159879688
+      },
+      "iterations": {
+        "mean": 7162.666666666667,
+        "min": 5883,
+        "max": 8307,
+        "stddevPct": 13.88044512033747
+      },
+      "mbPerSec": {
+        "mean": 20.146666666666665,
+        "min": 19.52,
+        "max": 21.0,
+        "stddevPct": 3.1027685426157627
+      },
+      "nsPerOp": {
+        "mean": 510909.6666666667,
+        "min": 489716.0,
+        "max": 526818.0,
+        "stddevPct": 3.053589217193535
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-only/payload=100KB",
+      "shape": "filter-only",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19490.0,
+        "min": 19490.0,
+        "max": 19490.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1057665.3333333333,
+        "min": 1057665.0,
+        "max": 1057666.0,
+        "stddevPct": 4.457029137046171e-05
+      },
+      "eventsPerSec": {
+        "mean": 212.53333333333333,
+        "min": 210.7,
+        "max": 215.1,
+        "stddevPct": 0.8796928270000097
+      },
+      "iterations": {
+        "mean": 775.6666666666666,
+        "min": 760,
+        "max": 801,
+        "stddevPct": 2.3309070257534366
+      },
+      "mbPerSec": {
+        "mean": 21.776666666666667,
+        "min": 21.59,
+        "max": 22.04,
+        "stddevPct": 0.8795810744563676
+      },
+      "nsPerOp": {
+        "mean": 4705604.0,
+        "min": 4648715.0,
+        "max": 4746422.0,
+        "stddevPct": 0.8814144678839867
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=recipe-5/payload=1KB",
+      "shape": "recipe-5",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 276.0,
+        "min": 276.0,
+        "max": 276.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 18072.0,
+        "min": 18072.0,
+        "max": 18072.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 13090.0,
+        "min": 12505.0,
+        "max": 13494.0,
+        "stddevPct": 3.235730776754449
+      },
+      "iterations": {
+        "mean": 46697.666666666664,
+        "min": 44318,
+        "max": 49964,
+        "stddevPct": 5.115283959163648
+      },
+      "mbPerSec": {
+        "mean": 13.773333333333333,
+        "min": 13.16,
+        "max": 14.2,
+        "stddevPct": 3.2281378510228573
+      },
+      "nsPerOp": {
+        "mean": 76475.33333333333,
+        "min": 74105.0,
+        "max": 79966.0,
+        "stddevPct": 3.2958010867226455
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=recipe-5/payload=10KB",
+      "shape": "recipe-5",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2054.0,
+        "min": 2054.0,
+        "max": 2054.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 122936.0,
+        "min": 122936.0,
+        "max": 122936.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1928.0,
+        "min": 1917.0,
+        "max": 1949.0,
+        "stddevPct": 0.7704799431243843
+      },
+      "iterations": {
+        "mean": 7095.666666666667,
+        "min": 6530,
+        "max": 7849,
+        "stddevPct": 7.815890514022966
+      },
+      "mbPerSec": {
+        "mean": 19.830000000000002,
+        "min": 19.71,
+        "max": 20.05,
+        "stddevPct": 0.7855654022893208
+      },
+      "nsPerOp": {
+        "mean": 518716.0,
+        "min": 513076.0,
+        "max": 521690.0,
+        "stddevPct": 0.7692193787744077
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=recipe-5/payload=100KB",
+      "shape": "recipe-5",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19506.0,
+        "min": 19506.0,
+        "max": 19506.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1058888.0,
+        "min": 1058888.0,
+        "max": 1058888.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 208.23333333333335,
+        "min": 207.9,
+        "max": 208.5,
+        "stddevPct": 0.11979053583396569
+      },
+      "iterations": {
+        "mean": 727.6666666666666,
+        "min": 705,
+        "max": 754,
+        "stddevPct": 2.772077924032482
+      },
+      "mbPerSec": {
+        "mean": 21.333333333333332,
+        "min": 21.3,
+        "max": 21.36,
+        "stddevPct": 0.11692679333668318
+      },
+      "nsPerOp": {
+        "mean": 4802675.0,
+        "min": 4795578.0,
+        "max": 4810814.0,
+        "stddevPct": 0.13041812045936146
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=mapper/payload=1KB",
+      "shape": "mapper",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 319.0,
+        "min": 319.0,
+        "max": 319.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 23184.0,
+        "min": 23184.0,
+        "max": 23184.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 11305.333333333334,
+        "min": 11031.0,
+        "max": 11734.0,
+        "stddevPct": 2.715943836808304
+      },
+      "iterations": {
+        "mean": 41973.666666666664,
+        "min": 41347,
+        "max": 43126,
+        "stddevPct": 1.94375518252665
+      },
+      "mbPerSec": {
+        "mean": 11.89,
+        "min": 11.6,
+        "max": 12.34,
+        "stddevPct": 2.713151014731754
+      },
+      "nsPerOp": {
+        "mean": 88517.66666666667,
+        "min": 85221.0,
+        "max": 90655.0,
+        "stddevPct": 2.671829501336922
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=mapper/payload=10KB",
+      "shape": "mapper",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2333.0,
+        "min": 2333.0,
+        "max": 2333.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 169824.0,
+        "min": 169824.0,
+        "max": 169824.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1519.3333333333333,
+        "min": 1494.0,
+        "max": 1556.0,
+        "stddevPct": 1.7474600922983659
+      },
+      "iterations": {
+        "mean": 5115.666666666667,
+        "min": 4557,
+        "max": 5416,
+        "stddevPct": 7.729372458019716
+      },
+      "mbPerSec": {
+        "mean": 15.623333333333333,
+        "min": 15.36,
+        "max": 16.0,
+        "stddevPct": 1.749259739088513
+      },
+      "nsPerOp": {
+        "mean": 658388.3333333334,
+        "min": 642743.0,
+        "max": 669412.0,
+        "stddevPct": 1.7265586389121526
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=mapper/payload=100KB",
+      "shape": "mapper",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 22111.0,
+        "min": 22111.0,
+        "max": 22111.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1516000.0,
+        "min": 1516000.0,
+        "max": 1516000.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 158.0,
+        "min": 144.6,
+        "max": 167.4,
+        "stddevPct": 6.157157725071046
+      },
+      "iterations": {
+        "mean": 587.3333333333334,
+        "min": 574,
+        "max": 602,
+        "stddevPct": 1.952854771178803
+      },
+      "mbPerSec": {
+        "mean": 16.186666666666667,
+        "min": 14.81,
+        "max": 17.15,
+        "stddevPct": 6.171811913157189
+      },
+      "nsPerOp": {
+        "mean": 6355564.333333333,
+        "min": 5975315.0,
+        "max": 6917603.0,
+        "stddevPct": 6.381746653182881
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=js/payload=1KB",
+      "shape": "js",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 832.0,
+        "min": 832.0,
+        "max": 832.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 51849.0,
+        "min": 51831.0,
+        "max": 51870.0,
+        "stddevPct": 0.030979147918395743
+      },
+      "eventsPerSec": {
+        "mean": 813.5,
+        "min": 800.9,
+        "max": 821.4,
+        "stddevPct": 1.1069223758561701
+      },
+      "iterations": {
+        "mean": 2764.6666666666665,
+        "min": 2652,
+        "max": 2878,
+        "stddevPct": 3.3373035173336287
+      },
+      "mbPerSec": {
+        "mean": 0.8533333333333334,
+        "min": 0.84,
+        "max": 0.86,
+        "stddevPct": 1.1048543456039814
+      },
+      "nsPerOp": {
+        "mean": 1229410.6666666667,
+        "min": 1217448.0,
+        "max": 1248601.0,
+        "stddevPct": 1.1148926980591805
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=js/payload=10KB",
+      "shape": "js",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 4979.0,
+        "min": 4979.0,
+        "max": 4979.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 343771.6666666667,
+        "min": 343755.0,
+        "max": 343799.0,
+        "stddevPct": 0.0056671876957874005
+      },
+      "eventsPerSec": {
+        "mean": 132.4,
+        "min": 130.9,
+        "max": 133.3,
+        "stddevPct": 0.8064258498513077
+      },
+      "iterations": {
+        "mean": 464.3333333333333,
+        "min": 430,
+        "max": 487,
+        "stddevPct": 5.317123958978092
+      },
+      "mbPerSec": {
+        "mean": 1.3633333333333333,
+        "min": 1.35,
+        "max": 1.37,
+        "stddevPct": 0.6915469742655728
+      },
+      "nsPerOp": {
+        "mean": 7553220.0,
+        "min": 7501652.0,
+        "max": 7641027.0,
+        "stddevPct": 0.8261841549680573
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=js/payload=100KB",
+      "shape": "js",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 45710.666666666664,
+        "min": 45710.0,
+        "max": 45712.0,
+        "stddevPct": 0.0020625580643075215
+      },
+      "bytesPerOp": {
+        "mean": 3098359.3333333335,
+        "min": 3097858.0,
+        "max": 3099362.0,
+        "stddevPct": 0.022882833235064137
+      },
+      "eventsPerSec": {
+        "mean": 14.046666666666667,
+        "min": 13.15,
+        "max": 14.56,
+        "stddevPct": 4.529590026030386
+      },
+      "iterations": {
+        "mean": 47.333333333333336,
+        "min": 44,
+        "max": 49,
+        "stddevPct": 4.979625219623574
+      },
+      "mbPerSec": {
+        "mean": 1.4400000000000002,
+        "min": 1.35,
+        "max": 1.49,
+        "stddevPct": 4.428501497617819
+      },
+      "nsPerOp": {
+        "mean": 71333755.0,
+        "min": 68669156.0,
+        "max": 76020438.0,
+        "stddevPct": 4.660276212129909
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-1/payload=1KB",
+      "shape": "filter-1",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 260.0,
+        "min": 260.0,
+        "max": 260.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 16848.0,
+        "min": 16848.0,
+        "max": 16848.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 14437.333333333334,
+        "min": 14205.0,
+        "max": 14558.0,
+        "stddevPct": 1.1381988199023616
+      },
+      "iterations": {
+        "mean": 51228.0,
+        "min": 47762,
+        "max": 53120,
+        "stddevPct": 4.790872411595738
+      },
+      "mbPerSec": {
+        "mean": 15.186666666666667,
+        "min": 14.94,
+        "max": 15.31,
+        "stddevPct": 1.1485053074583988
+      },
+      "nsPerOp": {
+        "mean": 69276.33333333333,
+        "min": 68693.0,
+        "max": 70400.0,
+        "stddevPct": 1.147211728175748
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-1/payload=10KB",
+      "shape": "filter-1",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2038.0,
+        "min": 2038.0,
+        "max": 2038.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 121712.0,
+        "min": 121712.0,
+        "max": 121712.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1884.6666666666667,
+        "min": 1858.0,
+        "max": 1908.0,
+        "stddevPct": 1.0902748501890656
+      },
+      "iterations": {
+        "mean": 7124.0,
+        "min": 6241,
+        "max": 7689,
+        "stddevPct": 8.877955444043483
+      },
+      "mbPerSec": {
+        "mean": 19.383333333333336,
+        "min": 19.11,
+        "max": 19.62,
+        "stddevPct": 1.0824491818989694
+      },
+      "nsPerOp": {
+        "mean": 530715.6666666666,
+        "min": 524171.0,
+        "max": 538296.0,
+        "stddevPct": 1.0952800137140999
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-1/payload=100KB",
+      "shape": "filter-1",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19490.0,
+        "min": 19490.0,
+        "max": 19490.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1057665.0,
+        "min": 1057665.0,
+        "max": 1057665.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 203.29999999999998,
+        "min": 199.4,
+        "max": 205.9,
+        "stddevPct": 1.3813679140728339
+      },
+      "iterations": {
+        "mean": 732.6666666666666,
+        "min": 723,
+        "max": 741,
+        "stddevPct": 1.0111970323427149
+      },
+      "mbPerSec": {
+        "mean": 20.826666666666668,
+        "min": 20.43,
+        "max": 21.09,
+        "stddevPct": 1.3706590311143827
+      },
+      "nsPerOp": {
+        "mean": 4920398.666666667,
+        "min": 4857909.0,
+        "max": 5014598.0,
+        "stddevPct": 1.377610142268417
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-10/payload=1KB",
+      "shape": "filter-10",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 260.0,
+        "min": 260.0,
+        "max": 260.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 16848.0,
+        "min": 16848.0,
+        "max": 16848.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 13866.666666666666,
+        "min": 13391.0,
+        "max": 14438.0,
+        "stddevPct": 3.1208348722026638
+      },
+      "iterations": {
+        "mean": 48359.333333333336,
+        "min": 41734,
+        "max": 52970,
+        "stddevPct": 9.932310834518415
+      },
+      "mbPerSec": {
+        "mean": 14.589999999999998,
+        "min": 14.09,
+        "max": 15.19,
+        "stddevPct": 3.115874273928685
+      },
+      "nsPerOp": {
+        "mean": 72185.33333333333,
+        "min": 69260.0,
+        "max": 74680.0,
+        "stddevPct": 3.094206080554308
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-10/payload=10KB",
+      "shape": "filter-10",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2038.0,
+        "min": 2038.0,
+        "max": 2038.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 121712.0,
+        "min": 121712.0,
+        "max": 121712.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1832.3333333333333,
+        "min": 1772.0,
+        "max": 1874.0,
+        "stddevPct": 2.3840205371531127
+      },
+      "iterations": {
+        "mean": 6549.666666666667,
+        "min": 5794,
+        "max": 7842,
+        "stddevPct": 14.018742904361762
+      },
+      "mbPerSec": {
+        "mean": 18.846666666666668,
+        "min": 18.22,
+        "max": 19.28,
+        "stddevPct": 2.4079762893693015
+      },
+      "nsPerOp": {
+        "mean": 546062.0,
+        "min": 533509.0,
+        "max": 564357.0,
+        "stddevPct": 2.4231632811723425
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-10/payload=100KB",
+      "shape": "filter-10",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19490.0,
+        "min": 19490.0,
+        "max": 19490.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1057665.0,
+        "min": 1057665.0,
+        "max": 1057665.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 205.46666666666667,
+        "min": 204.8,
+        "max": 206.4,
+        "stddevPct": 0.33089029938953846
+      },
+      "iterations": {
+        "mean": 723.0,
+        "min": 720,
+        "max": 727,
+        "stddevPct": 0.40718122942959184
+      },
+      "mbPerSec": {
+        "mean": 21.05333333333333,
+        "min": 20.98,
+        "max": 21.15,
+        "stddevPct": 0.33883683595681485
+      },
+      "nsPerOp": {
+        "mean": 4866910.0,
+        "min": 4844877.0,
+        "max": 4883575.0,
+        "stddevPct": 0.3338459474877976
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-50/payload=1KB",
+      "shape": "filter-50",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 260.0,
+        "min": 260.0,
+        "max": 260.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 16848.0,
+        "min": 16848.0,
+        "max": 16848.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 14038.0,
+        "min": 13868.0,
+        "max": 14375.0,
+        "stddevPct": 1.6975219589588408
+      },
+      "iterations": {
+        "mean": 49983.666666666664,
+        "min": 48926,
+        "max": 50901,
+        "stddevPct": 1.6252781524001354
+      },
+      "mbPerSec": {
+        "mean": 14.766666666666666,
+        "min": 14.59,
+        "max": 15.12,
+        "stddevPct": 1.6919485057736783
+      },
+      "nsPerOp": {
+        "mean": 71255.0,
+        "min": 69566.0,
+        "max": 72109.0,
+        "stddevPct": 1.6761329621505314
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-50/payload=10KB",
+      "shape": "filter-50",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2038.0,
+        "min": 2038.0,
+        "max": 2038.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 121712.0,
+        "min": 121712.0,
+        "max": 121712.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1862.0,
+        "min": 1816.0,
+        "max": 1886.0,
+        "stddevPct": 1.7474306254081533
+      },
+      "iterations": {
+        "mean": 6216.0,
+        "min": 5730,
+        "max": 6588,
+        "stddevPct": 5.782382346239979
+      },
+      "mbPerSec": {
+        "mean": 19.153333333333332,
+        "min": 18.68,
+        "max": 19.4,
+        "stddevPct": 1.7479818349446157
+      },
+      "nsPerOp": {
+        "mean": 537180.0,
+        "min": 530194.0,
+        "max": 550691.0,
+        "stddevPct": 1.7788401053206269
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=filter-50/payload=100KB",
+      "shape": "filter-50",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19490.0,
+        "min": 19490.0,
+        "max": 19490.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1057665.0,
+        "min": 1057665.0,
+        "max": 1057665.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 201.29999999999998,
+        "min": 197.6,
+        "max": 205.1,
+        "stddevPct": 1.5214498590276757
+      },
+      "iterations": {
+        "mean": 712.3333333333334,
+        "min": 681,
+        "max": 729,
+        "stddevPct": 3.112454683821411
+      },
+      "mbPerSec": {
+        "mean": 20.62666666666667,
+        "min": 20.25,
+        "max": 21.01,
+        "stddevPct": 1.504385148382295
+      },
+      "nsPerOp": {
+        "mean": 4968537.0,
+        "min": 4876130.0,
+        "max": 5059954.0,
+        "stddevPct": 1.5104868632337578
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-1/payload=1KB",
+      "shape": "steps-1",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 263.0,
+        "min": 263.0,
+        "max": 263.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 17232.0,
+        "min": 17232.0,
+        "max": 17232.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 14117.666666666666,
+        "min": 14030.0,
+        "max": 14195.0,
+        "stddevPct": 0.47993836471919804
+      },
+      "iterations": {
+        "mean": 50079.666666666664,
+        "min": 49434,
+        "max": 50793,
+        "stddevPct": 1.1119659187710236
+      },
+      "mbPerSec": {
+        "mean": 14.85,
+        "min": 14.76,
+        "max": 14.93,
+        "stddevPct": 0.4697744003693902
+      },
+      "nsPerOp": {
+        "mean": 70835.0,
+        "min": 70448.0,
+        "max": 71274.0,
+        "stddevPct": 0.4788760239354266
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-1/payload=10KB",
+      "shape": "steps-1",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2041.0,
+        "min": 2041.0,
+        "max": 2041.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 122096.0,
+        "min": 122096.0,
+        "max": 122096.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1885.0,
+        "min": 1872.0,
+        "max": 1906.0,
+        "stddevPct": 0.7951663008281915
+      },
+      "iterations": {
+        "mean": 7053.333333333333,
+        "min": 6084,
+        "max": 8146,
+        "stddevPct": 11.998770965371536
+      },
+      "mbPerSec": {
+        "mean": 19.393333333333334,
+        "min": 19.26,
+        "max": 19.61,
+        "stddevPct": 0.7969764949721274
+      },
+      "nsPerOp": {
+        "mean": 530461.6666666666,
+        "min": 524569.0,
+        "max": 534128.0,
+        "stddevPct": 0.7932734253307603
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-1/payload=100KB",
+      "shape": "steps-1",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19493.0,
+        "min": 19493.0,
+        "max": 19493.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1058049.0,
+        "min": 1058049.0,
+        "max": 1058049.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 201.9333333333333,
+        "min": 196.4,
+        "max": 206.5,
+        "stddevPct": 2.069782101121382
+      },
+      "iterations": {
+        "mean": 716.3333333333334,
+        "min": 676,
+        "max": 744,
+        "stddevPct": 4.072126543910503
+      },
+      "mbPerSec": {
+        "mean": 20.69,
+        "min": 20.12,
+        "max": 21.16,
+        "stddevPct": 2.0803583635884193
+      },
+      "nsPerOp": {
+        "mean": 4954506.666666667,
+        "min": 4842129.0,
+        "max": 5092787.0,
+        "stddevPct": 2.098229977567445
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-5/payload=1KB",
+      "shape": "steps-5",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 278.0,
+        "min": 278.0,
+        "max": 278.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 18368.0,
+        "min": 18368.0,
+        "max": 18368.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 13222.666666666666,
+        "min": 12699.0,
+        "max": 13746.0,
+        "stddevPct": 3.232600774699905
+      },
+      "iterations": {
+        "mean": 45540.666666666664,
+        "min": 43220,
+        "max": 47202,
+        "stddevPct": 3.7135542613803696
+      },
+      "mbPerSec": {
+        "mean": 13.910000000000002,
+        "min": 13.36,
+        "max": 14.46,
+        "stddevPct": 3.2284192631937443
+      },
+      "nsPerOp": {
+        "mean": 75706.33333333333,
+        "min": 72747.0,
+        "max": 78747.0,
+        "stddevPct": 3.236406643715576
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-5/payload=10KB",
+      "shape": "steps-5",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2056.0,
+        "min": 2056.0,
+        "max": 2056.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 123232.0,
+        "min": 123232.0,
+        "max": 123232.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1789.6666666666667,
+        "min": 1657.0,
+        "max": 1865.0,
+        "stddevPct": 5.257787863278109
+      },
+      "iterations": {
+        "mean": 6212.333333333333,
+        "min": 6052,
+        "max": 6511,
+        "stddevPct": 3.4025882009508965
+      },
+      "mbPerSec": {
+        "mean": 18.403333333333332,
+        "min": 17.04,
+        "max": 19.18,
+        "stddevPct": 5.255231749046874
+      },
+      "nsPerOp": {
+        "mean": 560377.6666666666,
+        "min": 536171.0,
+        "max": 603430.0,
+        "stddevPct": 5.446535577824906
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-5/payload=100KB",
+      "shape": "steps-5",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19508.0,
+        "min": 19508.0,
+        "max": 19508.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1059184.6666666667,
+        "min": 1059184.0,
+        "max": 1059185.0,
+        "stddevPct": 4.450635810982583e-05
+      },
+      "eventsPerSec": {
+        "mean": 205.4,
+        "min": 203.3,
+        "max": 209.5,
+        "stddevPct": 1.4115994305733595
+      },
+      "iterations": {
+        "mean": 729.3333333333334,
+        "min": 714,
+        "max": 739,
+        "stddevPct": 1.5033714993965746
+      },
+      "mbPerSec": {
+        "mean": 21.046666666666667,
+        "min": 20.83,
+        "max": 21.47,
+        "stddevPct": 1.4224091301436617
+      },
+      "nsPerOp": {
+        "mean": 4868827.666666667,
+        "min": 4772565.0,
+        "max": 4917665.0,
+        "stddevPct": 1.3980865593329483
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-20/payload=1KB",
+      "shape": "steps-20",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 331.0,
+        "min": 331.0,
+        "max": 331.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 24136.0,
+        "min": 24136.0,
+        "max": 24136.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 9971.666666666666,
+        "min": 9933.0,
+        "max": 10041.0,
+        "stddevPct": 0.49274346040951444
+      },
+      "iterations": {
+        "mean": 36649.666666666664,
+        "min": 35605,
+        "max": 37197,
+        "stddevPct": 2.016315366375885
+      },
+      "mbPerSec": {
+        "mean": 10.49,
+        "min": 10.45,
+        "max": 10.56,
+        "stddevPct": 0.47345613046556767
+      },
+      "nsPerOp": {
+        "mean": 100285.33333333333,
+        "min": 99587.0,
+        "max": 100671.0,
+        "stddevPct": 0.4932872302415668
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-20/payload=10KB",
+      "shape": "steps-20",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2109.0,
+        "min": 2109.0,
+        "max": 2109.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 129000.0,
+        "min": 129000.0,
+        "max": 129000.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1758.6666666666667,
+        "min": 1739.0,
+        "max": 1794.0,
+        "stddevPct": 1.4236779346636788
+      },
+      "iterations": {
+        "mean": 5807.333333333333,
+        "min": 5744,
+        "max": 5844,
+        "stddevPct": 0.7743506809339938
+      },
+      "mbPerSec": {
+        "mean": 18.086666666666666,
+        "min": 17.88,
+        "max": 18.45,
+        "stddevPct": 1.424945210473845
+      },
+      "nsPerOp": {
+        "mean": 568737.0,
+        "min": 557407.0,
+        "max": 575183.0,
+        "stddevPct": 1.413106279082528
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-20/payload=100KB",
+      "shape": "steps-20",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19561.0,
+        "min": 19561.0,
+        "max": 19561.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1064952.0,
+        "min": 1064952.0,
+        "max": 1064952.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 201.63333333333333,
+        "min": 197.5,
+        "max": 206.5,
+        "stddevPct": 1.8402936088709865
+      },
+      "iterations": {
+        "mean": 735.0,
+        "min": 733,
+        "max": 736,
+        "stddevPct": 0.1924100084861354
+      },
+      "mbPerSec": {
+        "mean": 20.66,
+        "min": 20.24,
+        "max": 21.16,
+        "stddevPct": 1.8384536344942426
+      },
+      "nsPerOp": {
+        "mean": 4961132.333333333,
+        "min": 4842923.0,
+        "max": 5062837.0,
+        "stddevPct": 1.8248832523856593
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-5-js/payload=1KB",
+      "shape": "steps-5-js",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 856.0,
+        "min": 856.0,
+        "max": 856.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 53838.0,
+        "min": 53833.0,
+        "max": 53845.0,
+        "stddevPct": 0.009471041854438844
+      },
+      "eventsPerSec": {
+        "mean": 783.8666666666667,
+        "min": 767.9,
+        "max": 792.4,
+        "stddevPct": 1.4414525227198156
+      },
+      "iterations": {
+        "mean": 2610.6666666666665,
+        "min": 2538,
+        "max": 2694,
+        "stddevPct": 2.4565299558357996
+      },
+      "mbPerSec": {
+        "mean": 0.8233333333333333,
+        "min": 0.81,
+        "max": 0.83,
+        "stddevPct": 1.1451121962535131
+      },
+      "nsPerOp": {
+        "mean": 1275958.3333333333,
+        "min": 1261986.0,
+        "max": 1302178.0,
+        "stddevPct": 1.4540814944851643
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-5-js/payload=10KB",
+      "shape": "steps-5-js",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 5004.0,
+        "min": 5004.0,
+        "max": 5004.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 345395.6666666667,
+        "min": 345387.0,
+        "max": 345402.0,
+        "stddevPct": 0.0018361837767160224
+      },
+      "eventsPerSec": {
+        "mean": 133.76666666666665,
+        "min": 130.4,
+        "max": 136.2,
+        "stddevPct": 1.8375977138885187
+      },
+      "iterations": {
+        "mean": 475.3333333333333,
+        "min": 463,
+        "max": 494,
+        "stddevPct": 2.824267961515045
+      },
+      "mbPerSec": {
+        "mean": 1.3766666666666667,
+        "min": 1.34,
+        "max": 1.4,
+        "stddevPct": 1.906539436806728
+      },
+      "nsPerOp": {
+        "mean": 7479301.0,
+        "min": 7342648.0,
+        "max": 7671063.0,
+        "stddevPct": 1.8667914995358221
+      }
+    },
+    {
+      "layer": "engine",
+      "benchmark": "BenchmarkS1Engine/shape=steps-5-js/payload=100KB",
+      "shape": "steps-5-js",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 45738.333333333336,
+        "min": 45738.0,
+        "max": 45739.0,
+        "stddevPct": 0.0010306552216398316
+      },
+      "bytesPerOp": {
+        "mean": 3100747.3333333335,
+        "min": 3100390.0,
+        "max": 3100926.0,
+        "stddevPct": 0.008148771763108065
+      },
+      "eventsPerSec": {
+        "mean": 14.233333333333334,
+        "min": 14.0,
+        "max": 14.4,
+        "stddevPct": 1.194149768991286
+      },
+      "iterations": {
+        "mean": 44.666666666666664,
+        "min": 44,
+        "max": 46,
+        "stddevPct": 2.1107665110046194
+      },
+      "mbPerSec": {
+        "mean": 1.46,
+        "min": 1.43,
+        "max": 1.48,
+        "stddevPct": 1.4796211640200607
+      },
+      "nsPerOp": {
+        "mean": 70256776.0,
+        "min": 69438020.0,
+        "max": 71419665.0,
+        "stddevPct": 1.2024571384364329
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=filter-only/payload=1KB",
+      "shape": "filter-only",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 263.0,
+        "min": 263.0,
+        "max": 263.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 17056.0,
+        "min": 17056.0,
+        "max": 17056.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 15490.0,
+        "min": 15395.0,
+        "max": 15570.0,
+        "stddevPct": 0.4662782156234227
+      },
+      "iterations": {
+        "mean": 53560.333333333336,
+        "min": 51145,
+        "max": 55024,
+        "stddevPct": 3.2125300539369372
+      },
+      "mbPerSec": {
+        "mean": 16.296666666666667,
+        "min": 16.2,
+        "max": 16.38,
+        "stddevPct": 0.4546146608896058
+      },
+      "nsPerOp": {
+        "mean": 64560.0,
+        "min": 64227.0,
+        "max": 64956.0,
+        "stddevPct": 0.4661223094042886
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=filter-only/payload=10KB",
+      "shape": "filter-only",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2041.0,
+        "min": 2041.0,
+        "max": 2041.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 121920.0,
+        "min": 121920.0,
+        "max": 121920.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 2011.6666666666667,
+        "min": 2003.0,
+        "max": 2020.0,
+        "stddevPct": 0.34519745908864385
+      },
+      "iterations": {
+        "mean": 7287.0,
+        "min": 6668,
+        "max": 7915,
+        "stddevPct": 6.986762643799668
+      },
+      "mbPerSec": {
+        "mean": 20.69,
+        "min": 20.6,
+        "max": 20.78,
+        "stddevPct": 0.3551700932020069
+      },
+      "nsPerOp": {
+        "mean": 497112.6666666667,
+        "min": 494993.0,
+        "max": 499220.0,
+        "stddevPct": 0.3471421422045156
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=filter-only/payload=100KB",
+      "shape": "filter-only",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19493.0,
+        "min": 19493.0,
+        "max": 19493.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1057872.0,
+        "min": 1057872.0,
+        "max": 1057872.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 224.73333333333335,
+        "min": 220.9,
+        "max": 229.6,
+        "stddevPct": 1.6135299618478076
+      },
+      "iterations": {
+        "mean": 796.3333333333334,
+        "min": 746,
+        "max": 830,
+        "stddevPct": 4.553544999069874
+      },
+      "mbPerSec": {
+        "mean": 23.03,
+        "min": 22.64,
+        "max": 23.53,
+        "stddevPct": 1.6134313152530007
+      },
+      "nsPerOp": {
+        "mean": 4450151.0,
+        "min": 4354471.0,
+        "max": 4525944.0,
+        "stddevPct": 1.6044847349728195
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=recipe-5/payload=1KB",
+      "shape": "recipe-5",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 279.0,
+        "min": 279.0,
+        "max": 279.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 18264.0,
+        "min": 18264.0,
+        "max": 18264.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 13868.333333333334,
+        "min": 13727.0,
+        "max": 14119.0,
+        "stddevPct": 1.2815446376504078
+      },
+      "iterations": {
+        "mean": 51678.666666666664,
+        "min": 49472,
+        "max": 52804,
+        "stddevPct": 3.0195290566071655
+      },
+      "mbPerSec": {
+        "mean": 14.586666666666666,
+        "min": 14.44,
+        "max": 14.85,
+        "stddevPct": 1.2792993603545149
+      },
+      "nsPerOp": {
+        "mean": 72118.66666666667,
+        "min": 70826.0,
+        "max": 72849.0,
+        "stddevPct": 1.2709925882061928
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=recipe-5/payload=10KB",
+      "shape": "recipe-5",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2057.0,
+        "min": 2057.0,
+        "max": 2057.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 123128.0,
+        "min": 123128.0,
+        "max": 123128.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1958.3333333333333,
+        "min": 1944.0,
+        "max": 1970.0,
+        "stddevPct": 0.5505008214058291
+      },
+      "iterations": {
+        "mean": 7061.666666666667,
+        "min": 6391,
+        "max": 8378,
+        "stddevPct": 13.181649952017954
+      },
+      "mbPerSec": {
+        "mean": 20.14,
+        "min": 19.99,
+        "max": 20.26,
+        "stddevPct": 0.5573471777716964
+      },
+      "nsPerOp": {
+        "mean": 510673.0,
+        "min": 507578.0,
+        "max": 514474.0,
+        "stddevPct": 0.5598884815071213
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=recipe-5/payload=100KB",
+      "shape": "recipe-5",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 19509.0,
+        "min": 19509.0,
+        "max": 19509.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1059080.0,
+        "min": 1059080.0,
+        "max": 1059080.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 223.36666666666667,
+        "min": 222.4,
+        "max": 224.3,
+        "stddevPct": 0.3474241673428697
+      },
+      "iterations": {
+        "mean": 801.6666666666666,
+        "min": 771,
+        "max": 820,
+        "stddevPct": 2.722143418433748
+      },
+      "mbPerSec": {
+        "mean": 22.883333333333336,
+        "min": 22.78,
+        "max": 22.98,
+        "stddevPct": 0.3574025971270284
+      },
+      "nsPerOp": {
+        "mean": 4477359.0,
+        "min": 4458562.0,
+        "max": 4497018.0,
+        "stddevPct": 0.3509082925400024
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=mapper/payload=1KB",
+      "shape": "mapper",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 322.0,
+        "min": 322.0,
+        "max": 322.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 23376.0,
+        "min": 23376.0,
+        "max": 23376.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 11738.333333333334,
+        "min": 11596.0,
+        "max": 11972.0,
+        "stddevPct": 1.4187188455765576
+      },
+      "iterations": {
+        "mean": 42330.333333333336,
+        "min": 40344,
+        "max": 45160,
+        "stddevPct": 4.853653365569497
+      },
+      "mbPerSec": {
+        "mean": 12.346666666666666,
+        "min": 12.2,
+        "max": 12.59,
+        "stddevPct": 1.403368403711343
+      },
+      "nsPerOp": {
+        "mean": 85209.66666666667,
+        "min": 83532.0,
+        "max": 86238.0,
+        "stddevPct": 1.403992442844556
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=mapper/payload=10KB",
+      "shape": "mapper",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2336.0,
+        "min": 2336.0,
+        "max": 2336.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 170016.0,
+        "min": 170016.0,
+        "max": 170016.0,
+        "stddevPct": 0.0
+      },
+      "eventsPerSec": {
+        "mean": 1550.6666666666667,
+        "min": 1490.0,
+        "max": 1587.0,
+        "stddevPct": 2.7843920748857194
+      },
+      "iterations": {
+        "mean": 5276.0,
+        "min": 5072,
+        "max": 5408,
+        "stddevPct": 2.773213215795585
+      },
+      "mbPerSec": {
+        "mean": 15.946666666666667,
+        "min": 15.32,
+        "max": 16.32,
+        "stddevPct": 2.7956945647659666
+      },
+      "nsPerOp": {
+        "mean": 645423.3333333334,
+        "min": 630047.0,
+        "max": 671205.0,
+        "stddevPct": 2.8420106385591923
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=mapper/payload=100KB",
+      "shape": "mapper",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 22114.0,
+        "min": 22114.0,
+        "max": 22114.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 1516198.3333333333,
+        "min": 1516198.0,
+        "max": 1516199.0,
+        "stddevPct": 3.1091217450071835e-05
+      },
+      "eventsPerSec": {
+        "mean": 154.86666666666667,
+        "min": 146.8,
+        "max": 165.0,
+        "stddevPct": 4.889667287293804
+      },
+      "iterations": {
+        "mean": 571.6666666666666,
+        "min": 564,
+        "max": 578,
+        "stddevPct": 1.0133030435558465
+      },
+      "mbPerSec": {
+        "mean": 15.87,
+        "min": 15.04,
+        "max": 16.91,
+        "stddevPct": 4.900641113229376
+      },
+      "nsPerOp": {
+        "mean": 6471967.333333333,
+        "min": 6060176.0,
+        "max": 6813032.0,
+        "stddevPct": 4.811433873698876
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=js/payload=1KB",
+      "shape": "js",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 838.0,
+        "min": 838.0,
+        "max": 838.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 52094.0,
+        "min": 52086.0,
+        "max": 52104.0,
+        "stddevPct": 0.014365022408622648
+      },
+      "eventsPerSec": {
+        "mean": 789.0333333333333,
+        "min": 741.4,
+        "max": 812.9,
+        "stddevPct": 4.268752197012176
+      },
+      "iterations": {
+        "mean": 2758.0,
+        "min": 2512,
+        "max": 2911,
+        "stddevPct": 6.369269501957066
+      },
+      "mbPerSec": {
+        "mean": 0.8333333333333334,
+        "min": 0.78,
+        "max": 0.86,
+        "stddevPct": 4.525483399593902
+      },
+      "nsPerOp": {
+        "mean": 1269770.3333333333,
+        "min": 1230200.0,
+        "max": 1348803.0,
+        "stddevPct": 4.401154323833774
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=js/payload=10KB",
+      "shape": "js",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 4985.0,
+        "min": 4985.0,
+        "max": 4985.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 344033.3333333333,
+        "min": 344011.0,
+        "max": 344058.0,
+        "stddevPct": 0.005597851690981219
+      },
+      "eventsPerSec": {
+        "mean": 129.29999999999998,
+        "min": 123.6,
+        "max": 132.8,
+        "stddevPct": 3.144083771778635
+      },
+      "iterations": {
+        "mean": 460.3333333333333,
+        "min": 438,
+        "max": 486,
+        "stddevPct": 4.287580403501075
+      },
+      "mbPerSec": {
+        "mean": 1.33,
+        "min": 1.27,
+        "max": 1.37,
+        "stddevPct": 3.2484915781493062
+      },
+      "nsPerOp": {
+        "mean": 7740534.666666667,
+        "min": 7527927.0,
+        "max": 8091418.0,
+        "stddevPct": 3.2292453952162887
+      }
+    },
+    {
+      "layer": "runner",
+      "benchmark": "BenchmarkS1RecordProcessor/shape=js/payload=100KB",
+      "shape": "js",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 45716.333333333336,
+        "min": 45716.0,
+        "max": 45717.0,
+        "stddevPct": 0.0010311512022494478
+      },
+      "bytesPerOp": {
+        "mean": 3098491.6666666665,
+        "min": 3098114.0,
+        "max": 3098928.0,
+        "stddevPct": 0.01080827013759575
+      },
+      "eventsPerSec": {
+        "mean": 14.206666666666665,
+        "min": 13.56,
+        "max": 14.87,
+        "stddevPct": 3.7653807699175426
+      },
+      "iterations": {
+        "mean": 47.666666666666664,
+        "min": 46,
+        "max": 49,
+        "stddevPct": 2.6165436271146443
+      },
+      "mbPerSec": {
+        "mean": 1.4533333333333331,
+        "min": 1.39,
+        "max": 1.52,
+        "stddevPct": 3.655361800575515
+      },
+      "nsPerOp": {
+        "mean": 70477309.66666667,
+        "min": 67235265.0,
+        "max": 73726999.0,
+        "stddevPct": 3.760422798447399
+      }
+    },
+    {
+      "layer": "sandbox",
+      "benchmark": "BenchmarkS1SandboxCall/payload=1KB",
+      "shape": "js",
+      "payload": "1KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 522.0,
+        "min": 522.0,
+        "max": 522.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 29151.333333333332,
+        "min": 29145.0,
+        "max": 29158.0,
+        "stddevPct": 0.018223726130890787
+      },
+      "eventsPerSec": {
+        "mean": 879.0,
+        "min": 853.7,
+        "max": 895.4,
+        "stddevPct": 2.064838581268019
+      },
+      "iterations": {
+        "mean": 3180.0,
+        "min": 3067,
+        "max": 3298,
+        "stddevPct": 2.967660562868937
+      },
+      "nsPerOp": {
+        "mean": 1138146.6666666667,
+        "min": 1116819.0,
+        "max": 1171327.0,
+        "stddevPct": 2.0892535107353196
+      }
+    },
+    {
+      "layer": "sandbox",
+      "benchmark": "BenchmarkS1SandboxCall/payload=10KB",
+      "shape": "js",
+      "payload": "10KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 2536.0,
+        "min": 2536.0,
+        "max": 2536.0,
+        "stddevPct": 0.0
+      },
+      "bytesPerOp": {
+        "mean": 173455.33333333334,
+        "min": 173450.0,
+        "max": 173461.0,
+        "stddevPct": 0.002592547853478521
+      },
+      "eventsPerSec": {
+        "mean": 141.86666666666667,
+        "min": 136.4,
+        "max": 145.9,
+        "stddevPct": 2.825612214831166
+      },
+      "iterations": {
+        "mean": 524.6666666666666,
+        "min": 510,
+        "max": 532,
+        "stddevPct": 1.9766644455024203
+      },
+      "nsPerOp": {
+        "mean": 7053568.0,
+        "min": 6853542.0,
+        "max": 7330850.0,
+        "stddevPct": 2.8690835122450338
+      }
+    },
+    {
+      "layer": "sandbox",
+      "benchmark": "BenchmarkS1SandboxCall/payload=100KB",
+      "shape": "js",
+      "payload": "100KB",
+      "runs": 3,
+      "allocsPerOp": {
+        "mean": 22326.333333333332,
+        "min": 22326.0,
+        "max": 22327.0,
+        "stddevPct": 0.0021114283019649373
+      },
+      "bytesPerOp": {
+        "mean": 1571541.6666666667,
+        "min": 1570686.0,
+        "max": 1572381.0,
+        "stddevPct": 0.04403810870727685
+      },
+      "eventsPerSec": {
+        "mean": 15.32,
+        "min": 15.2,
+        "max": 15.45,
+        "stddevPct": 0.6677984879557355
+      },
+      "iterations": {
+        "mean": 51.333333333333336,
+        "min": 48,
+        "max": 55,
+        "stddevPct": 5.585925498079628
+      },
+      "nsPerOp": {
+        "mean": 65280413.333333336,
+        "min": 64742584.0,
+        "max": 65796310.0,
+        "stddevPct": 0.6594034606170505
+      }
+    }
+  ],
+  "profiles": {
+    "js-1KB": {
+      "profile": "/home/dev/project/event_router/test/stress/results/s1-profiles/js-1KB.cpu.pprof",
+      "topFlat": [
+        {
+          "flat": "5.84s",
+          "flatPct": 37.44,
+          "sumPct": 37.44,
+          "cum": "5.84s",
+          "cumPct": 37.44,
+          "function": "runtime._ExternalCode"
+        },
+        {
+          "flat": "1.44s",
+          "flatPct": 9.23,
+          "sumPct": 46.67,
+          "cum": "2.55s",
+          "cumPct": 16.35,
+          "function": "github.com/tetratelabs/wazero/internal/engine/wazevo.(*callEngine).callWithStack"
+        },
+        {
+          "flat": "0.49s",
+          "flatPct": 3.14,
+          "sumPct": 49.81,
+          "cum": "0.49s",
+          "cumPct": 3.14,
+          "function": "runtime.memmove"
+        },
+        {
+          "flat": "0.32s",
+          "flatPct": 2.05,
+          "sumPct": 51.86,
+          "cum": "0.32s",
+          "cumPct": 2.05,
+          "function": "github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.afterGoFunctionCallEntrypoint"
+        },
+        {
+          "flat": "0.25s",
+          "flatPct": 1.6,
+          "sumPct": 53.46,
+          "cum": "0.26s",
+          "cumPct": 1.67,
+          "function": "github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.(*instruction).Uses"
+        },
+        {
+          "flat": "0.20s",
+          "flatPct": 1.28,
+          "sumPct": 54.74,
+          "cum": "0.93s",
+          "cumPct": 5.96,
+          "function": "github.com/tetratelabs/wazero/internal/engine/wazevo/backend/regalloc.(*Allocator[go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.instruction,go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.labelPosition,go.shape.*uint8]).allocBlock"
+        },
+        {
+          "flat": "0.19s",
+          "flatPct": 1.22,
+          "sumPct": 55.96,
+          "cum": "0.19s",
+          "cumPct": 1.22,
+          "function": "runtime.asyncPreempt"
+        },
+        {
+          "flat": "0.18s",
+          "flatPct": 1.15,
+          "sumPct": 57.12,
+          "cum": "0.18s",
+          "cumPct": 1.15,
+          "function": "github.com/tetratelabs/wazero/internal/wasm.(*ModuleInstance).FailIfClosed"
+        },
+        {
+          "flat": "0.15s",
+          "flatPct": 0.96,
+          "sumPct": 58.08,
+          "cum": "0.15s",
+          "cumPct": 0.96,
+          "function": "runtime.memclrNoHeapPointers"
+        },
+        {
+          "flat": "0.13s",
+          "flatPct": 0.83,
+          "sumPct": 58.91,
+          "cum": "0.15s",
+          "cumPct": 0.96,
+          "function": "github.com/tetratelabs/wazero/internal/engine/wazevo/ssa.(*dominatorSparseTree).buildSparseTable"
+        },
+        {
+          "flat": "0.11s",
+          "flatPct": 0.71,
+          "sumPct": 59.62,
+          "cum": "0.12s",
+          "cumPct": 0.77,
+          "function": "github.com/tetratelabs/wazero/internal/engine/wazevo/backend/regalloc.(*regInUseSet[go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.instruction,go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.labelPosition,go.shape.*uint8]).range_ (inline)"
+        },
+        {
+          "flat": "0.10s",
+          "flatPct": 0.64,
+          "sumPct": 60.26,
+          "cum": "0.12s",
+          "cumPct": 0.77,
+          "function": "runtime.tryDeferToSpanScan"
+        },
+        {
+          "flat": "0.09s",
+          "flatPct": 0.58,
+          "sumPct": 60.83,
+          "cum": "0.09s",
+          "cumPct": 0.58,
+          "function": "github.com/tetratelabs/wazero/internal/engine/wazevo/wazevoapi.VarLength[go.shape.uint64].View"
+        },
+        {
+          "flat": "0.08s",
+          "flatPct": 0.51,
+          "sumPct": 61.35,
+          "cum": "0.08s",
+          "cumPct": 0.51,
+          "function": "internal/runtime/maps.ctrlGroup.matchH2"
+        },
+        {
+          "flat": "0.08s",
+          "flatPct": 0.51,
+          "sumPct": 61.86,
+          "cum": "0.28s",
+          "cumPct": 1.79,
+          "function": "runtime.newproc1"
+        }
+      ],
+      "topCum": [
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 0.0,
+          "cum": "8.75s",
+          "cumPct": 56.09,
+          "function": "github.com/eventrouter/router/pkg/engine_test.pipelineCase.Run"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 0.0,
+          "cum": "8.75s",
+          "cumPct": 56.09,
+          "function": "testing.(*B).runN"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 0.0,
+          "cum": "7.62s",
+          "cumPct": 48.85,
+          "function": "testing.(*B).launch"
+        },
+        {
+          "flat": "5.84s",
+          "flatPct": 37.44,
+          "sumPct": 37.44,
+          "cum": "5.84s",
+          "cumPct": 37.44,
+          "function": "runtime._ExternalCode"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.44,
+          "cum": "5.84s",
+          "cumPct": 37.44,
+          "function": "runtime._System"
+        },
+        {
+          "flat": "0.02s",
+          "flatPct": 0.13,
+          "sumPct": 37.56,
+          "cum": "4.56s",
+          "cumPct": 29.23,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.(*branch).run"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.56,
+          "cum": "4.56s",
+          "cumPct": 29.23,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Process"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.56,
+          "cum": "4.51s",
+          "cumPct": 28.91,
+          "function": "github.com/eventrouter/router/pkg/engine/step.(*StepChain).Run"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.56,
+          "cum": "4.51s",
+          "cumPct": 28.91,
+          "function": "github.com/eventrouter/router/pkg/engine/step.(*StepChain).runStep"
+        },
+        {
+          "flat": "0.01s",
+          "flatPct": 0.064,
+          "sumPct": 37.63,
+          "cum": "4.50s",
+          "cumPct": 28.85,
+          "function": "github.com/eventrouter/router/pkg/engine/step.(*StepChain).applyAll"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.63,
+          "cum": "4.49s",
+          "cumPct": 28.78,
+          "function": "github.com/eventrouter/router/pkg/engine/step.(*jsStep).Apply"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.63,
+          "cum": "4.32s",
+          "cumPct": 27.69,
+          "function": "github.com/eventrouter/router/pkg/sandbox/enginebind.scriptModule.Call"
+        },
+        {
+          "flat": "0.01s",
+          "flatPct": 0.064,
+          "sumPct": 37.69,
+          "cum": "4.30s",
+          "cumPct": 27.56,
+          "function": "github.com/eventrouter/router/pkg/sandbox.(*pooledModule).Call"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.69,
+          "cum": "3.55s",
+          "cumPct": 22.76,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.(*PipelineCompiler).Compile"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 37.69,
+          "cum": "3.55s",
+          "cumPct": 22.76,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.(*PipelineCompiler).branch"
+        }
+      ]
+    },
+    "recipe-5-1KB": {
+      "profile": "/home/dev/project/event_router/test/stress/results/s1-profiles/recipe-5-1KB.cpu.pprof",
+      "topFlat": [
+        {
+          "flat": "730ms",
+          "flatPct": 5.47,
+          "sumPct": 5.47,
+          "cum": "1010ms",
+          "cumPct": 7.57,
+          "function": "runtime.tryDeferToSpanScan"
+        },
+        {
+          "flat": "640ms",
+          "flatPct": 4.79,
+          "sumPct": 10.26,
+          "cum": "1150ms",
+          "cumPct": 8.61,
+          "function": "runtime.scanObject"
+        },
+        {
+          "flat": "490ms",
+          "flatPct": 3.67,
+          "sumPct": 13.93,
+          "cum": "490ms",
+          "cumPct": 3.67,
+          "function": "runtime.memclrNoHeapPointers"
+        },
+        {
+          "flat": "370ms",
+          "flatPct": 2.77,
+          "sumPct": 16.7,
+          "cum": "400ms",
+          "cumPct": 3.0,
+          "function": "encoding/json/internal/jsonwire.ConsumeSimpleString (inline)"
+        },
+        {
+          "flat": "360ms",
+          "flatPct": 2.7,
+          "sumPct": 19.4,
+          "cum": "1100ms",
+          "cumPct": 8.24,
+          "function": "encoding/json/jsontext.(*decoderState).ReadToken"
+        },
+        {
+          "flat": "300ms",
+          "flatPct": 2.25,
+          "sumPct": 21.65,
+          "cum": "300ms",
+          "cumPct": 2.25,
+          "function": "internal/runtime/maps.memHashAES"
+        },
+        {
+          "flat": "290ms",
+          "flatPct": 2.17,
+          "sumPct": 23.82,
+          "cum": "5040ms",
+          "cumPct": 37.75,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.treeEmitter.object"
+        },
+        {
+          "flat": "280ms",
+          "flatPct": 2.1,
+          "sumPct": 25.92,
+          "cum": "420ms",
+          "cumPct": 3.15,
+          "function": "runtime.gcmarknewobject"
+        },
+        {
+          "flat": "280ms",
+          "flatPct": 2.1,
+          "sumPct": 28.01,
+          "cum": "4710ms",
+          "cumPct": 35.28,
+          "function": "runtime.mallocgc"
+        },
+        {
+          "flat": "270ms",
+          "flatPct": 2.02,
+          "sumPct": 30.04,
+          "cum": "370ms",
+          "cumPct": 2.77,
+          "function": "encoding/json/internal/jsonwire.AppendQuote"
+        },
+        {
+          "flat": "220ms",
+          "flatPct": 1.65,
+          "sumPct": 31.69,
+          "cum": "850ms",
+          "cumPct": 6.37,
+          "function": "runtime.wbBufFlush1"
+        },
+        {
+          "flat": "210ms",
+          "flatPct": 1.57,
+          "sumPct": 33.26,
+          "cum": "210ms",
+          "cumPct": 1.57,
+          "function": "runtime.memmove"
+        },
+        {
+          "flat": "190ms",
+          "flatPct": 1.42,
+          "sumPct": 34.68,
+          "cum": "610ms",
+          "cumPct": 4.57,
+          "function": "runtime.mallocgcTinySC2"
+        },
+        {
+          "flat": "180ms",
+          "flatPct": 1.35,
+          "sumPct": 36.03,
+          "cum": "600ms",
+          "cumPct": 4.49,
+          "function": "encoding/json/jsontext.(*objectNamespace).insert"
+        },
+        {
+          "flat": "180ms",
+          "flatPct": 1.35,
+          "sumPct": 37.38,
+          "cum": "320ms",
+          "cumPct": 2.4,
+          "function": "internal/runtime/maps.(*Iter).Next"
+        }
+      ],
+      "topCum": [
+        {
+          "flat": "0.02s",
+          "flatPct": 0.15,
+          "sumPct": 0.15,
+          "cum": "12.99s",
+          "cumPct": 97.3,
+          "function": "github.com/eventrouter/router/pkg/engine_test.pipelineCase.Run"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 0.15,
+          "cum": "12.99s",
+          "cumPct": 97.3,
+          "function": "testing.(*B).launch"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 0.15,
+          "cum": "12.99s",
+          "cumPct": 97.3,
+          "function": "testing.(*B).runN"
+        },
+        {
+          "flat": "0.02s",
+          "flatPct": 0.15,
+          "sumPct": 0.3,
+          "cum": "6.35s",
+          "cumPct": 47.57,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Decode"
+        },
+        {
+          "flat": "0.01s",
+          "flatPct": 0.075,
+          "sumPct": 0.37,
+          "cum": "6.33s",
+          "cumPct": 47.42,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.JSONCodec.Decode"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 0.37,
+          "cum": "6.32s",
+          "cumPct": 47.34,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.TreeReader.Read"
+        },
+        {
+          "flat": "0.08s",
+          "flatPct": 0.6,
+          "sumPct": 0.97,
+          "cum": "5.98s",
+          "cumPct": 44.79,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.treeBuilder.value"
+        },
+        {
+          "flat": "0.09s",
+          "flatPct": 0.67,
+          "sumPct": 1.65,
+          "cum": "5.92s",
+          "cumPct": 44.34,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.treeBuilder.object"
+        },
+        {
+          "flat": "0.01s",
+          "flatPct": 0.075,
+          "sumPct": 1.72,
+          "cum": "5.29s",
+          "cumPct": 39.63,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Encode"
+        },
+        {
+          "flat": "0.04s",
+          "flatPct": 0.3,
+          "sumPct": 2.02,
+          "cum": "5.28s",
+          "cumPct": 39.55,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.(*OutputShaper).Encode"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 2.02,
+          "cum": "5.19s",
+          "cumPct": 38.88,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.JSONCodec.Encode"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 2.02,
+          "cum": "5.19s",
+          "cumPct": 38.88,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.TreeWriter.Write"
+        },
+        {
+          "flat": "0",
+          "flatPct": 0.0,
+          "sumPct": 2.02,
+          "cum": "5.19s",
+          "cumPct": 38.88,
+          "function": "github.com/eventrouter/router/pkg/engine/compile.NullableEncoder.Encode (inline)"
+        },
+        {
+          "flat": "0.29s",
+          "flatPct": 2.17,
+          "sumPct": 4.19,
+          "cum": "5.04s",
+          "cumPct": 37.75,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.treeEmitter.object"
+        },
+        {
+          "flat": "0.06s",
+          "flatPct": 0.45,
+          "sumPct": 4.64,
+          "cum": "5.04s",
+          "cumPct": 37.75,
+          "function": "github.com/eventrouter/router/pkg/engine/codec.treeEmitter.value"
+        }
+      ]
+    }
+  }
+}

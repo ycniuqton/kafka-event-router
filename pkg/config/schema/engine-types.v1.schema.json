@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eventrouter.dev/schemas/engine-types.v1.schema.json",
+  "title": "EngineTypes",
+  "description": "Wire shapes produced by pkg/config and pkg/engine other than the route document: validation results and per-event traces.",
+  "type": "object",
+  "properties": {
+    "validationResult": { "$ref": "#/$defs/validationResult" },
+    "eventTrace": { "$ref": "#/$defs/eventTrace" }
+  },
+  "$defs": {
+    "issueCode": {
+      "title": "IssueCode",
+      "type": "string",
+      "enum": ["schema_invalid", "connection_not_found", "connection_forbidden", "field_unknown", "operator_type_mismatch", "path_invalid", "regex_invalid", "operand_invalid", "formula_invalid", "js_compile", "library_ref_missing", "library_update_available", "topic_missing", "exactly_once_cross_cluster", "test_case_failed", "limit_out_of_range", "step_unsupported", "format_unsupported", "version_unsupported"]
+    },
+    "severity": { "title": "Severity", "type": "string", "enum": ["error", "warning"] },
+    "validationIssue": {
+      "title": "ValidationIssue",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "path", "message"],
+      "properties": {
+        "code": { "$ref": "#/$defs/issueCode" },
+        "severity": { "$ref": "#/$defs/severity" },
+        "path": { "type": "string", "description": "JSON Pointer into the route document" },
+        "message": { "type": "string" }
+      }
+    },
+    "validationResult": {
+      "title": "ValidationResult",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["valid", "issues"],
+      "properties": {
+        "valid": { "type": "boolean" },
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/validationIssue" } }
+      }
+    },
+    "eventStatus": { "title": "EventStatus", "type": "string", "enum": ["passed", "filtered", "error", "dropped"] },
+    "errorType": { "title": "ErrorType", "type": "string", "enum": ["decode", "decode_transient", "step", "step_timeout", "output_invalid", "limit"] },
+    "traceError": {
+      "title": "TraceError",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "message"],
+      "properties": {
+        "type": { "$ref": "#/$defs/errorType" },
+        "step": { "type": "string" },
+        "path": { "type": "string" },
+        "message": { "type": "string" }
+      }
+    },
+    "nodeResult": {
+      "title": "NodeResult",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node", "result"],
+      "properties": {
+        "node": { "type": "string", "description": "JSON Pointer relative to the branch filter (\"\" = root)" },
+        "result": { "type": "boolean" },
+        "warning": { "type": "string" }
+      }
+    },
+    "patchOp": {
+      "title": "PatchOp",
+      "type": "object",
+      "required": ["op", "path"],
+      "properties": {
+        "op": { "type": "string", "enum": ["add", "remove", "replace", "move", "copy", "test"] },
+        "from": { "type": "string" },
+        "path": { "type": "string" },
+        "value": {}
+      }
+    },
+    "stepTrace": {
+      "title": "StepTrace",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "patch", "durationUs", "logs", "error"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "type": "string" },
+        "patch": { "type": "array", "items": { "$ref": "#/$defs/patchOp" } },
+        "durationUs": { "type": "integer" },
+        "logs": { "type": "array", "items": { "type": "string" } },
+        "error": { "type": ["string", "null"] }
+      }
+    },
+    "branchTrace": {
+      "title": "BranchTrace",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "filter", "steps", "outputs"],
+      "properties": {
+        "id": { "type": "string" },
+        "filter": { "type": "array", "items": { "$ref": "#/$defs/nodeResult" } },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/stepTrace" } },
+        "outputs": { "type": "integer" }
+      }
+    },
+    "eventTrace": {
+      "title": "EventTrace",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["offset", "status", "branches", "error"],
+      "properties": {
+        "offset": { "type": "integer" },
+        "status": { "$ref": "#/$defs/eventStatus" },
+        "branches": { "type": "array", "items": { "$ref": "#/$defs/branchTrace" } },
+        "error": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/traceError" }] }
+      }
+    }
+  }
+}

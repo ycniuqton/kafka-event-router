@@ -1,0 +1,195 @@
+[
+  {
+    "kind": "rename",
+    "from": "value.cust_id",
+    "to": "value.customerId"
+  },
+  {
+    "kind": "remove",
+    "fields": [
+      "value.phone",
+      "value.internal.notes"
+    ]
+  },
+  {
+    "kind": "keep_only",
+    "fields": [
+      "value.orderId",
+      "value.amount"
+    ]
+  },
+  {
+    "kind": "copy",
+    "from": "value.orderId",
+    "to": "value.meta.orderRef"
+  },
+  {
+    "kind": "move",
+    "from": "value.customer.email",
+    "to": "value.contact.email"
+  },
+  {
+    "kind": "mask",
+    "field": "value.email",
+    "style": "email"
+  },
+  {
+    "kind": "hash",
+    "field": "value.cust_id"
+  },
+  {
+    "kind": "convert_type",
+    "field": "value.amount",
+    "targetType": "integer",
+    "onFailure": "null"
+  },
+  {
+    "kind": "set",
+    "field": "value.source",
+    "source": {
+      "from": "metadata",
+      "name": "topic"
+    }
+  },
+  {
+    "kind": "default_if_missing",
+    "field": "value.currency",
+    "value": "EUR"
+  },
+  {
+    "kind": "drop_if",
+    "condition": {
+      "type": "or",
+      "children": [
+        {
+          "type": "cond",
+          "field": "value.amount",
+          "op": "lt",
+          "value": 0
+        },
+        {
+          "type": "cond",
+          "field": "value.test",
+          "op": "exists"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "set_key",
+    "source": {
+      "from": "field",
+      "path": "value.orderId"
+    }
+  },
+  {
+    "kind": "map",
+    "start": "copy_input",
+    "target": {
+      "fields": {
+        "customer": {
+          "fields": {
+            "id": {
+              "source": {
+                "from": "field",
+                "path": "value.cust_id"
+              }
+            }
+          }
+        },
+        "cust_id": {
+          "remove": true
+        },
+        "total": {
+          "source": {
+            "from": "formula",
+            "expr": "value.amount * 2"
+          }
+        },
+        "meta": {
+          "fields": {
+            "topic": {
+              "source": {
+                "from": "metadata",
+                "name": "topic"
+              }
+            },
+            "version": {
+              "source": {
+                "from": "constant",
+                "value": 2
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "kind": "lookup",
+    "field": "value.country",
+    "to": "value.region",
+    "defaultValue": "OTHER",
+    "rows": [
+      {
+        "key": "VN",
+        "value": "APAC"
+      },
+      {
+        "key": "DE",
+        "value": {
+          "region": "EMEA"
+        }
+      }
+    ]
+  },
+  {
+    "kind": "split_array",
+    "field": "value.items",
+    "to": "value.item"
+  },
+  {
+    "kind": "wrap",
+    "field": "value.payload"
+  },
+  {
+    "kind": "unwrap",
+    "field": "value.data.order"
+  },
+  {
+    "kind": "header_add",
+    "header": "source",
+    "source": {
+      "from": "metadata",
+      "name": "topic"
+    }
+  },
+  {
+    "kind": "header_remove",
+    "header": "x-internal"
+  },
+  {
+    "kind": "header_rename",
+    "header": "traceId",
+    "newHeader": "trace-id"
+  },
+  {
+    "kind": "header_copy_to_payload",
+    "header": "traceId",
+    "field": "value.meta.traceId"
+  },
+  {
+    "kind": "header_copy_from_payload",
+    "header": "order-id",
+    "field": "value.orderId"
+  },
+  {
+    "kind": "library",
+    "ref": "mask-customer-pii",
+    "version": 3
+  },
+  {
+    "kind": "js",
+    "code": "function transform(event, ctx) { return event; }"
+  }
+]

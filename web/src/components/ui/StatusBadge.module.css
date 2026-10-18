@@ -1,0 +1,2 @@
+.badge{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--tone);background:color-mix(in oklch, var(--tone) 16%, transparent);white-space:nowrap;justify-self:start}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--tone)}

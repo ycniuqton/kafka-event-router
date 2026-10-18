@@ -1,0 +1,5 @@
+{
+  "BenchmarkFilterOnly": { "minEventsPerSec": 13000 },
+  "BenchmarkRecipeChain": { "minEventsPerSec": 11000 },
+  "BenchmarkMapper": { "minEventsPerSec": 9000 }
+}

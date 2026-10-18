@@ -1,0 +1,1 @@
+# taskset -c 10-13 .local/bin/loadgen produce --brokers 127.0.0.1:39092 --topic stress-smoke-101706115452-one-r0-in --steps 100:10s --lanes 1 --streams 8 --stream-prefix p0 --keys roundrobin --size 1024 --acks all --linger 5ms --compression none --bad-ratio 0 --interval 2s --stop-on-eof

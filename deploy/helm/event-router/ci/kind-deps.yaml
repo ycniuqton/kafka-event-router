@@ -1,0 +1,53 @@
+# CI-only backing services for the kind install smoke (not for production use).
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: postgres }
+spec:
+  selector: { matchLabels: { app: postgres } }
+  template:
+    metadata: { labels: { app: postgres } }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          env:
+            - { name: POSTGRES_USER, value: router }
+            - { name: POSTGRES_PASSWORD, value: router }
+            - { name: POSTGRES_DB, value: router }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe: { exec: { command: [pg_isready, -U, router] }, periodSeconds: 2 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: postgres }
+spec: { selector: { app: postgres }, ports: [{ port: 5432 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: redis }
+spec:
+  selector: { matchLabels: { app: redis } }
+  template:
+    metadata: { labels: { app: redis } }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports: [{ containerPort: 6379 }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: redis }
+spec: { selector: { app: redis }, ports: [{ port: 6379 }] }
+---
+# CI-only credentials Secret referenced by ci/kind-values.yaml (secret.existingSecret); the chart never renders it.
+apiVersion: v1
+kind: Secret
+metadata: { name: event-router-secrets }
+type: Opaque
+stringData:
+  ROUTER_DATABASE_URL: postgres://router:router@postgres:5432/router?sslmode=disable
+  ROUTER_REDIS_URL: redis://redis:6379/0
+  ROUTER_COOKIE_SECRET: ci-cookie-secret
+  ROUTER_CURSOR_SECRET: ci-cursor-secret
+  ROUTER_PREVIEW_DIRECTIVE_SECRET: ci-directive-secret

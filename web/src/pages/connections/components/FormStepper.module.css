@@ -1,0 +1,8 @@
+.stepper{display:flex;gap:6px;flex:none}
+.segment{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;border:none;background:none;padding:0;cursor:pointer;text-align:left}
+.bar{height:3px;border-radius:2px;background:var(--ln2)}
+.label{font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.segment[data-state="current"] .bar{background:var(--acc)}
+.segment[data-state="current"] .label{color:var(--tx)}
+.segment[data-state="done"] .bar{background:var(--ok)}
+.segment[data-state="done"] .label{color:var(--ok)}

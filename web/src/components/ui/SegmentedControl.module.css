@@ -1,0 +1,8 @@
+.group{display:inline-flex;border:1px solid var(--ln2);border-radius:var(--radius-lg);padding:2px;background:var(--p1);flex-wrap:wrap}
+.option{border:none;border-radius:5px;background:transparent;color:var(--tx2);cursor:pointer;white-space:nowrap}
+.option:hover{color:var(--tx)}
+.selected{background:var(--p3);color:var(--tx)}
+.xs .option{height:22px;padding:0 8px;font-size:11px}
+.sm .option{height:24px;padding:0 10px;font-size:12px}
+.md .option{height:26px;padding:0 12px;font-size:13px}
+.mono .option{font-family:var(--font-mono)}

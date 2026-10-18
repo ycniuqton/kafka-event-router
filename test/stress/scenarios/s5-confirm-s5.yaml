@@ -1,0 +1,14 @@
+name: s5-confirm-s5
+description: >
+  S5 confirmation, second pass for the "s5" case (5 set steps): its 5-min step at 65k failed p99 in s5-confirm, so
+  this re-checks 57.5k with the full criteria. Same route shape as s5-confirm.
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1}
+  load: {size: 1024, producers: 2, lanes: 4, streams: 512}
+  drain: {timeout: 5m}
+cases:
+  - {name: s5, routes: {steps: {count: 5, kind: set}}, load: {steps: [{rate: 57500, duration: 5m}]}}

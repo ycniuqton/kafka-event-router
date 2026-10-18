@@ -1,0 +1,17 @@
+16:05:41 pinned worker (pid 1704447) to CPUs 0-5
+16:05:41 pinned kafka (pid 1699610) to CPUs 6-9
+16:05:41 case kill-worker-45k: 1 route(s), 12 partition(s), 1 step(s)
+16:05:47 action spread-loop at +0s: nohup sh -c 'for i in $(seq 1 40); do test/stress/scripts/group-spread.sh stress-s7- test/stress/results/s7-probe/spread-kill-worker-45k.txt; sleep 20; done' >/dev/null 2>&1 &
+16:05:47 action host-probe at +0s: nohup test/stress/scripts/host-probe.sh test/stress/results/s7-probe/host-kill-worker-45k.txt 900 >/dev/null 2>&1 &
+16:07:12 action kill-worker at +1m30s: kill -9 $(cat .local/run/worker.pid)
+16:07:22 action restart-worker at +1m40s: test/stress/scripts/workers.sh restart-main
+16:11:47 case kill-worker-45k: max sustainable 0 ev/s, knee 45000 (p99_over_limit), lost 0, error ""
+16:11:52 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+16:11:52 case kill-worker-30k: 1 route(s), 12 partition(s), 1 step(s)
+16:11:59 action host-probe at +0s: nohup test/stress/scripts/host-probe.sh test/stress/results/s7-probe/host-kill-worker-30k.txt 900 >/dev/null 2>&1 &
+16:13:24 action kill-worker at +1m30s: kill -9 $(cat .local/run/worker.pid)
+16:13:34 action restart-worker at +1m40s: test/stress/scripts/workers.sh restart-main
+16:17:59 case kill-worker-30k: max sustainable 0 ev/s, knee 30000 (p99_over_limit), lost 0, error ""
+16:18:05 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+16:18:05 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s7-probe/s7-probe.json

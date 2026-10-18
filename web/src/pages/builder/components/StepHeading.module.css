@@ -1,0 +1,4 @@
+.heading{display:flex;align-items:flex-start;gap:12px}
+.text{flex:1;min-width:0}
+.title{font-size:18px;font-weight:600}
+.subtitle{color:var(--tx2)}

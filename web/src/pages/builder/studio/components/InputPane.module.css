@@ -1,0 +1,8 @@
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--p1)}
+.eventId{flex:1;min-width:0;font:11px var(--font-mono);color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.position{font-size:12px;color:var(--tx2);white-space:nowrap}
+.sub{padding:6px 14px;font-size:11px;color:var(--tx3);border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:8px}
+.hint{flex:1;min-width:0}
+.body{flex:1;min-height:0;overflow:auto}
+.footer{padding:8px 14px;border-top:1px solid var(--ln);font:11px var(--font-mono);color:var(--tx3)}
+.footerValue{color:var(--tx2)}

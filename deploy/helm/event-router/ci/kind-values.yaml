@@ -1,0 +1,16 @@
+# kind install smoke: local images, in-cluster Postgres/Redis, local secrets provider, k8s_token workload auth.
+global: { environment: local, publicURL: http://localhost }
+image: { registry: event-router, tag: ci, pullPolicy: Never }
+env:
+  ROUTER_AUTH_MODES: dev,api_token
+  ROUTER_SECRETS_PROVIDER: local
+  ROUTER_SECRETS_LOCAL_KEY_FILE: /tmp/master.key
+  ROUTER_WORKLOAD_AUTH: k8s_token
+secret: { existingSecret: event-router-secrets }   # created by ci/kind-deps.yaml
+containerSecurityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: false, capabilities: { drop: [ALL] } }
+api: { hpa: { enabled: false }, resources: { requests: { cpu: 50m, memory: 64Mi } } }
+worker: { replicas: 2, zone: { fromTopologyLabel: false, value: kind }, resources: { requests: { cpu: 50m, memory: 64Mi } } }
+preview: { resources: { requests: { cpu: 50m, memory: 64Mi } } }
+web: { replicas: 1 }
+ingress: { enabled: false }
+networkPolicy: { enabled: false }

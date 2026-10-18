@@ -1,0 +1,2 @@
+.frame{height:240px;min-height:160px;resize:vertical;overflow:hidden;border-radius:var(--radius-md);border:1px solid var(--ln2);background:var(--bg)}
+.fallback{min-height:240px;font:12px/1.6 var(--font-mono);white-space:pre;background:var(--bg)}

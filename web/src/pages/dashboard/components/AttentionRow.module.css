@@ -1,0 +1,8 @@
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--ln)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--tone)}
+.text{flex:1;min-width:0}
+.head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.title{font-weight:500}
+.kind{font-size:11px;color:var(--tone)}
+.detail{color:var(--tx2);font-size:12px}
+.action{flex:none;height:28px;padding:0 12px;font-weight:500}

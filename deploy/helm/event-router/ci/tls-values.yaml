@@ -1,0 +1,7 @@
+# CI variant: TLS everywhere, mTLS workload auth, HPA off, existing secret.
+tls: { enabled: true, secretName: event-router-tls }
+env: { ROUTER_WORKLOAD_AUTH: mtls }
+secret: { existingSecret: event-router-secrets }
+api: { hpa: { enabled: false } }
+worker: { hpa: { enabled: true } }
+ingress: { tlsSecretName: router-ingress-tls }

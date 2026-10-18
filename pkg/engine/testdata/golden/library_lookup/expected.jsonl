@@ -1,0 +1,8 @@
+{"branch":"recipe","topic":"customers-enriched","key":null,"value":{"country":"DE","countryName":"Germany","id":1,"label":"Germany"},"headers":[]}
+{"branch":"js","topic":"customers-enriched","key":null,"value":{"country":"DE","countryName":"Germany","id":1,"label":"Germany"},"headers":[]}
+{"branch":"recipe","topic":"customers-enriched","key":null,"value":{"country":"FR","countryName":"France","id":2,"label":"France"},"headers":[]}
+{"branch":"js","topic":"customers-enriched","key":null,"value":{"country":"FR","countryName":"France","id":2,"label":"France"},"headers":[]}
+{"branch":"recipe","topic":"customers-enriched","key":null,"value":{"country":"XX","countryName":"Unknown","id":3,"label":"n/a"},"headers":[]}
+{"branch":"js","topic":"customers-enriched","key":null,"value":{"country":"XX","countryName":"Unknown","id":3,"label":"n/a"},"headers":[]}
+{"branch":"recipe","topic":"customers-enriched","key":null,"value":{"country":"JP","countryName":"Japan","id":4,"label":"Japan"},"headers":[]}
+{"branch":"js","topic":"customers-enriched","key":null,"value":{"country":"JP","countryName":"Japan","id":4,"label":"Japan"},"headers":[]}

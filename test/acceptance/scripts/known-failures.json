@@ -1,0 +1,3 @@
+{
+  "TC-TS-35": "Product limitation, not fixed: the embedded QuickJS build records source positions only at calls/throws, so a TypeError from a property access (`event.value.order.items` on undefined) is reported at the function start (1:1) instead of line 2. Thrown errors are positioned correctly (TC-TS-14). Fixing needs a QuickJS/WASM rebuild with per-opcode line info (pkg/sandbox/quickjs)."
+}

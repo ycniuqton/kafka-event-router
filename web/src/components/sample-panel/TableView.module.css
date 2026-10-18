@@ -1,0 +1,6 @@
+.table{font:11.5px var(--font-mono);overflow-x:auto}
+.row{display:grid;grid-template-columns:22px 34px repeat(var(--cols),104px);gap:6px;padding:5px 12px;border-bottom:1px solid var(--ln);width:max-content;min-width:100%}
+.row[data-dim]{opacity:.55}
+.head{padding:6px 12px;color:var(--tx3)}
+.n{color:var(--tx3)}
+.cell{min-width:0;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

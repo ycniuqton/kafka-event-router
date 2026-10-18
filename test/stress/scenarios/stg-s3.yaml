@@ -1,0 +1,16 @@
+name: stg-s3
+description: >
+  Staging S3 - route count 10 -> 50 -> 80 at 10 ev/s/route, incremental. Capped below the staging worker's default
+  scheduler capacity (100 load units = ~89 one-partition routes next to orders-smoke).
+target: staging
+incremental: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 1
+  routes: {topology: per_route, deployConcurrency: 8}
+  load: {size: 1024, lanes: 2, streams: 1000}
+  drain: {timeout: 3m}
+cases:
+  - {name: r10, routes: {count: 10}, load: {steps: [{rate: 100, duration: 2m}]}}
+  - {name: r50, routes: {count: 50}, load: {steps: [{rate: 500, duration: 2m}]}}
+  - {name: r80, routes: {count: 80}, load: {steps: [{rate: 800, duration: 2m}]}}

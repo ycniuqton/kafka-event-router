@@ -1,0 +1,14 @@
+{
+  "name": "web-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Playwright end-to-end tests against a running stack (deploy/dev: vite :5173 + api :8080, dev login).",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "kafkajs": "2.2.4",
+    "kafkajs-snappy": "1.1.0"
+  }
+}

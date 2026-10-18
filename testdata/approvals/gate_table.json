@@ -1,0 +1,125 @@
+{
+ "description": "Deploy gate (design flow 5.4): shared by the Go TeamProductionPolicy test and the web DeployModeResolver test.",
+ "cases": [
+  {
+   "role": "viewer",
+   "prod": false,
+   "requireProdApproval": true,
+   "outcome": "deny"
+  },
+  {
+   "role": "viewer",
+   "prod": false,
+   "requireProdApproval": false,
+   "outcome": "deny"
+  },
+  {
+   "role": "viewer",
+   "prod": true,
+   "requireProdApproval": true,
+   "outcome": "deny"
+  },
+  {
+   "role": "viewer",
+   "prod": true,
+   "requireProdApproval": false,
+   "outcome": "deny"
+  },
+  {
+   "role": "editor",
+   "prod": false,
+   "requireProdApproval": true,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "editor",
+   "prod": false,
+   "requireProdApproval": false,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "editor",
+   "prod": true,
+   "requireProdApproval": true,
+   "outcome": "require_approval"
+  },
+  {
+   "role": "editor",
+   "prod": true,
+   "requireProdApproval": false,
+   "outcome": "require_approval"
+  },
+  {
+   "role": "approver",
+   "prod": false,
+   "requireProdApproval": true,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "approver",
+   "prod": false,
+   "requireProdApproval": false,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "approver",
+   "prod": true,
+   "requireProdApproval": true,
+   "outcome": "require_approval"
+  },
+  {
+   "role": "approver",
+   "prod": true,
+   "requireProdApproval": false,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "admin",
+   "prod": false,
+   "requireProdApproval": true,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "admin",
+   "prod": false,
+   "requireProdApproval": false,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "admin",
+   "prod": true,
+   "requireProdApproval": true,
+   "outcome": "require_approval"
+  },
+  {
+   "role": "admin",
+   "prod": true,
+   "requireProdApproval": false,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "workspace_admin",
+   "prod": false,
+   "requireProdApproval": true,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "workspace_admin",
+   "prod": false,
+   "requireProdApproval": false,
+   "outcome": "deploy_now"
+  },
+  {
+   "role": "workspace_admin",
+   "prod": true,
+   "requireProdApproval": true,
+   "outcome": "require_approval"
+  },
+  {
+   "role": "workspace_admin",
+   "prod": true,
+   "requireProdApproval": false,
+   "outcome": "deploy_now"
+  }
+ ]
+}

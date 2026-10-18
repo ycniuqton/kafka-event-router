@@ -1,0 +1,9 @@
+Event Router {{ .Chart.AppVersion }} installed as "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+UI: {{ .Values.global.publicURL }}
+api: {{ if .Values.api.hpa.enabled }}HPA {{ .Values.api.hpa.minReplicas }}-{{ .Values.api.hpa.maxReplicas }}{{ else }}{{ .Values.api.replicas }}{{ end }} replicas (PDB minAvailable {{ .Values.api.pdb.minAvailable }})
+workers: {{ .Values.worker.kind }} with {{ .Values.worker.replicas }} replicas; ROUTER_WORKER_ID = pod name, cache {{ if .Values.worker.cache.persistence.enabled }}PVC{{ else }}emptyDir{{ end }} {{ .Values.worker.cache.sizeLimit }}
+Workload auth: {{ .Values.env.ROUTER_WORKLOAD_AUTH }} (audience {{ .Values.workloadIdentity.audience }}); TLS: {{ .Values.tls.enabled }}
+
+Credentials are read from Secret "{{ .Values.secret.existingSecret }}" (must exist before install; the migrate hook needs ROUTER_DATABASE_URL):
+  kubectl -n {{ .Release.Namespace }} get secret {{ .Values.secret.existingSecret }}

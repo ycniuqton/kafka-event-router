@@ -1,0 +1,8 @@
+@keyframes flow{to{stroke-dashoffset:-28}}
+.edge path{fill:none;stroke:var(--tone)}
+.base{stroke-opacity:.22;stroke-width:var(--edge-w)}
+.edge[data-hovered="true"] .base{stroke-opacity:.55;stroke-width:var(--edge-hover-w)}
+.flow{stroke-width:var(--edge-w);stroke-dasharray:6 8;animation:flow var(--flow-s) linear infinite}
+.error{stroke-width:var(--edge-w);stroke-dasharray:2 5}
+.edge .hit{stroke:transparent;stroke-width:14px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.flow{animation:none}}

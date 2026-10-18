@@ -1,0 +1,88 @@
+{
+  "name": "Protobuf-decoded batch: repeated int64 split into events, small integers stay numbers",
+  "entry": "transform",
+  "code": "function transform(event) {\n  return event.value.items.map((item) =\u003e ({\n    key: item.sku,\n    value: { sku: item.sku, units: item.units + 1, total: item.total, isTagged: typeof item.total === 'object', at: event.value.at }\n  }));\n}\n",
+  "now": "2024-05-01T12:00:00Z",
+  "events": [
+    {
+      "key": null,
+      "value": {
+        "at": {
+          "$timestamp": "2024-05-01T00:00:00Z"
+        },
+        "items": [
+          {
+            "sku": "A",
+            "total": {
+              "$long": "18014398509481984"
+            },
+            "units": 1
+          },
+          {
+            "sku": "B",
+            "total": 7,
+            "units": 41
+          }
+        ]
+      },
+      "headers": {},
+      "topic": "batches.proto",
+      "partition": 2,
+      "offset": 77,
+      "timestamp": "2024-05-01T00:00:01Z"
+    },
+    {
+      "key": null,
+      "value": {
+        "at": {
+          "$timestamp": "2024-05-01T00:00:00Z"
+        },
+        "items": []
+      },
+      "headers": {},
+      "topic": "batches.proto",
+      "partition": 2,
+      "offset": 78,
+      "timestamp": "2024-05-01T00:00:02Z"
+    }
+  ],
+  "expect": [
+    {
+      "outputs": [
+        {
+          "key": "A",
+          "value": {
+            "at": {
+              "$timestamp": "2024-05-01T00:00:00Z"
+            },
+            "isTagged": true,
+            "sku": "A",
+            "total": {
+              "$long": "18014398509481984"
+            },
+            "units": 2
+          }
+        },
+        {
+          "key": "B",
+          "value": {
+            "at": {
+              "$timestamp": "2024-05-01T00:00:00Z"
+            },
+            "isTagged": false,
+            "sku": "B",
+            "total": 7,
+            "units": 42
+          }
+        }
+      ]
+    },
+    {
+      "dropped": true
+    }
+  ],
+  "limits": {},
+  "formats": [
+    "protobuf"
+  ]
+}

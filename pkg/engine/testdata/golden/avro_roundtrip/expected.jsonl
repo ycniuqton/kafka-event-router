@@ -1,0 +1,3 @@
+{"branch":"avro","topic":"orders-enriched","key":null,"value":{"at":"2026-03-04T05:06:07.123Z","day":"2026-03-04","email":"a**@example.com","id":"o-1","price":"19.99","qty":2,"status":"PAID"},"headers":[]}
+{"branch":"json","topic":"orders-paid-json","key":null,"value":{"at":"2026-03-04T05:06:07.123Z","email":"ada@example.com","id":"o-1","price":"19.99","qty":"2 pcs","status":"PAID"},"headers":[]}
+{"branch":"avro","topic":"orders-enriched","key":null,"value":{"at":"2026-01-01T00:00:00Z","day":"2026-01-01","email":null,"id":"o-2","price":"5.00","qty":1,"status":"NEW"},"headers":[]}

@@ -1,0 +1,244 @@
+openapi: 3.1.0
+info:
+  title: Event Router API
+  version: 0.1.0
+  description: |
+    Control-plane API. Conventions: JSON only; errors are RFC 7807 `application/problem+json` whose
+    `path` members are JSON Pointers; lists use cursor pages `{items, next_cursor}`; versioned resources
+    return `ETag` and require `If-Match` on PATCH/PUT/DELETE (428 if missing, 412 if stale).
+    Feature folders add `paths/<feature>.yaml` and reference them below.
+servers:
+  - url: /api/v1
+security:
+  - sessionCookie: []
+  - bearerToken: []
+tags:
+  - name: auth
+    description: Login, session and current principal (platform-core).
+  - name: access-control
+    description: Users, invitations, role bindings, teams, connection grants, effective access, approvals and the audit log (access-control).
+  - name: connections
+    description: Saved Kafka clusters, live tests, topic browser and topic creation (connections).
+  - name: routes
+    description: Routes, drafts, validation, deploys, versions, diff, rollback and bulk actions (routes).
+  - name: sandbox
+    description: JS sandbox runtime info for the Studio editor (js-sandbox).
+  - name: monitoring
+    description: Dashboard, recent activity, first-run checklist, route overview metrics, flow map, alert rules, the alerts bell and WS /events (monitoring).
+  - name: dead-letters
+    description: DLQ browse, detail, retry, discard, export and Open in Studio (dead-letters).
+paths:
+  /auth/config:
+    $ref: "./paths/auth.yaml#/config"
+  /auth/oidc/login:
+    $ref: "./paths/auth.yaml#/oidcLogin"
+  /auth/oidc/callback:
+    $ref: "./paths/auth.yaml#/oidcCallback"
+  /auth/dev/login:
+    $ref: "./paths/auth.yaml#/devLogin"
+  /auth/logout:
+    $ref: "./paths/auth.yaml#/logout"
+  /auth/me:
+    $ref: "./paths/auth.yaml#/me"
+  /auth/tokens:
+    $ref: "./paths/auth.yaml#/tokens"
+  /auth/tokens/{id}:
+    $ref: "./paths/auth.yaml#/token"
+  /users:
+    $ref: "./paths/access-control.yaml#/users"
+  /users/{id}:
+    $ref: "./paths/access-control.yaml#/user"
+  /role-bindings:
+    $ref: "./paths/access-control.yaml#/roleBindings"
+  /role-bindings/{userId}/{teamId}:
+    $ref: "./paths/access-control.yaml#/roleBinding"
+  /audit-log:
+    $ref: "./paths/access-control.yaml#/auditLog"
+  /audit-log/actions:
+    $ref: "./paths/access-control.yaml#/auditActions"
+  /audit-log/export:
+    $ref: "./paths/access-control.yaml#/auditExport"
+  /audit-log/export/status:
+    $ref: "./paths/access-control.yaml#/auditExportStatus"
+  /workspace-settings:
+    $ref: "./paths/access-control.yaml#/workspaceSettings"
+  /users/invitations:
+    $ref: "./paths/access-control.yaml#/invitations"
+  /teams:
+    $ref: "./paths/access-control.yaml#/teams"
+  /teams/{id}:
+    $ref: "./paths/access-control.yaml#/team"
+  /teams/{id}/grants:
+    $ref: "./paths/access-control.yaml#/teamGrants"
+  /teams/{id}/grants/{connectionId}:
+    $ref: "./paths/access-control.yaml#/teamGrant"
+  /approvals:
+    $ref: "./paths/approvals.yaml#/approvals"
+  /approvals/{id}:
+    $ref: "./paths/approvals.yaml#/approval"
+  /approvals/{id}/approve:
+    $ref: "./paths/approvals.yaml#/approve"
+  /approvals/{id}/reject:
+    $ref: "./paths/approvals.yaml#/reject"
+  /approvals/{id}/withdraw:
+    $ref: "./paths/approvals.yaml#/withdraw"
+  /approvals/{id}/comments:
+    $ref: "./paths/approvals.yaml#/comments"
+  /connections:
+    $ref: "./paths/connections.yaml#/connections"
+  /connections/test:
+    $ref: "./paths/connections.yaml#/connectionDraftTest"
+  /connections/{id}:
+    $ref: "./paths/connections.yaml#/connection"
+  /connections/{id}/test:
+    $ref: "./paths/connections.yaml#/connectionTest"
+  /connections/{id}/topics:
+    $ref: "./paths/connections.yaml#/connectionTopics"
+  /routes:
+    $ref: "./paths/routes.yaml#/routes"
+  /routes/bulk:
+    $ref: "./paths/routes.yaml#/routesBulk"
+  /routes/export:
+    $ref: "./paths/routes.yaml#/routesExport"
+  /routes/import:
+    $ref: "./paths/routes.yaml#/routesImport"
+  /routes/{id}:
+    $ref: "./paths/routes.yaml#/route"
+  /routes/{id}/duplicate:
+    $ref: "./paths/routes.yaml#/routeDuplicate"
+  /routes/{id}/validate:
+    $ref: "./paths/routes.yaml#/routeValidate"
+  /routes/{id}/deploy:
+    $ref: "./paths/routes.yaml#/routeDeploy"
+  /routes/{id}/pause:
+    $ref: "./paths/routes.yaml#/routePause"
+  /routes/{id}/resume:
+    $ref: "./paths/routes.yaml#/routeResume"
+  /routes/{id}/rollback:
+    $ref: "./paths/routes.yaml#/routeRollback"
+  /routes/{id}/unarchive:
+    $ref: "./paths/routes.yaml#/routeUnarchive"
+  /routes/{id}/export:
+    $ref: "./paths/routes.yaml#/routeExport"
+  /routes/{id}/replay:
+    $ref: "./paths/routes.yaml#/routeReplay"
+  /routes/{id}/replays/{replayId}:
+    $ref: "./paths/routes.yaml#/routeReplayStatus"
+  /routes/{id}/deployments:
+    $ref: "./paths/routes.yaml#/routeDeployments"
+  /routes/{id}/versions:
+    $ref: "./paths/routes.yaml#/routeVersions"
+  /routes/{id}/versions/{no}:
+    $ref: "./paths/routes.yaml#/routeVersion"
+  /routes/{id}/versions/{a}/diff/{b}:
+    $ref: "./paths/routes.yaml#/routeDiff"
+  /sandbox/runtime-info:
+    $ref: "./paths/sandbox.yaml#/runtimeInfo"
+  /sandbox/check:
+    $ref: "./paths/sandbox.yaml#/check"
+  /dashboard/summary:
+    $ref: "./paths/monitoring.yaml#/dashboardSummary"
+  /dashboard/attention:
+    $ref: "./paths/monitoring.yaml#/dashboardAttention"
+  /activity:
+    $ref: "./paths/monitoring.yaml#/activity"
+  /onboarding:
+    $ref: "./paths/monitoring.yaml#/onboarding"
+  /onboarding/demo:
+    $ref: "./paths/monitoring.yaml#/onboardingDemo"
+  /routes/{id}/tail:
+    $ref: "./paths/monitoring.yaml#/routeTail"
+  /routes/{id}/metrics:
+    $ref: "./paths/monitoring.yaml#/routeMetrics"
+  /flow-map:
+    $ref: "./paths/monitoring.yaml#/flowMap"
+  /alert-rules:
+    $ref: "./paths/monitoring.yaml#/alertRules"
+  /alert-rules/{id}:
+    $ref: "./paths/monitoring.yaml#/alertRule"
+  /alert-rules/{id}/test:
+    $ref: "./paths/monitoring.yaml#/alertRuleTest"
+  /alerts:
+    $ref: "./paths/monitoring.yaml#/alerts"
+  /alerts/{id}/ack:
+    $ref: "./paths/monitoring.yaml#/alertAck"
+  /events:
+    $ref: "./paths/monitoring.yaml#/events"
+  /routes/{id}/dlq:
+    $ref: "./paths/dead-letters.yaml#/routeDLQ"
+  /routes/{id}/dlq/summary:
+    $ref: "./paths/dead-letters.yaml#/routeDLQSummary"
+  /routes/{id}/dlq/retry:
+    $ref: "./paths/dead-letters.yaml#/routeDLQRetry"
+  /routes/{id}/dlq/discard:
+    $ref: "./paths/dead-letters.yaml#/routeDLQDiscard"
+  /routes/{id}/dlq/restore:
+    $ref: "./paths/dead-letters.yaml#/routeDLQRestore"
+  /routes/{id}/dlq/jobs:
+    $ref: "./paths/dead-letters.yaml#/routeDLQJobs"
+  /dlq/jobs/{jobId}:
+    $ref: "./paths/dead-letters.yaml#/dlqJob"
+  /dlq/jobs/{jobId}/cancel:
+    $ref: "./paths/dead-letters.yaml#/dlqJobCancel"
+  /routes/{id}/dlq/export:
+    $ref: "./paths/dead-letters.yaml#/routeDLQExport"
+  /routes/{id}/dlq/{dlqId}:
+    $ref: "./paths/dead-letters.yaml#/routeDLQItem"
+  /routes/{id}/dlq/{dlqId}/studio:
+    $ref: "./paths/dead-letters.yaml#/routeDLQStudio"
+  /dlq:
+    $ref: "./paths/dead-letters.yaml#/globalDLQ"
+  /dlq/summary:
+    $ref: "./paths/dead-letters.yaml#/globalDLQSummary"
+components:
+  securitySchemes:
+    sessionCookie:
+      $ref: "./components/security.yaml#/securitySchemes/sessionCookie"
+    bearerToken:
+      $ref: "./components/security.yaml#/securitySchemes/bearerToken"
+  schemas:
+    Problem:
+      $ref: "./components/problem.yaml#/Problem"
+    FieldError:
+      $ref: "./components/problem.yaml#/FieldError"
+    PageMeta:
+      $ref: "./components/page.yaml#/PageMeta"
+  parameters:
+    Limit:
+      $ref: "./components/params.yaml#/Limit"
+    Cursor:
+      $ref: "./components/params.yaml#/Cursor"
+    IfMatch:
+      $ref: "./components/params.yaml#/IfMatch"
+    IdParam:
+      $ref: "./components/params.yaml#/IdParam"
+    CSRFToken:
+      $ref: "./components/params.yaml#/CSRFToken"
+  headers:
+    ETag:
+      $ref: "./components/params.yaml#/ETagHeader"
+    RequestID:
+      $ref: "./components/params.yaml#/RequestIDHeader"
+  responses:
+    BadRequest:
+      $ref: "./components/problem.yaml#/responses/BadRequest"
+    Unauthenticated:
+      $ref: "./components/problem.yaml#/responses/Unauthenticated"
+    Forbidden:
+      $ref: "./components/problem.yaml#/responses/Forbidden"
+    NotFound:
+      $ref: "./components/problem.yaml#/responses/NotFound"
+    Conflict:
+      $ref: "./components/problem.yaml#/responses/Conflict"
+    PreconditionFailed:
+      $ref: "./components/problem.yaml#/responses/PreconditionFailed"
+    PayloadTooLarge:
+      $ref: "./components/problem.yaml#/responses/PayloadTooLarge"
+    ValidationFailed:
+      $ref: "./components/problem.yaml#/responses/ValidationFailed"
+    PreconditionRequired:
+      $ref: "./components/problem.yaml#/responses/PreconditionRequired"
+    Unavailable:
+      $ref: "./components/problem.yaml#/responses/Unavailable"
+    RateLimited:
+      $ref: "./components/problem.yaml#/responses/RateLimited"

@@ -1,0 +1,561 @@
+users:
+  get:
+    tags: [access-control]
+    operationId: listUsers
+    summary: Workspace members (any member may read).
+    parameters:
+      - { name: q, in: query, schema: { type: string }, description: Matches email or display name. }
+      - { name: team, in: query, schema: { type: string, format: uuid } }
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page of users ordered by email.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/User" } }
+                next_cursor: { type: [string, "null"] }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+user:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [access-control]
+    operationId: getUser
+    summary: One user with team roles.
+    responses:
+      "200":
+        description: The user.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/User" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+  patch:
+    tags: [access-control]
+    operationId: updateUser
+    summary: Rename, make workspace admin, or disable (workspace admins only). Disabling revokes sessions.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              displayName: { type: string, minLength: 1, maxLength: 200 }
+              workspaceAdmin: { type: boolean }
+              disabled: { type: boolean }
+    responses:
+      "200":
+        description: Updated user.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/User" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+roleBindings:
+  get:
+    tags: [access-control]
+    operationId: listRoleBindings
+    summary: Role bindings, optionally for one user or team, plus the roles assignable in this phase.
+    parameters:
+      - { name: userId, in: query, schema: { type: string, format: uuid } }
+      - { name: teamId, in: query, schema: { type: string, format: uuid } }
+    responses:
+      "200":
+        description: Bindings ordered by team name.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, assignableRoles]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/RoleBinding" } }
+                assignableRoles: { type: array, items: { $ref: "#/components/schemas/Role" } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+roleBinding:
+  parameters:
+    - { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    - { name: teamId, in: path, required: true, schema: { type: string, format: uuid } }
+  put:
+    tags: [access-control]
+    operationId: setRoleBinding
+    summary: Create or change a user's role in a team (team.members_manage). If-Match is required when the binding exists.
+    parameters:
+      - { name: If-Match, in: header, schema: { type: string, example: '"1"' } }
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [role]
+            properties:
+              role: { $ref: "#/components/schemas/Role" }
+    responses:
+      "200":
+        description: The binding.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RoleBinding" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+  delete:
+    tags: [access-control]
+    operationId: removeRoleBinding
+    summary: Remove a user from a team (409 last_admin when it would leave no administrator).
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Removed. }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+auditLog:
+  get:
+    tags: [access-control]
+    operationId: listAuditLog
+    summary: Audit log, newest first (workspace admins only, audit.read).
+    parameters:
+      - { name: actor, in: query, schema: { type: string, format: uuid } }
+      - { name: action, in: query, schema: { type: string }, description: Comma-separated catalogued actions. }
+      - { name: objectType, in: query, schema: { type: string } }
+      - { name: objectId, in: query, schema: { type: string } }
+      - { name: teamId, in: query, schema: { type: string, format: uuid } }
+      - { name: from, in: query, schema: { type: string, format: date-time } }
+      - { name: to, in: query, schema: { type: string, format: date-time } }
+      - { name: sensitive, in: query, schema: { type: boolean }, description: Only raw-data access and secret changes. }
+      - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: "Matches object label, object id or action." }
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One keyset page of entries.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/AuditEntry" } }
+                next_cursor: { type: [string, "null"] }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+auditActions:
+  get:
+    tags: [access-control]
+    operationId: listAuditActions
+    summary: The audited action catalog offered by the audit filter bar (workspace admins only).
+    responses:
+      "200":
+        description: Every catalogued action, sorted.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/AuditAction" } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+auditExport:
+  get:
+    tags: [access-control]
+    operationId: exportAuditLog
+    summary: Stream the filtered audit log as JSONL or CSV (audit.export, workspace admins). Audited as audit.exported.
+    parameters:
+      - { name: format, in: query, required: true, schema: { type: string, enum: [jsonl, csv] } }
+      - { name: actor, in: query, schema: { type: string, format: uuid } }
+      - { name: action, in: query, schema: { type: string }, description: Comma-separated catalogued actions. }
+      - { name: objectType, in: query, schema: { type: string } }
+      - { name: objectId, in: query, schema: { type: string } }
+      - { name: teamId, in: query, schema: { type: string, format: uuid } }
+      - { name: from, in: query, schema: { type: string, format: date-time } }
+      - { name: to, in: query, schema: { type: string, format: date-time } }
+      - { name: sensitive, in: query, schema: { type: boolean } }
+      - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+    responses:
+      "200":
+        description: The file, newest entry first (attachment; at most 1,000,000 rows).
+        headers:
+          Content-Disposition: { schema: { type: string, example: 'attachment; filename="audit-log-20261014-090500.csv"' } }
+        content:
+          application/x-ndjson: { schema: { type: string, description: One AuditEntry JSON object per line. } }
+          text/csv: { schema: { type: string, description: "Header row: id,at,actor_id,actor_name,actor_kind,action,category,object_type,object_id,object_label,team_id,ip,request_id,sensitive,diff" } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+auditExportStatus:
+  get:
+    tags: [access-control]
+    operationId: getAuditExportStatus
+    summary: Continuous SIEM export status (configured sink, checkpoint, lag); workspace admins only.
+    responses:
+      "200":
+        description: The export status.
+        content: { application/json: { schema: { $ref: "#/components/schemas/AuditExportStatus" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+workspaceSettings:
+  get:
+    tags: [access-control]
+    operationId: getWorkspaceSettings
+    summary: Workspace-wide settings (any member; AI assist is off by default).
+    responses:
+      "200":
+        description: The settings.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/WorkspaceSettings" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+  patch:
+    tags: [access-control]
+    operationId: updateWorkspaceSettings
+    summary: Change workspace settings (settings.manage). Audited as settings.updated.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/WorkspaceSettingsInput" } } }
+    responses:
+      "200":
+        description: Updated settings.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/WorkspaceSettings" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+invitations:
+  post:
+    tags: [access-control]
+    operationId: inviteUser
+    summary: Pre-invite a user by email with one team role (workspace admins). The first login with that email claims the row.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [email, teamId, role]
+            properties:
+              email: { type: string, format: email }
+              displayName: { type: string, maxLength: 200 }
+              teamId: { type: string, format: uuid }
+              role: { $ref: "#/components/schemas/Role" }
+    responses:
+      "201":
+        description: The pending user (status invited).
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/User" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+teams:
+  get:
+    tags: [access-control]
+    operationId: listTeams
+    summary: Every team with its approval policy and member count (any member).
+    responses:
+      "200":
+        description: Teams ordered by name.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/Team" } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+  post:
+    tags: [access-control]
+    operationId: createTeam
+    summary: Create a team (workspace admins, team.manage). Production approval defaults to required.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/TeamInput" } } }
+    responses:
+      "201":
+        description: The new team.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Team" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+team:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [access-control]
+    operationId: getTeam
+    summary: One team.
+    responses:
+      "200":
+        description: The team.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Team" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+  patch:
+    tags: [access-control]
+    operationId: updateTeam
+    summary: Rename a team or change whether its production deploys need approval.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/TeamInput" } } }
+    responses:
+      "200":
+        description: Updated team.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/Team" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+  delete:
+    tags: [access-control]
+    operationId: deleteTeam
+    summary: Delete a team that owns nothing (409 team_not_empty with counts otherwise).
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Deleted (bindings and grants go with it). }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+teamGrants:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [access-control]
+    operationId: listTeamGrants
+    summary: Connections of other teams this team may use (any member may read).
+    responses:
+      "200":
+        description: Grants ordered by connection name.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/ConnectionGrant" } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+teamGrant:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+    - { name: connectionId, in: path, required: true, schema: { type: string, format: uuid } }
+  put:
+    tags: [access-control]
+    operationId: addTeamGrant
+    summary: Let the team use another team's connection (workspace admins, grant.manage). Idempotent.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The grant.
+        content: { application/json: { schema: { $ref: "#/components/schemas/ConnectionGrant" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+  delete:
+    tags: [access-control]
+    operationId: removeTeamGrant
+    summary: Revoke a grant; routes using it fail validation on their next deploy or approval.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Revoked. }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+components:
+  schemas:
+    WorkspaceSettings:
+      type: object
+      required: [aiAssistEnabled, defaultRequireProdApproval, rowVersion]
+      properties:
+        aiAssistEnabled: { type: boolean }
+        defaultRequireProdApproval: { type: boolean, description: Production approval default of new teams. }
+        rowVersion: { type: integer }
+    WorkspaceSettingsInput:
+      type: object
+      additionalProperties: false
+      properties:
+        aiAssistEnabled: { type: boolean }
+        defaultRequireProdApproval: { type: boolean }
+    AuditExportCheckpoint:
+      type: object
+      required: [sink, lastId, exportedTotal, lastAttemptAt, updatedAt]
+      properties:
+        sink: { type: string }
+        lastId: { type: string, description: Last delivered audit entry id. }
+        exportedTotal: { type: integer }
+        lastError: { type: string }
+        lastAttemptAt: { type: [string, "null"], format: date-time }
+        updatedAt: { type: [string, "null"], format: date-time }
+    AuditExportStatus:
+      type: object
+      required: [enabled, sink, target, checkpoint, lagRows]
+      properties:
+        enabled: { type: boolean }
+        sink: { type: string, enum: [none, webhook, syslog] }
+        target: { type: string, description: Sink address without credentials or query. }
+        checkpoint:
+          oneOf:
+            - { $ref: "#/components/schemas/AuditExportCheckpoint" }
+            - { type: "null" }
+        lagRows: { type: integer, description: Entries written but not exported yet. }
+    AuditCategory:
+      type: string
+      enum: [change, access, admin]
+    AuditAction:
+      type: object
+      required: [action, category, sensitive]
+      properties:
+        action: { type: string }
+        category: { $ref: "#/components/schemas/AuditCategory" }
+        sensitive: { type: boolean }
+    AuditEntry:
+      type: object
+      required: [id, at, actor, action, category, objectType, objectId, objectLabel, teamId, ip, requestId, sensitive]
+      properties:
+        id: { type: string }
+        at: { type: string, format: date-time }
+        actor:
+          type: object
+          required: [id, name, kind]
+          properties:
+            id: { type: [string, "null"], format: uuid }
+            name: { type: string }
+            kind: { type: string }
+        action: { type: string }
+        category: { $ref: "#/components/schemas/AuditCategory" }
+        objectType: { type: string }
+        objectId: { type: string }
+        objectLabel: { type: string, description: Human label stored at write time (survives deletes). }
+        teamId: { type: [string, "null"], format: uuid }
+        ip: { type: string }
+        requestId: { type: string }
+        sensitive: { type: boolean }
+        diff: { type: object, additionalProperties: true }
+    Team:
+      type: object
+      required: [id, name, requireProdApproval, memberCount, createdAt, rowVersion]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        requireProdApproval: { type: boolean, description: Production deploys of this team need a second person. }
+        memberCount: { type: integer }
+        createdAt: { type: string, format: date-time }
+        rowVersion: { type: integer }
+    TeamInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        requireProdApproval: { type: boolean }
+    ConnectionGrant:
+      type: object
+      required: [teamId, connectionId, connectionName, ownerTeamId, envTag, grantedBy, createdAt]
+      properties:
+        teamId: { type: string, format: uuid }
+        connectionId: { type: string, format: uuid }
+        connectionName: { type: string }
+        ownerTeamId: { type: string, format: uuid }
+        envTag: { type: string, enum: [prod, staging, dev] }
+        grantedBy: { type: [string, "null"], format: uuid }
+        createdAt: { type: string, format: date-time }
+    Role:
+      type: string
+      enum: [viewer, editor, approver, admin]
+    UserTeam:
+      type: object
+      required: [teamId, teamName, role, rowVersion]
+      properties:
+        teamId: { type: string, format: uuid }
+        teamName: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        rowVersion: { type: integer, description: Version of the role binding (If-Match on PUT/DELETE /role-bindings). }
+    User:
+      type: object
+      required: [id, email, displayName, workspaceAdmin, status, teams, lastLoginAt, rowVersion]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        displayName: { type: string }
+        workspaceAdmin: { type: boolean }
+        status: { type: string, enum: [active, invited, disabled] }
+        teams: { type: array, items: { $ref: "#/components/schemas/UserTeam" } }
+        lastLoginAt: { type: [string, "null"], format: date-time }
+        rowVersion: { type: integer }
+    RoleBinding:
+      type: object
+      required: [userId, teamId, teamName, role, createdAt, rowVersion]
+      properties:
+        userId: { type: string, format: uuid }
+        teamId: { type: string, format: uuid }
+        teamName: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+        createdAt: { type: string, format: date-time }
+        rowVersion: { type: integer }
+    TeamAccess:
+      type: object
+      required: [role, permissions]
+      properties:
+        role: { $ref: "#/components/schemas/Role" }
+        permissions: { type: array, items: { type: string, example: route.write } }
+    Access:
+      type: object
+      description: Effective permissions embedded in GET /auth/me as `access` (UI gating only; the server decides).
+      required: [workspaceAdmin, workspace, teams]
+      properties:
+        workspaceAdmin: { type: boolean }
+        workspace: { type: array, items: { type: string, example: user.manage } }
+        teams:
+          type: object
+          additionalProperties: { $ref: "#/components/schemas/TeamAccess" }

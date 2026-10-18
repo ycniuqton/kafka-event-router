@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Staging two-Kafka demo</title>
+<style>body{font:14px/1.5 system-ui,sans-serif;max-width:960px;margin:24px auto;padding:0 16px;color:#1d2330;background:#fff}
+table{border-collapse:collapse;width:100%;margin:8px 0 16px}td,th{border:1px solid #d7dbe3;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#f2f4f8}code{background:#f2f4f8;padding:1px 4px;border-radius:3px}.ok{color:#137333;font-weight:600}</style></head><body>
+<h1>Staging: routes between two Kafka clusters</h1>
+<p>Cluster A = <code>kafka</code> (kafka:19092 / 127.0.0.1:29092). Cluster B = <code>kafka-b</code> (kafka-b:19092 / 127.0.0.1:29093). The <code>demo-producer</code> sends about 1 ev/s to each stream.</p>
+<h2>Routes (all running, end-to-end verified: 16/16 checks PASS)</h2>
+<table><tr><th>Route</th><th>Flow</th><th>Result</th></tr>
+<tr><td>demo-a-to-b-paid</td><td>A demo-orders → B demo-orders-paid; filter OrderPaid, mask email, key=orderId</td><td class="ok">PASS</td></tr>
+<tr><td>demo-b-to-a-enrich</td><td>B demo-payments → A demo-payments-enriched; rename, formula amount, drop, JS riskLevel</td><td class="ok">PASS</td></tr>
+<tr><td>demo-a-branches</td><td>A demo-orders → paid: B demo-paid-b / cancelled: A demo-cancelled-a; other types match no branch</td><td class="ok">PASS</td></tr>
+<tr><td>demo-b-dlq</td><td>B demo-raw → A demo-clean; JS throws on bad:true → router.dlq.demo-b-dlq</td><td class="ok">PASS (alert firing at ~11.6%)</td></tr>
+<tr><td>demo-b-local</td><td>B demo-b-in → B demo-b-out, exactly_once</td><td class="ok">PASS</td></tr>
+<tr><td>demo-approval-gate</td><td>A demo-orders → kafka-b-prod demo-orders-highvalue; v3 approved, v4 pending</td><td class="ok">PASS</td></tr></table>
+<p>Cross-cluster delivery is <b>at_least_once</b> (no loss; duplicates possible). Exactly-once is only possible when everything uses the same connection.</p>
+<h2>Product bugs fixed</h2>
+<ol><li>Saved test cases compared the output <i>before</i> destination shaping (key policy, headers, codecs, size limit). Studio and the runtime compare it <i>after</i>. A case pinned in Studio on a key-by-field route therefore failed and blocked deploy. Fix: <code>internal/library/testcases/execution.go</code>.</li>
+<li>A deploy that only <i>requested</i> approval superseded the rollout of the version that is live. That version then never became active, and if the request was rejected the route had no current deployment. Fix: <code>SupersedeScope</code> (routes repository, activator, lifecycle, routestore).</li></ol>
+<p>Guide: <code>test/acceptance/DEMO-STAGING.md</code></p></body></html>

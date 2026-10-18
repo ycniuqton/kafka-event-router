@@ -1,0 +1,23 @@
+# Dex for local OIDC testing (compose profile "oidc"). Static user: admin@example.com / password.
+# Add "127.0.0.1 dex" to /etc/hosts so the browser and the api resolve the same issuer URL.
+issuer: http://dex:5556/dex
+storage:
+  type: memory
+web:
+  http: 0.0.0.0:5556
+oauth2:
+  skipApprovalScreen: true
+enablePasswordDB: true
+staticClients:
+  - id: event-router
+    name: Event Router
+    secret: event-router-dev-secret
+    redirectURIs:
+      - http://localhost:8080/auth/oidc/callback
+      - http://localhost:5173/auth/oidc/callback
+staticPasswords:
+  - email: admin@example.com
+    # bcrypt of "password"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: admin
+    userID: 08a8684b-db88-4b73-90a9-3cd1661f5466

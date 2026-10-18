@@ -1,0 +1,430 @@
+{
+ "summary": {
+  "loaded": 4,
+  "processed": 4,
+  "passed": 3,
+  "filtered": 0,
+  "errors": 0,
+  "dropped": 1,
+  "incomplete": false,
+  "durationMs": 0,
+  "branches": [
+   {
+    "branch": "high-value",
+    "passed": 2,
+    "filtered": 2,
+    "errors": 0,
+    "dropped": 0
+   },
+   {
+    "branch": "audit",
+    "passed": 3,
+    "filtered": 0,
+    "errors": 0,
+    "dropped": 1
+   },
+   {
+    "branch": "refunds",
+    "passed": 1,
+    "filtered": 3,
+    "errors": 0,
+    "dropped": 0
+   }
+  ]
+ },
+ "issues": [],
+ "results": [
+  {
+   "seq": 0,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "high-value",
+     "status": "passed",
+     "filter": [
+      {
+       "path": "/branches/0/filter",
+       "result": true
+      }
+     ],
+     "steps": [
+      {
+       "index": 0,
+       "id": "tag",
+       "kind": "set",
+       "patch": [
+        {
+         "op": "add",
+         "path": "/value/tier",
+         "value": "gold"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-high",
+       "key": "o-1",
+       "value": {
+        "amount": 1500,
+        "email": "big@spender.com",
+        "orderId": "o-1",
+        "tier": "gold",
+        "type": "sale"
+       },
+       "headers": [],
+       "sizeBytes": 88,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    },
+    {
+     "branch": "audit",
+     "status": "passed",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "mask",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/email",
+         "value": "b**@spender.com"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "drop-test",
+       "kind": "drop_if",
+       "patch": [],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-audit",
+       "key": null,
+       "value": {
+        "amount": 1500,
+        "email": "b**@spender.com",
+        "orderId": "o-1",
+        "type": "sale"
+       },
+       "headers": [],
+       "sizeBytes": 71,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    },
+    {
+     "branch": "refunds",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/2/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 1,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "high-value",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/0/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    },
+    {
+     "branch": "audit",
+     "status": "passed",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "mask",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/email",
+         "value": "s****@buyer.org"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "drop-test",
+       "kind": "drop_if",
+       "patch": [],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-audit",
+       "key": null,
+       "value": {
+        "amount": 20,
+        "email": "s****@buyer.org",
+        "orderId": "o-2",
+        "type": "refund"
+       },
+       "headers": [],
+       "sizeBytes": 71,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    },
+    {
+     "branch": "refunds",
+     "status": "passed",
+     "filter": [
+      {
+       "path": "/branches/2/filter",
+       "result": true
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-refunds",
+       "key": null,
+       "value": {
+        "amount": 20,
+        "email": "small@buyer.org",
+        "orderId": "o-2",
+        "type": "refund"
+       },
+       "headers": [],
+       "sizeBytes": 71,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "seq": 2,
+   "status": "dropped",
+   "error": null,
+   "branches": [
+    {
+     "branch": "high-value",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/0/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    },
+    {
+     "branch": "audit",
+     "status": "dropped",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "mask",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/email",
+         "value": "q*@test.dev"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "drop-test",
+       "kind": "drop_if",
+       "patch": [
+        {
+         "op": "remove",
+         "path": "/0"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": []
+    },
+    {
+     "branch": "refunds",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/2/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 3,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "high-value",
+     "status": "passed",
+     "filter": [
+      {
+       "path": "/branches/0/filter",
+       "result": true
+      }
+     ],
+     "steps": [
+      {
+       "index": 0,
+       "id": "tag",
+       "kind": "set",
+       "patch": [
+        {
+         "op": "add",
+         "path": "/value/tier",
+         "value": "gold"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-high",
+       "key": null,
+       "value": {
+        "amount": 2000,
+        "email": "nokey@buyer.org",
+        "tier": "gold",
+        "type": "sale"
+       },
+       "headers": [],
+       "sizeBytes": 69,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    },
+    {
+     "branch": "audit",
+     "status": "passed",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "mask",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/email",
+         "value": "n****@buyer.org"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "drop-test",
+       "kind": "drop_if",
+       "patch": [],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-audit",
+       "key": null,
+       "value": {
+        "amount": 2000,
+        "email": "n****@buyer.org",
+        "type": "sale"
+       },
+       "headers": [],
+       "sizeBytes": 55,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    },
+    {
+     "branch": "refunds",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/2/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  }
+ ],
+ "masked": false
+}

@@ -1,0 +1,125 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- $sel := dict "root" . }}
+# Default deny for every Event Router pod; the policies below open only what each component needs.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "er.fullname" . }}-default-deny
+  labels: {{- include "er.labels" (dict "root" . "component" "network") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ include "er.name" . }}
+  policyTypes: [Ingress, Egress]
+  egress:
+    - ports: [{ port: 53, protocol: UDP }, { port: 53, protocol: TCP }]
+---
+# api: public port from the ingress controller and web; internal port only from workers and preview.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "er.fullname" . }}-api
+  labels: {{- include "er.labels" (dict "root" . "component" "api") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "er.selector" (dict "root" . "component" "api") | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {{- toYaml .Values.networkPolicy.ingressNamespaceSelector | nindent 14 }}
+        - podSelector:
+            matchLabels: {{- include "er.selector" (dict "root" . "component" "web") | nindent 14 }}
+      ports: [{ port: {{ .Values.api.port }} }]
+    - from:
+        - podSelector:
+            matchLabels: {{- include "er.selector" (dict "root" . "component" "worker") | nindent 14 }}
+        - podSelector:
+            matchLabels: {{- include "er.selector" (dict "root" . "component" "preview") | nindent 14 }}
+      ports: [{ port: {{ .Values.api.internalPort }} }]
+  egress:
+    {{- range .Values.networkPolicy.apiEgress }}
+    - to: [{ ipBlock: { cidr: {{ .cidr }} } }]
+      ports: {{- range .ports }}
+        - { port: {{ . }}, protocol: TCP }
+      {{- end }}
+    {{- end }}
+    {{- range .Values.networkPolicy.kafkaEgress }}
+    - to: [{ ipBlock: { cidr: {{ .cidr }} } }]
+      ports: {{- range .ports }}
+        - { port: {{ . }}, protocol: TCP }
+      {{- end }}
+    {{- end }}
+    - to:
+        - podSelector:
+            matchLabels: {{- include "er.selector" (dict "root" . "component" "preview") | nindent 14 }}
+      ports: [{ port: {{ .Values.preview.port }} }]
+---
+{{- range $component := list "worker" "preview" }}
+# {{ $component }}: metrics/health from the namespace; egress to the api internal port, Kafka and Redis.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "er.fullname" $ }}-{{ $component }}
+  labels: {{- include "er.labels" (dict "root" $ "component" $component) | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "er.selector" (dict "root" $ "component" $component) | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector: {}
+      ports: [{ port: {{ (index $.Values $component).port }} }]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: {{- include "er.selector" (dict "root" $ "component" "api") | nindent 14 }}
+      ports: [{ port: {{ $.Values.api.internalPort }} }, { port: {{ $.Values.api.port }} }]
+    {{- range concat $.Values.networkPolicy.kafkaEgress $.Values.networkPolicy.redisEgress }}
+    - to: [{ ipBlock: { cidr: {{ .cidr }} } }]
+      ports: {{- range .ports }}
+        - { port: {{ . }}, protocol: TCP }
+      {{- end }}
+    {{- end }}
+---
+{{- end }}
+# migrate hook Job: egress to the database only (same allow-list as the api).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "er.fullname" . }}-migrate
+  labels: {{- include "er.labels" (dict "root" . "component" "migrate") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "er.selector" (dict "root" . "component" "migrate") | nindent 6 }}
+  policyTypes: [Egress]
+  egress:
+    {{- range .Values.networkPolicy.apiEgress }}
+    - to: [{ ipBlock: { cidr: {{ .cidr }} } }]
+      ports: {{- range .ports }}
+        - { port: {{ . }}, protocol: TCP }
+      {{- end }}
+    {{- end }}
+---
+# web: only from the ingress controller; egress to the api public port (nginx proxy for /api, /auth).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "er.fullname" . }}-web
+  labels: {{- include "er.labels" (dict "root" . "component" "web") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "er.selector" (dict "root" . "component" "web") | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: {{- toYaml .Values.networkPolicy.ingressNamespaceSelector | nindent 14 }}
+      ports: [{ port: {{ .Values.web.port }} }]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: {{- include "er.selector" (dict "root" . "component" "api") | nindent 14 }}
+      ports: [{ port: {{ .Values.api.port }} }]
+{{- end }}

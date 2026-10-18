@@ -1,0 +1,7 @@
+# Lint config for `make openapi-lint`; redirect-only auth operations legitimately lack 2xx/4xx bodies.
+extends:
+  - recommended
+rules:
+  info-license: off
+  operation-2xx-response: warn
+  operation-4xx-response: warn

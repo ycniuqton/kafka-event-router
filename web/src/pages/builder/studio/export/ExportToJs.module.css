@@ -1,0 +1,4 @@
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 10px;border-radius:8px;border:1px solid var(--acc);background:var(--p2);font-size:12px}
+.count{font:11px var(--font-mono);color:var(--acc)}
+.spacer{flex:1}
+.check{margin:0 2px 0 0;accent-color:var(--acc)}

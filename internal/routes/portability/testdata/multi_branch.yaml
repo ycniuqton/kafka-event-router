@@ -1,0 +1,50 @@
+---
+apiVersion: router/v1
+name: orders-split
+source:
+  connectionId: orders-prod
+  consumerGroup: router.orders-split
+  format:
+    type: json
+  startFrom:
+    mode: offsets
+    offsets:
+      "0": 42
+      "1": 7
+  topics:
+    - orders
+branches:
+  - destination:
+      connectionId: partner
+      format:
+        subject: orders-eu-value
+        type: avro
+      topic: orders-eu
+    filter:
+      field: value.region
+      op: eq
+      type: cond
+      value: EU
+    id: eu
+  - destination:
+      connectionId: orders-prod
+      topic: orders-rest
+    filter:
+      child:
+        field: value.region
+        op: eq
+        type: cond
+        value: EU
+      type: not
+    id: rest
+    transform:
+      steps:
+        - code: |-
+            function transform(event, ctx) {
+              event.value.note = "yes: no";
+              return event;
+            }
+          kind: js
+errorPolicy:
+  dlqConnectionId: partner
+  onError: dlq

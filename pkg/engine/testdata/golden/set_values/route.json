@@ -1,0 +1,18 @@
+{
+  "apiVersion": "router/v1",
+  "name": "set-values",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "s1", "kind": "set", "field": "value.meta.source", "source": { "from": "constant", "value": "router" } },
+      { "id": "s2", "kind": "set", "field": "value.meta.topic", "source": { "from": "metadata", "name": "topic" } },
+      { "id": "s3", "kind": "set", "field": "value.meta.offset", "source": { "from": "metadata", "name": "offset" } },
+      { "id": "s4", "kind": "set", "field": "value.total", "source": { "from": "field", "path": "value.amount" } },
+      { "id": "s5", "kind": "default_if_missing", "field": "value.currency", "value": "EUR" },
+      { "id": "s6", "kind": "set_key", "source": { "from": "field", "path": "value.orderId" } },
+      { "id": "s7", "kind": "set", "field": "headers.x-route", "source": { "from": "constant", "value": "set-values" } }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "orders-enriched" }
+  }]
+}

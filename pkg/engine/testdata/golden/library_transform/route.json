@@ -1,0 +1,13 @@
+{
+  "apiVersion": "router/v1",
+  "name": "library-transform",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "clean", "kind": "library", "ref": "orders-clean", "version": 2 },
+      { "id": "stamp", "kind": "set", "field": "value.cleanedBy", "source": { "from": "constant", "value": "orders-clean@2" } }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "orders-clean" }
+  }]
+}

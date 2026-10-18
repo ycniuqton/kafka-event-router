@@ -1,0 +1,101 @@
+{
+  "name": "UI spec 8.5 example: order summary with masked email and frozen now",
+  "entry": "transform",
+  "code": "// Return the new event, null to drop it, or an array to emit several events.\nfunction transform(event, ctx) {\n  const { order } = event.value;\n  return {\n    ...event,\n    value: {\n      orderId: order.id,\n      total: order.items.reduce((sum, i) =\u003e sum + i.price * i.qty, 0),\n      email: ctx.mask.email(order.customer.email),\n      processedAt: ctx.now(),\n    },\n  };\n}\n",
+  "now": "2024-05-01T12:00:00Z",
+  "events": [
+    {
+      "key": "o-1",
+      "value": {
+        "order": {
+          "customer": {
+            "email": "jane.doe@example.com"
+          },
+          "id": "o-1",
+          "items": [
+            {
+              "price": 10,
+              "qty": 2
+            },
+            {
+              "price": 5.5,
+              "qty": 1
+            }
+          ]
+        }
+      },
+      "headers": {
+        "trace": "t-1"
+      },
+      "topic": "orders",
+      "partition": 0,
+      "offset": 1,
+      "timestamp": "2024-05-01T11:59:59Z"
+    },
+    {
+      "key": "o-2",
+      "value": {
+        "order": {
+          "customer": {
+            "email": "bob@x.io"
+          },
+          "id": "o-2",
+          "items": []
+        }
+      },
+      "headers": {},
+      "topic": "orders",
+      "partition": 1,
+      "offset": 7,
+      "timestamp": "2024-05-01T11:59:58Z"
+    },
+    {
+      "key": "o-3",
+      "value": {
+        "nothing": true
+      },
+      "headers": {},
+      "topic": "orders",
+      "partition": 1,
+      "offset": 8,
+      "timestamp": "2024-05-01T11:59:58Z"
+    }
+  ],
+  "expect": [
+    {
+      "outputs": [
+        {
+          "key": "o-1",
+          "value": {
+            "email": "********@example.com",
+            "orderId": "o-1",
+            "processedAt": "2024-05-01T12:00:00.000Z",
+            "total": 25.5
+          },
+          "headers": {
+            "trace": "t-1"
+          }
+        }
+      ]
+    },
+    {
+      "outputs": [
+        {
+          "key": "o-2",
+          "value": {
+            "email": "***@x.io",
+            "orderId": "o-2",
+            "processedAt": "2024-05-01T12:00:00.000Z",
+            "total": 0
+          }
+        }
+      ]
+    },
+    {
+      "error": "runtime",
+      "message": "TypeError: cannot read property 'id' of undefined",
+      "line": 2
+    }
+  ],
+  "limits": {}
+}

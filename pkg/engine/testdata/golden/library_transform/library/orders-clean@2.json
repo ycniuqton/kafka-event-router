@@ -1,0 +1,6 @@
+[
+  { "id": "rename", "kind": "rename", "from": "value.cust_id", "to": "value.customerId" },
+  { "id": "mask", "kind": "mask", "field": "value.card", "style": "last4" },
+  { "id": "off", "kind": "remove", "fields": ["value.customerId"], "enabled": false },
+  { "id": "drop-test", "kind": "drop_if", "condition": { "type": "cond", "field": "value.test", "op": "eq", "value": true } }
+]

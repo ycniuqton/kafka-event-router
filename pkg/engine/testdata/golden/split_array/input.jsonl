@@ -1,0 +1,4 @@
+{"orderId":"o-1","items":[{"sku":"A","qty":1},{"sku":"B","qty":2}]}
+{"orderId":"o-2","items":[]}
+{"orderId":"o-3","items":[{"sku":"A"},{"sku":"B"},{"sku":"C"},{"sku":"D"}]}
+{"orderId":"o-4","items":"none"}

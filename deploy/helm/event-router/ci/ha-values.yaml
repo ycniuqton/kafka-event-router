@@ -1,0 +1,33 @@
+# HA profile: 3 api / 3 workers spread one per node and across zones, persistent worker cache,
+# TLS + mTLS workload auth, per-key DB secret from a Postgres operator, external backing services.
+global: { environment: production, publicURL: https://router.example.com }
+external:
+  kafkaBootstrap: kafka-bootstrap.kafka.svc:9093
+  vault: { addr: https://vault.vault.svc:8200 }
+  oidc: { issuer: https://idp.example.com }
+  metrics: { backend: prometheus, url: http://prometheus-operated.monitoring.svc:9090 }
+  tracing: { exporter: otlp, otlpEndpoint: otel-collector.observability.svc:4317 }
+env: { ROUTER_WORKLOAD_AUTH: mtls, ROUTER_LOG_LEVEL: info }
+secret:
+  existingSecret: event-router-secrets
+  keyRefs:
+    ROUTER_DATABASE_URL: { name: router-pg-app, key: uri }
+tls: { enabled: true, secretName: event-router-tls }
+scheduling:
+  antiAffinity: hard   # one pod per node per component: needs >= max replicas (api HPA 9) schedulable nodes
+  spread: { hostname: DoNotSchedule, zone: DoNotSchedule }
+api:
+  replicas: 3
+  pdb: { minAvailable: 2 }
+  hpa: { enabled: true, minReplicas: 3, maxReplicas: 9 }
+worker:
+  kind: StatefulSet
+  replicas: 3
+  zone: { fromTopologyLabel: true }
+  cache:
+    sizeLimit: 2Gi
+    persistence: { enabled: true, storageClassName: standard-rwo }
+  pdb: { maxUnavailable: 1 }
+preview: { replicas: 2, pdb: { minAvailable: 1 } }
+web: { replicas: 3, pdb: { minAvailable: 2 } }
+ingress: { host: router.example.com, tlsSecretName: router-ingress-tls }

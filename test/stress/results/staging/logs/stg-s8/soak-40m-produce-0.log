@@ -1,0 +1,1 @@
+# /opt/event-router/stress/loadgen produce --brokers 127.0.0.1:29092 --topic stress-stg-101719093631-soak-40m-r0-in --steps 7000:40m0s --lanes 4 --streams 512 --stream-prefix p0 --keys roundrobin --size 1024 --acks all --linger 5ms --compression none --bad-ratio 0 --interval 15s --stop-on-eof

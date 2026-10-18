@@ -1,0 +1,9 @@
+.viewport{height:var(--viewport-h);max-height:calc(100vh - 300px);min-height:200px;overflow-y:auto}
+.spacer{height:var(--pad)}
+.row{height:var(--row-h);box-sizing:border-box;font-size:12px}
+.sensitive{background:color-mix(in oklch,var(--warn) 9%,transparent)}
+.sensitive .action{color:var(--warn)}
+.sensitive:hover{background:color-mix(in oklch,var(--warn) 15%,transparent)}
+.mono2{font-family:var(--font-mono);color:var(--tx2)}
+.mono3{font-family:var(--font-mono);color:var(--tx3)}
+.status{padding:10px 14px;font-size:12px;color:var(--tx3);text-align:center}

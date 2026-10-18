@@ -1,0 +1,81 @@
+{
+  "name": "Avro-decoded order: long beyond 2^53, decimal, bytes and timestamp cross the boundary losslessly",
+  "entry": "transform",
+  "code": "function transform(event, ctx) {\n  const v = event.value;\n  ctx.log('id is ' + typeof v.id + ', qty is ' + typeof v.qty);\n  return {\n    key: event.key,\n    value: {\n      id: v.id,\n      nextId: { $long: (BigInt(v.id.$long) + 1n).toString() },\n      qty: v.qty * 2,\n      amount: v.amount,\n      doubled: { $decimal: (Number(v.amount.$decimal) * 2).toFixed(2) },\n      payload: v.payload,\n      placedAt: v.placedAt,\n      placedMs: Date.parse(v.placedAt.$timestamp),\n      tags: v.tags\n    }\n  };\n}\n",
+  "now": "2024-05-01T12:00:00Z",
+  "events": [
+    {
+      "key": "o-1",
+      "value": {
+        "amount": {
+          "$decimal": "19.99"
+        },
+        "id": {
+          "$long": "9007199254740993"
+        },
+        "payload": {
+          "$bytes": "AAEC/w=="
+        },
+        "placedAt": {
+          "$timestamp": "2024-04-30T08:15:00.123Z"
+        },
+        "qty": 3,
+        "tags": [
+          "a",
+          {
+            "$long": "-9223372036854775808"
+          }
+        ]
+      },
+      "headers": {},
+      "topic": "orders.avro",
+      "partition": 0,
+      "offset": 1,
+      "timestamp": "2024-04-30T08:15:01Z"
+    }
+  ],
+  "expect": [
+    {
+      "outputs": [
+        {
+          "key": "o-1",
+          "value": {
+            "amount": {
+              "$decimal": "19.99"
+            },
+            "doubled": {
+              "$decimal": "39.98"
+            },
+            "id": {
+              "$long": "9007199254740993"
+            },
+            "nextId": {
+              "$long": "9007199254740994"
+            },
+            "payload": {
+              "$bytes": "AAEC/w=="
+            },
+            "placedAt": {
+              "$timestamp": "2024-04-30T08:15:00.123Z"
+            },
+            "placedMs": 1714464900123,
+            "qty": 6,
+            "tags": [
+              "a",
+              {
+                "$long": "-9223372036854775808"
+              }
+            ]
+          }
+        }
+      ],
+      "logs": [
+        "id is object, qty is number"
+      ]
+    }
+  ],
+  "limits": {},
+  "formats": [
+    "avro"
+  ]
+}

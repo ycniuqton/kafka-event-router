@@ -1,0 +1,26 @@
+12:29:58 pinned worker (pid 1666287) to CPUs 0-5
+12:29:58 pinned kafka (pid 1583441) to CPUs 6-9
+12:29:58 case f50: 1 route(s), 12 partition(s), 1 step(s)
+12:35:09 case f50: max sustainable 65000 ev/s, knee 0 (), lost 0, error ""
+12:35:14 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+12:35:14 case s5: 1 route(s), 12 partition(s), 1 step(s)
+12:40:25 case s5: max sustainable 0 ev/s, knee 65000 (p99_over_limit), lost 0, error ""
+12:40:30 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+12:40:30 case s20: 1 route(s), 12 partition(s), 2 step(s)
+12:45:31 case s20 step 0 (50000 ev/s): sustained (lag slope -10.5/s, p99 647.2 ms)
+12:51:33 case s20: max sustainable 50000 ev/s, knee 57500 (lag_growing), lost 0, error ""
+12:51:38 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+12:51:38 case js: 1 route(s), 12 partition(s), 2 step(s)
+12:56:39 case js step 0 (5000 ev/s): sustained (lag slope 0.2/s, p99 188.4 ms)
+13:02:53 case js: max sustainable 5000 ev/s, knee 6500 (lag_growing), lost 0, error ""
+13:02:59 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+13:02:59 case f10-s5-js: 1 route(s), 12 partition(s), 2 step(s)
+13:07:59 case f10-s5-js step 0 (4000 ev/s): sustained (lag slope 0.0/s, p99 25.9 ms)
+13:13:13 case f10-s5-js: max sustainable 4000 ev/s, knee 5000 (p99_over_limit), lost 0, error ""
+13:13:19 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+13:13:19 case f50-s20-js: 1 route(s), 12 partition(s), 2 step(s)
+13:18:19 case f50-s20-js step 0 (4000 ev/s): sustained (lag slope 0.3/s, p99 434.2 ms)
+13:24:30 case f50-s20-js: max sustainable 4000 ev/s, knee 5000 (lag_growing), lost 0, error ""
+13:24:35 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+13:24:35 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s5-confirm/s5-confirm.json

@@ -1,0 +1,8 @@
+.toolbar{display:flex;flex-direction:column;gap:6px}
+.line{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.upload{display:inline-flex;align-items:center;justify-content:center;height:26px;padding:0 10px;border:1px dashed var(--ln2);border-radius:var(--radius-sm);color:var(--tx2);font-size:12px;cursor:pointer}
+.upload:hover{color:var(--tx);border-color:var(--acc)}
+.upload[data-disabled]{opacity:.5;cursor:default}
+.file{display:none}
+.format{display:flex;align-items:center;gap:6px}
+.formatLabel{font-size:11px;color:var(--tx3)}

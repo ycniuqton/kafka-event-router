@@ -1,0 +1,141 @@
+{
+  "a": null,
+  "b": {
+    "apiVersion": "router/v1",
+    "name": "merge",
+    "source": {
+      "connectionId": "c1",
+      "topics": [
+        "a",
+        "b"
+      ],
+      "format": {
+        "type": "json"
+      },
+      "startFrom": {
+        "mode": "earliest"
+      }
+    },
+    "branches": [
+      {
+        "id": "main",
+        "filter": {
+          "type": "not",
+          "child": {
+            "type": "expr",
+            "code": "event.value.test === true"
+          }
+        },
+        "destination": {
+          "connectionId": "c2",
+          "topic": "all",
+          "key": {
+            "mode": "field",
+            "field": "value.id"
+          },
+          "createTopic": {
+            "partitions": 6
+          }
+        }
+      }
+    ],
+    "delivery": {
+      "mode": "at_least_once"
+    }
+  },
+  "expected": {
+    "a": "a",
+    "b": "b",
+    "sections": [
+      {
+        "section": "source",
+        "lines": [
+          {
+            "mark": "+",
+            "text": "connection c1",
+            "path": "/source/connectionId"
+          },
+          {
+            "mark": "+",
+            "text": "topic a",
+            "path": "/source/topics/0"
+          },
+          {
+            "mark": "+",
+            "text": "topic b",
+            "path": "/source/topics/1"
+          },
+          {
+            "mark": "+",
+            "text": "start from earliest",
+            "path": "/source"
+          },
+          {
+            "mark": "+",
+            "text": "format json",
+            "path": "/source/format"
+          }
+        ]
+      },
+      {
+        "section": "filter",
+        "lines": [
+          {
+            "mark": "+",
+            "text": "not",
+            "path": "/branches/0/filter/type"
+          },
+          {
+            "mark": "+",
+            "text": "expression: event.value.test === true",
+            "path": "/branches/0/filter/child"
+          }
+        ]
+      },
+      {
+        "section": "transform",
+        "lines": []
+      },
+      {
+        "section": "destination",
+        "lines": [
+          {
+            "mark": "+",
+            "text": "connection c2",
+            "path": "/branches/0/destination/connectionId"
+          },
+          {
+            "mark": "+",
+            "text": "topic all",
+            "path": "/branches/0/destination/topic"
+          },
+          {
+            "mark": "+",
+            "text": "key field value.id",
+            "path": "/branches/0/destination/key"
+          },
+          {
+            "mark": "+",
+            "text": "create topic with partitions 6",
+            "path": "/branches/0/destination"
+          }
+        ]
+      },
+      {
+        "section": "settings",
+        "lines": [
+          {
+            "mark": "+",
+            "text": "name merge",
+            "path": "/name"
+          },
+          {
+            "mark": "+",
+            "text": "delivery at_least_once",
+            "path": "/delivery"
+          }
+        ]
+      }
+    ]
+  }
+}

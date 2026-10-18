@@ -1,0 +1,10 @@
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--ln);cursor:pointer}
+.row:last-child{border-bottom:none}
+.row:hover{background:var(--p2)}
+.selected,.selected:hover{background:var(--p3)}
+.check{accent-color:var(--acc)}
+.label{font:600 13px var(--font-mono);width:34px}
+.body{flex:1;min-width:0}
+.note{font-weight:500}
+.meta{font-size:12px;color:var(--tx3)}
+.origin{color:var(--tx2)}

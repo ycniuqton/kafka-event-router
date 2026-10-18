@@ -1,0 +1,3 @@
+{"branch":"main","topic":"customers","key":null,"value":{"customer":{"fullName":"Ada Lovelace","id":"C-1","tier":"gold"},"receivedFrom":"crm","source":"crm","total":1428.6},"headers":[]}
+{"branch":"main","topic":"customers","key":null,"value":{"customer":{"fullName":"Bob","id":"C-2","tier":"standard"},"receivedFrom":"crm","source":"crm","total":11.9},"headers":[]}
+{"branch":"main","topic":"customers","key":null,"value":{"customer":{"fullName":"Nobody","tier":"standard"},"receivedFrom":"crm","source":"crm","total":8.33},"headers":[]}

@@ -1,0 +1,4 @@
+.icon{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:15px;padding:0 2px;border-radius:var(--radius-xs);border:1px solid var(--ln2);font:9.5px/1 var(--font-mono);color:var(--tx3);align-self:center}
+.icon[data-kind="string"]{color:var(--cstr)}
+.icon[data-kind="number"]{color:var(--cnum)}
+.icon[data-kind="boolean"],.icon[data-kind="null"]{color:var(--warn)}

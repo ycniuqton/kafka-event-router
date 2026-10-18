@@ -1,0 +1,49 @@
+name: s5-explore
+description: >
+  S5 exploration pass — rule complexity on one route (12 partitions, 1 KB, default maxInFlight 1000, i.e. the S2 p12
+  configuration whose knee is 65k ev/s). 1-min steps (20 s warm-up) locate each configuration's own knee; s5-confirm
+  re-checks it with 5-min steps. Non-JS cases ramp 20k -> 90k, JS cases ramp 500 -> 10k (S1: ~0.8k ev/s per core).
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 20s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+    steps:
+      - {rate: 20000, duration: 1m}
+      - {rate: 30000, duration: 1m}
+      - {rate: 40000, duration: 1m}
+      - {rate: 50000, duration: 1m}
+      - {rate: 57500, duration: 1m}
+      - {rate: 65000, duration: 1m}
+      - {rate: 72500, duration: 1m}
+      - {rate: 80000, duration: 1m}
+      - {rate: 90000, duration: 1m}
+  drain: {timeout: 3m}
+jsSteps: &jsramp
+  - {rate: 500, duration: 1m}
+  - {rate: 1000, duration: 1m}
+  - {rate: 1500, duration: 1m}
+  - {rate: 2000, duration: 1m}
+  - {rate: 3000, duration: 1m}
+  - {rate: 4000, duration: 1m}
+  - {rate: 5000, duration: 1m}
+  - {rate: 6500, duration: 1m}
+  - {rate: 8000, duration: 1m}
+  - {rate: 10000, duration: 1m}
+cases:
+  - {name: baseline}
+  - {name: f1, routes: {filter: {conditions: 1}}}
+  - {name: f10, routes: {filter: {conditions: 10}}}
+  - {name: f50, routes: {filter: {conditions: 50}}}
+  - {name: s1, routes: {steps: {count: 1, kind: set}}}
+  - {name: s5, routes: {steps: {count: 5, kind: set}}}
+  - {name: s20, routes: {steps: {count: 20, kind: set}}}
+  - {name: js, routes: {js: identity}, load: {steps: *jsramp}}
+  - {name: f10-s5-js, routes: {filter: {conditions: 10}, steps: {count: 5, kind: set}, js: identity}, load: {steps: *jsramp}}
+  - {name: f50-s20-js, routes: {filter: {conditions: 50}, steps: {count: 20, kind: set}, js: identity}, load: {steps: *jsramp}}

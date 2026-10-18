@@ -1,0 +1,7 @@
+.check{accent-color:var(--acc)}
+.name{min-width:0}
+.title{font-weight:500}
+.owner{font-size:12px;color:var(--tx3)}
+.throughput{display:flex;align-items:center;gap:8px}
+.changed{font-size:12px;color:var(--tx3)}
+.tag{margin-left:6px;color:var(--tx2);font-family:var(--font-mono);font-size:11px}

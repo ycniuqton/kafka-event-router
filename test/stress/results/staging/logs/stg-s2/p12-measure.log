@@ -1,0 +1,1 @@
+# /opt/event-router/stress/loadgen measure --brokers 127.0.0.1:29092 --topics stress-stg-101718532489-p12-r0-out --from end --seq-source header --interval 5s --drain-idle 5s --track-by stream --stop-on-eof

@@ -1,0 +1,15 @@
+.modalScrim{position:fixed;inset:0;background:var(--scrim-modal);z-index:var(--z-modal);display:grid;place-items:center;padding:24px}
+.modal{width:min(var(--modal-w),100%);max-height:calc(100vh - 48px);overflow:auto;background:var(--p1);border:1px solid var(--ln2);border-radius:var(--radius-2xl);padding:22px;display:flex;flex-direction:column;gap:16px}
+.modalHead{display:flex;align-items:flex-start;gap:12px}
+.modalTitles{flex:1;min-width:0}
+.modalTitle{font-size:17px;font-weight:600}
+.modalSubtitle{color:var(--tx2);font-size:12px}
+.close{border:none;background:none;color:var(--tx3);font-size:18px;line-height:1;cursor:pointer;padding:0 2px}
+.close:hover{color:var(--tx)}
+.footer{display:flex;gap:8px;justify-content:flex-end}
+.drawerScrim{position:fixed;inset:0;background:var(--scrim-drawer);z-index:var(--z-drawer-scrim)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(var(--drawer-w),100%);background:var(--p1);border-left:1px solid var(--ln2);z-index:var(--z-drawer);display:flex;flex-direction:column;box-shadow:var(--shadow-drawer)}
+.drawerHead{height:var(--topbar-h);flex:none;display:flex;align-items:center;padding:0 18px;border-bottom:1px solid var(--ln)}
+.drawerTitle{font-weight:600;flex:1;font-size:15px}
+.drawerBody{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.drawerFooter{flex:none;display:flex;gap:8px;align-items:center;padding:14px 18px;border-top:1px solid var(--ln)}

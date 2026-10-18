@@ -1,0 +1,2 @@
+.root{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.marker{font-size:11px;color:var(--tx3);white-space:nowrap}

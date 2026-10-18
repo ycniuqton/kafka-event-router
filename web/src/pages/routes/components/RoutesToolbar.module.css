@@ -1,0 +1,10 @@
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.search{width:260px;max-width:100%}
+.facet{width:170px;max-width:100%}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.spacer{flex:1}
+@media (max-width:760px){
+  .search{width:100%}
+  .facet{display:none}
+  .view{display:none}
+}

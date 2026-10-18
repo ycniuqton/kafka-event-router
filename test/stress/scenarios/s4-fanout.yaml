@@ -1,0 +1,29 @@
+name: s4-fanout
+description: >
+  S4 — fan-out: N routes consume the same input topic (each its own group and output topic), fixed input rate.
+  Output volume = N x input. Delivery is tracked per output topic (every topic must get every event once).
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {topology: shared_input}
+  measure: {trackBy: topic-stream}
+  load:
+    size: 1024
+    lanes: 4
+    streams: 256
+    steps: [{rate: 5000, duration: 5m}]
+  drain: {timeout: 5m}
+cases:
+  - {name: n1, routes: {count: 1}}
+  - {name: n5, routes: {count: 5}}
+  - {name: n10, routes: {count: 10}}
+  # N >= 25 overloads one worker (output = N x 5k ev/s): 1-min segments so stopOnKnee ends the load after the
+  # first failing minute instead of building a backlog that cannot drain within the timeout.
+  - name: n25
+    routes: {count: 25}
+    load: {steps: [{rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}]}
+  - name: n50
+    routes: {count: 50}
+    load: {steps: [{rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}, {rate: 5000, duration: 1m}]}

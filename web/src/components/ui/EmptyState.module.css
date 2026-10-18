@@ -1,0 +1,5 @@
+.empty{padding:48px;text-align:center;border:1px dashed var(--ln2);border-radius:var(--radius-xl);color:var(--tx2)}
+.compact{padding:24px}
+.title{font-weight:500;color:var(--tx)}
+.description{margin:4px 0 0}
+.action{margin-top:14px;display:flex;justify-content:center;gap:8px}

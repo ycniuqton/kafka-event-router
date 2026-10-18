@@ -1,0 +1,4 @@
+.wrap{padding:10px 12px}
+.path{font:12px var(--font-mono);color:var(--ckey)}
+.value{font:12px var(--font-mono)}
+.actions{padding:4px 14px 2px;border-bottom:1px solid var(--ln);background:var(--p3)}

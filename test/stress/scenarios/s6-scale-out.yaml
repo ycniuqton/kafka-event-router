@@ -1,0 +1,48 @@
+name: s6-scale-out
+description: >
+  S6 — scale-out 1 -> 2 -> 3 workers, one route with replicas = workers, 48 partitions. Locally each worker is pinned
+  to its own 2 cores (0-1, 2-3, 4-5) so the per-worker CPU budget is constant; extra workers are started by
+  test/stress/scripts/workers.sh (metrics :8091, :8092). Compare maxSustainableRate across cases.
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+targetExtras:
+  local:
+    metrics:
+      - {name: worker-2, source: {kind: http, url: "http://127.0.0.1:8091/metrics"}}
+      - {name: worker-3, source: {kind: http, url: "http://127.0.0.1:8092/metrics"}}
+    processes:
+      - {name: worker-2, pid: {kind: file, path: .local/run/stress-worker-2.pid}}
+      - {name: worker-3, pid: {kind: file, path: .local/run/stress-worker-3.pid}}
+defaults:
+  partitions: 48
+  routes: {count: 1}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+    steps:
+      - {rate: 10000, duration: 5m}
+      - {rate: 20000, duration: 5m}
+      - {rate: 30000, duration: 5m}
+      - {rate: 40000, duration: 5m}
+      - {rate: 50000, duration: 5m}
+      - {rate: 65000, duration: 5m}
+      - {rate: 80000, duration: 5m}
+      - {rate: 100000, duration: 5m}
+      - {rate: 130000, duration: 5m}
+      - {rate: 160000, duration: 5m}
+  drain: {timeout: 5m}
+cases:
+  - name: w1
+    routes: {replicas: 1}
+    hooks: {before: ["test/stress/scripts/workers.sh scale 1"]}
+  - name: w2
+    routes: {replicas: 2}
+    hooks: {before: ["test/stress/scripts/workers.sh scale 2"]}
+  - name: w3
+    routes: {replicas: 3}
+    hooks:
+      before: ["test/stress/scripts/workers.sh scale 3"]
+      after: ["test/stress/scripts/workers.sh scale 1"]

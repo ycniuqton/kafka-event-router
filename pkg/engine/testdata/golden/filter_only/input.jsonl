@@ -1,0 +1,5 @@
+{"eventType":"OrderPaid","amount":150,"id":1}
+{"eventType":"OrderCreated","amount":500,"id":2}
+{"eventType":"OrderPaid","amount":50,"id":3}
+{"eventType":"OrderPaid","id":4}
+{"eventType":"OrderPaid","amount":100.5,"id":5}

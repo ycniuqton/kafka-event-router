@@ -1,0 +1,7 @@
+.step{padding:24px 28px;max-width:720px;display:flex;flex-direction:column;gap:20px}
+.connRow{display:flex;align-items:center;gap:10px}
+.connSelect{flex:1;font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.group{color:var(--tx2);border-color:var(--ln)}
+.groupLabel{display:flex;align-items:center;gap:8px}
+.advanced{border:none;background:none;padding:0;color:var(--acc);font-size:12px;cursor:pointer}

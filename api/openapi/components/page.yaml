@@ -1,0 +1,8 @@
+PageMeta:
+  type: object
+  description: Mix into list responses with allOf; `items` is defined by each list.
+  required: [next_cursor]
+  properties:
+    next_cursor:
+      type: [string, "null"]
+      description: Opaque, tamper-checked cursor of the next page; null on the last page.

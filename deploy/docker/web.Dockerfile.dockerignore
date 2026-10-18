@@ -1,0 +1,8 @@
+**
+!web/**
+web/node_modules
+web/dist
+!deploy/docker/nginx.conf
+!testdata/rbac/**
+!testdata/approvals/**
+!internal/preview/testdata/patch/**

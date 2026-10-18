@@ -1,0 +1,40 @@
+name: s5-rule-complexity
+description: >
+  S5 — cost of rule complexity: max sustainable rate of one route (12 partitions, 1 KB) with filters of 1/10/50
+  always-true conditions, 1/5/20 recipe steps, with and without an identity JavaScript step. Compare each case's
+  maxSustainableRate with the "baseline" case.
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+    steps:
+      - {rate: 2000, duration: 5m}
+      - {rate: 5000, duration: 5m}
+      - {rate: 10000, duration: 5m}
+      - {rate: 20000, duration: 5m}
+      - {rate: 30000, duration: 5m}
+      - {rate: 40000, duration: 5m}
+      - {rate: 50000, duration: 5m}
+      - {rate: 65000, duration: 5m}
+      - {rate: 80000, duration: 5m}
+      - {rate: 100000, duration: 5m}
+      - {rate: 130000, duration: 5m}
+  drain: {timeout: 5m}
+cases:
+  - {name: baseline}
+  - {name: f1, routes: {filter: {conditions: 1}}}
+  - {name: f10, routes: {filter: {conditions: 10}}}
+  - {name: f50, routes: {filter: {conditions: 50}}}
+  - {name: s1, routes: {steps: {count: 1, kind: set}}}
+  - {name: s5, routes: {steps: {count: 5, kind: set}}}
+  - {name: s20, routes: {steps: {count: 20, kind: set}}}
+  - {name: js, routes: {js: identity}}
+  - {name: f10-s5-js, routes: {filter: {conditions: 10}, steps: {count: 5, kind: set}, js: identity}}
+  - {name: f50-s20-js, routes: {filter: {conditions: 50}, steps: {count: 20, kind: set}, js: identity}}

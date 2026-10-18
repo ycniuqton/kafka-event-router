@@ -1,0 +1,4 @@
+.hint{font-size:12px;color:var(--tx2)}
+.group{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.label{font-size:12px;color:var(--tx2)}
+.error{font-size:12px;color:var(--err)}

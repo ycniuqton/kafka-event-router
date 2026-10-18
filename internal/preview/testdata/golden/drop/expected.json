@@ -1,0 +1,169 @@
+{
+ "summary": {
+  "loaded": 4,
+  "processed": 4,
+  "passed": 1,
+  "filtered": 0,
+  "errors": 0,
+  "dropped": 3,
+  "incomplete": false,
+  "durationMs": 0,
+  "branches": [
+   {
+    "branch": "main",
+    "passed": 1,
+    "filtered": 0,
+    "errors": 0,
+    "dropped": 3
+   }
+  ]
+ },
+ "issues": [],
+ "results": [
+  {
+   "seq": 0,
+   "status": "dropped",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "dropped",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "d1",
+       "kind": "drop_if",
+       "patch": [
+        {
+         "op": "remove",
+         "path": "/0"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 1,
+   "status": "dropped",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "dropped",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "d1",
+       "kind": "drop_if",
+       "patch": [
+        {
+         "op": "remove",
+         "path": "/0"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 2,
+   "status": "dropped",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "dropped",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "d1",
+       "kind": "drop_if",
+       "patch": [
+        {
+         "op": "remove",
+         "path": "/0"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 3,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "d1",
+       "kind": "drop_if",
+       "patch": [],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "s1",
+       "kind": "set",
+       "patch": [
+        {
+         "op": "add",
+         "path": "/value/kept",
+         "value": true
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "events-prod",
+       "key": null,
+       "value": {
+        "env": "prod",
+        "id": 4,
+        "kept": true
+       },
+       "headers": [],
+       "sizeBytes": 33,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "masked": false
+}

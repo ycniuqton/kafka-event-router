@@ -1,0 +1,11 @@
+.body{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto}
+.line{font-weight:500;color:var(--err)}
+.line[data-ok]{color:var(--ok)}
+.meta{font:11px var(--font-mono);color:var(--tx3)}
+.warn{font-size:12px;color:var(--warn)}
+.failure{display:flex;gap:8px;align-items:baseline;font:11.5px var(--font-mono);padding:4px 0;border-bottom:1px solid var(--ln)}
+.seq{color:var(--tx3)}
+.step{color:var(--tx2)}
+.message{color:var(--err);word-break:break-word}
+.topic{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);font-size:12px}
+.link{color:var(--acc);font-size:12px}

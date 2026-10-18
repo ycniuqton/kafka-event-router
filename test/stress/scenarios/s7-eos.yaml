@@ -1,0 +1,19 @@
+name: s7-eos
+description: >
+  S7 follow-up — exactly_once + kill -9 worker at 22k ev/s, ~70% of the ~31k ev/s an exactly_once route sustained in
+  s7 exactly-once-kill-worker (where 45k was above its capacity). Output read with read_committed; zero loss and zero
+  duplicates required. Local only.
+target: local
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1, onError: dlq, delivery: exactly_once}
+  measure: {includeDlq: true, readCommitted: true}
+  load: {size: 1024, producers: 2, lanes: 4, streams: 512, steps: [{rate: 22000, duration: 6m}]}
+  drain: {timeout: 10m}
+cases:
+  - name: eos-kill-worker-22k
+    actions:
+      - {at: 0s, name: host-probe, run: "nohup test/stress/scripts/host-probe.sh test/stress/results/s7-eos/host-eos-kill-worker-22k.txt 900 >/dev/null 2>&1 &"}
+      - {at: 90s, name: kill-worker, run: "kill -9 $(cat .local/run/worker.pid)"}
+      - {at: 100s, name: restart-worker, run: "test/stress/scripts/workers.sh restart-main"}

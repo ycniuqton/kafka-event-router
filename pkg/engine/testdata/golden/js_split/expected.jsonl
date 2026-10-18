@@ -1,0 +1,2 @@
+{"branch":"main","topic":"order-items","key":"A","value":{"item":{"qty":1,"sku":"A"},"orderId":"o1"},"headers":[]}
+{"branch":"main","topic":"order-items","key":"B","value":{"item":{"qty":2,"sku":"B"},"orderId":"o1"},"headers":[]}

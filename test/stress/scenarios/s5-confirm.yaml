@@ -1,0 +1,29 @@
+name: s5-confirm
+description: >
+  S5 confirmation pass — 5-min steps at the max sustainable rate found by s5-explore (and the next rate where the
+  explore knee differed from the baseline), full criteria (30 s warm-up). 12 partitions, 1 KB, default maxInFlight
+  1000. f1/f10/s1 share the baseline knee (65k, in-flight bound) and are represented by their heaviest sibling
+  (f50, s5); the baseline itself is S2 p12 (65k confirmed).
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1}
+  load: {size: 1024, producers: 2, lanes: 4, streams: 512}
+  drain: {timeout: 5m}
+cases:
+  - {name: f50, routes: {filter: {conditions: 50}}, load: {steps: [{rate: 65000, duration: 5m}]}}
+  - {name: s5, routes: {steps: {count: 5, kind: set}}, load: {steps: [{rate: 65000, duration: 5m}]}}
+  - name: s20
+    routes: {steps: {count: 20, kind: set}}
+    load: {steps: [{rate: 50000, duration: 5m}, {rate: 57500, duration: 5m}]}
+  - name: js
+    routes: {js: identity}
+    load: {steps: [{rate: 5000, duration: 5m}, {rate: 6500, duration: 5m}]}
+  - name: f10-s5-js
+    routes: {filter: {conditions: 10}, steps: {count: 5, kind: set}, js: identity}
+    load: {steps: [{rate: 4000, duration: 5m}, {rate: 5000, duration: 5m}]}
+  - name: f50-s20-js
+    routes: {filter: {conditions: 50}, steps: {count: 20, kind: set}, js: identity}
+    load: {steps: [{rate: 4000, duration: 5m}, {rate: 5000, duration: 5m}]}

@@ -1,0 +1,3 @@
+.mark{display:inline-flex;align-items:center;gap:3px;margin-left:4px;color:var(--tx3);font:10.5px var(--font-mono);vertical-align:middle}
+.icon{width:10px;height:10px;fill:currentColor;stroke:currentColor;stroke-width:1.2}
+.icon path{fill:none}

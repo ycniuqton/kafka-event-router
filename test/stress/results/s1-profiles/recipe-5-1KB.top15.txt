@@ -1,0 +1,24 @@
+File: recipe-5-1KB.test
+Build ID: 5d60e87e16ba553e2fdf92cfc262ae17534161dc
+Type: cpu
+Time: 2026-10-17 04:25:13 -02
+Duration: 13.44s, Total samples = 13350ms (99.36%)
+Showing nodes accounting for 4990ms, 37.38% of 13350ms total
+Dropped 246 nodes (cum <= 66.75ms)
+Showing top 15 nodes out of 183
+      flat  flat%   sum%        cum   cum%
+     730ms  5.47%  5.47%     1010ms  7.57%  runtime.tryDeferToSpanScan
+     640ms  4.79% 10.26%     1150ms  8.61%  runtime.scanObject
+     490ms  3.67% 13.93%      490ms  3.67%  runtime.memclrNoHeapPointers
+     370ms  2.77% 16.70%      400ms  3.00%  encoding/json/internal/jsonwire.ConsumeSimpleString (inline)
+     360ms  2.70% 19.40%     1100ms  8.24%  encoding/json/jsontext.(*decoderState).ReadToken
+     300ms  2.25% 21.65%      300ms  2.25%  internal/runtime/maps.memHashAES
+     290ms  2.17% 23.82%     5040ms 37.75%  github.com/eventrouter/router/pkg/engine/codec.treeEmitter.object
+     280ms  2.10% 25.92%      420ms  3.15%  runtime.gcmarknewobject
+     280ms  2.10% 28.01%     4710ms 35.28%  runtime.mallocgc
+     270ms  2.02% 30.04%      370ms  2.77%  encoding/json/internal/jsonwire.AppendQuote
+     220ms  1.65% 31.69%      850ms  6.37%  runtime.wbBufFlush1
+     210ms  1.57% 33.26%      210ms  1.57%  runtime.memmove
+     190ms  1.42% 34.68%      610ms  4.57%  runtime.mallocgcTinySC2
+     180ms  1.35% 36.03%      600ms  4.49%  encoding/json/jsontext.(*objectNamespace).insert
+     180ms  1.35% 37.38%      320ms  2.40%  internal/runtime/maps.(*Iter).Next

@@ -1,0 +1,848 @@
+{
+  "version": 3,
+  "operators": [
+    {
+      "op": "after",
+      "fieldTypes": [
+        "date"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "before",
+      "fieldTypes": [
+        "date"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "between",
+      "fieldTypes": [
+        "number",
+        "string"
+      ],
+      "operand": "range",
+      "handlesMissing": false
+    },
+    {
+      "op": "contains",
+      "fieldTypes": [
+        "string",
+        "array"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "ends_with",
+      "fieldTypes": [
+        "string"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "eq",
+      "fieldTypes": [
+        "string",
+        "number",
+        "boolean",
+        "date"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "exists",
+      "fieldTypes": [
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "object",
+        "array",
+        "null"
+      ],
+      "operand": "none",
+      "handlesMissing": true
+    },
+    {
+      "op": "gt",
+      "fieldTypes": [
+        "number",
+        "string"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "gte",
+      "fieldTypes": [
+        "number",
+        "string"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "in",
+      "fieldTypes": [
+        "string",
+        "number",
+        "boolean",
+        "date"
+      ],
+      "operand": "values",
+      "handlesMissing": false
+    },
+    {
+      "op": "is_empty",
+      "fieldTypes": [
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "object",
+        "array",
+        "null"
+      ],
+      "operand": "none",
+      "handlesMissing": true
+    },
+    {
+      "op": "lt",
+      "fieldTypes": [
+        "number",
+        "string"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "lte",
+      "fieldTypes": [
+        "number",
+        "string"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "ne",
+      "fieldTypes": [
+        "string",
+        "number",
+        "boolean",
+        "date"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "not_exists",
+      "fieldTypes": [
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "object",
+        "array",
+        "null"
+      ],
+      "operand": "none",
+      "handlesMissing": true
+    },
+    {
+      "op": "not_in",
+      "fieldTypes": [
+        "string",
+        "number",
+        "boolean",
+        "date"
+      ],
+      "operand": "values",
+      "handlesMissing": false
+    },
+    {
+      "op": "regex",
+      "fieldTypes": [
+        "string"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "starts_with",
+      "fieldTypes": [
+        "string"
+      ],
+      "operand": "value",
+      "handlesMissing": false
+    },
+    {
+      "op": "within_last",
+      "fieldTypes": [
+        "date"
+      ],
+      "operand": "duration",
+      "handlesMissing": false
+    }
+  ],
+  "operatorsByFieldType": {
+    "array": [
+      "contains",
+      "exists",
+      "is_empty",
+      "not_exists"
+    ],
+    "boolean": [
+      "eq",
+      "exists",
+      "in",
+      "is_empty",
+      "ne",
+      "not_exists",
+      "not_in"
+    ],
+    "date": [
+      "after",
+      "before",
+      "eq",
+      "exists",
+      "in",
+      "is_empty",
+      "ne",
+      "not_exists",
+      "not_in",
+      "within_last"
+    ],
+    "null": [
+      "exists",
+      "is_empty",
+      "not_exists"
+    ],
+    "number": [
+      "between",
+      "eq",
+      "exists",
+      "gt",
+      "gte",
+      "in",
+      "is_empty",
+      "lt",
+      "lte",
+      "ne",
+      "not_exists",
+      "not_in"
+    ],
+    "object": [
+      "exists",
+      "is_empty",
+      "not_exists"
+    ],
+    "string": [
+      "between",
+      "contains",
+      "ends_with",
+      "eq",
+      "exists",
+      "gt",
+      "gte",
+      "in",
+      "is_empty",
+      "lt",
+      "lte",
+      "ne",
+      "not_exists",
+      "not_in",
+      "regex",
+      "starts_with"
+    ]
+  },
+  "coercion": [
+    {
+      "left": "number",
+      "right": "numeric string",
+      "rule": "parse right as number"
+    },
+    {
+      "left": "numeric string",
+      "right": "number",
+      "rule": "parse left as number",
+      "warning": "coerced_string_to_number"
+    },
+    {
+      "left": "boolean or \"true\"/\"false\"",
+      "right": "boolean or \"true\"/\"false\"",
+      "rule": "parse string as boolean",
+      "warning": "coerced_string_to_bool"
+    },
+    {
+      "left": "RFC 3339 string or epoch ms",
+      "right": "date operator",
+      "rule": "parse to time"
+    },
+    {
+      "left": "missing",
+      "right": "any operator except exists/not_exists/is_empty",
+      "rule": "false"
+    },
+    {
+      "left": "null",
+      "right": "is_empty",
+      "rule": "true"
+    },
+    {
+      "left": "other mismatched types",
+      "right": "any",
+      "rule": "false",
+      "warning": "incomparable_types"
+    }
+  ],
+  "recipes": [
+    {
+      "kind": "rename",
+      "group": "fields"
+    },
+    {
+      "kind": "remove",
+      "group": "fields"
+    },
+    {
+      "kind": "keep_only",
+      "group": "fields"
+    },
+    {
+      "kind": "copy",
+      "group": "fields"
+    },
+    {
+      "kind": "move",
+      "group": "fields"
+    },
+    {
+      "kind": "set",
+      "group": "values"
+    },
+    {
+      "kind": "default_if_missing",
+      "group": "values"
+    },
+    {
+      "kind": "set_key",
+      "group": "values"
+    },
+    {
+      "kind": "mask",
+      "group": "privacy"
+    },
+    {
+      "kind": "hash",
+      "group": "privacy"
+    },
+    {
+      "kind": "convert_type",
+      "group": "types"
+    },
+    {
+      "kind": "drop_if",
+      "group": "flow"
+    },
+    {
+      "kind": "js",
+      "group": "code"
+    },
+    {
+      "kind": "library",
+      "group": "library"
+    },
+    {
+      "kind": "flatten",
+      "group": "structure"
+    },
+    {
+      "kind": "redact_pattern",
+      "group": "privacy"
+    },
+    {
+      "kind": "format_date",
+      "group": "types"
+    },
+    {
+      "kind": "round",
+      "group": "types"
+    },
+    {
+      "kind": "string_case",
+      "group": "types"
+    },
+    {
+      "kind": "lookup",
+      "group": "values"
+    },
+    {
+      "kind": "if_else",
+      "group": "flow"
+    },
+    {
+      "kind": "split_array",
+      "group": "structure"
+    },
+    {
+      "kind": "wrap",
+      "group": "structure"
+    },
+    {
+      "kind": "unwrap",
+      "group": "structure"
+    },
+    {
+      "kind": "header_add",
+      "group": "kafka"
+    },
+    {
+      "kind": "header_remove",
+      "group": "kafka"
+    },
+    {
+      "kind": "header_rename",
+      "group": "kafka"
+    },
+    {
+      "kind": "header_copy_to_payload",
+      "group": "kafka"
+    },
+    {
+      "kind": "header_copy_from_payload",
+      "group": "kafka"
+    },
+    {
+      "kind": "map",
+      "group": "fields"
+    }
+  ],
+  "recipeGroups": [
+    "fields",
+    "values",
+    "privacy",
+    "types",
+    "flow",
+    "structure",
+    "kafka",
+    "code",
+    "library"
+  ],
+  "maskStyles": [
+    "full",
+    "last4",
+    "email"
+  ],
+  "valueSources": [
+    "field",
+    "constant",
+    "metadata",
+    "formula"
+  ],
+  "metadataNames": [
+    "offset",
+    "partition",
+    "route_name",
+    "route_version",
+    "timestamp",
+    "topic"
+  ],
+  "dateLayouts": [
+    "rfc3339",
+    "rfc3339_ms",
+    "date",
+    "datetime"
+  ],
+  "formulaFunctions": [
+    {
+      "name": "concat",
+      "call": "concat(...values)",
+      "arity": {
+        "min": 1,
+        "max": -1
+      },
+      "params": [
+        {
+          "name": "values",
+          "kind": "any",
+          "variadic": true
+        }
+      ],
+      "returns": "string",
+      "category": "text",
+      "description": "Joins values as text.",
+      "example": "concat(value.first, \" \", value.last)"
+    },
+    {
+      "name": "upper",
+      "call": "upper(text)",
+      "arity": {
+        "min": 1,
+        "max": 1
+      },
+      "params": [
+        {
+          "name": "text",
+          "kind": "string"
+        }
+      ],
+      "returns": "string",
+      "category": "text",
+      "description": "Converts text to upper case.",
+      "example": "upper(value.name)"
+    },
+    {
+      "name": "lower",
+      "call": "lower(text)",
+      "arity": {
+        "min": 1,
+        "max": 1
+      },
+      "params": [
+        {
+          "name": "text",
+          "kind": "string"
+        }
+      ],
+      "returns": "string",
+      "category": "text",
+      "description": "Converts text to lower case.",
+      "example": "lower(value.name)"
+    },
+    {
+      "name": "trim",
+      "call": "trim(text)",
+      "arity": {
+        "min": 1,
+        "max": 1
+      },
+      "params": [
+        {
+          "name": "text",
+          "kind": "string"
+        }
+      ],
+      "returns": "string",
+      "category": "text",
+      "description": "Removes leading and trailing white space.",
+      "example": "trim(value.name)"
+    },
+    {
+      "name": "substring",
+      "call": "substring(text, start, length?)",
+      "arity": {
+        "min": 2,
+        "max": 3
+      },
+      "params": [
+        {
+          "name": "text",
+          "kind": "string"
+        },
+        {
+          "name": "start",
+          "kind": "integer"
+        },
+        {
+          "name": "length",
+          "kind": "integer",
+          "optional": true
+        }
+      ],
+      "returns": "string",
+      "category": "text",
+      "description": "Part of the text by character position.",
+      "example": "substring(value.iban, 0, 4)"
+    },
+    {
+      "name": "len",
+      "call": "len(value)",
+      "arity": {
+        "min": 1,
+        "max": 1
+      },
+      "params": [
+        {
+          "name": "value",
+          "kind": "any"
+        }
+      ],
+      "returns": "integer",
+      "category": "text",
+      "description": "Length of text, list or object.",
+      "example": "len(value.items)"
+    },
+    {
+      "name": "round",
+      "call": "round(number, decimals?)",
+      "arity": {
+        "min": 1,
+        "max": 2
+      },
+      "params": [
+        {
+          "name": "number",
+          "kind": "number"
+        },
+        {
+          "name": "decimals",
+          "kind": "integer",
+          "optional": true
+        }
+      ],
+      "returns": "number",
+      "category": "number",
+      "description": "Rounds to a number of decimals.",
+      "example": "round(value.price * 1.1, 2)"
+    },
+    {
+      "name": "toNumber",
+      "call": "toNumber(value)",
+      "arity": {
+        "min": 1,
+        "max": 1
+      },
+      "params": [
+        {
+          "name": "value",
+          "kind": "any"
+        }
+      ],
+      "returns": "number",
+      "category": "number",
+      "description": "Converts text to a number.",
+      "example": "toNumber(headers.retries)"
+    },
+    {
+      "name": "toString",
+      "call": "toString(value)",
+      "arity": {
+        "min": 1,
+        "max": 1
+      },
+      "params": [
+        {
+          "name": "value",
+          "kind": "any"
+        }
+      ],
+      "returns": "string",
+      "category": "text",
+      "description": "Converts a value to text.",
+      "example": "toString(value.id)"
+    },
+    {
+      "name": "coalesce",
+      "call": "coalesce(...values)",
+      "arity": {
+        "min": 1,
+        "max": -1
+      },
+      "params": [
+        {
+          "name": "values",
+          "kind": "any",
+          "variadic": true
+        }
+      ],
+      "returns": "any",
+      "category": "logic",
+      "description": "First value that is not null.",
+      "example": "coalesce(value.nickname, value.name, \"unknown\")"
+    },
+    {
+      "name": "if",
+      "call": "if(condition, then, else?)",
+      "arity": {
+        "min": 2,
+        "max": 3
+      },
+      "params": [
+        {
+          "name": "condition",
+          "kind": "boolean"
+        },
+        {
+          "name": "then",
+          "kind": "any"
+        },
+        {
+          "name": "else",
+          "kind": "any",
+          "optional": true
+        }
+      ],
+      "returns": "any",
+      "category": "logic",
+      "description": "Chooses a value by condition.",
+      "example": "if(value.amount \u003e 100, \"high\", \"low\")"
+    },
+    {
+      "name": "now",
+      "call": "now()",
+      "arity": {
+        "min": 0,
+        "max": 0
+      },
+      "params": [],
+      "returns": "string",
+      "category": "date",
+      "description": "Processing time of the event.",
+      "example": "now()"
+    },
+    {
+      "name": "formatDate",
+      "call": "formatDate(date, layout, timezone?)",
+      "arity": {
+        "min": 2,
+        "max": 3
+      },
+      "params": [
+        {
+          "name": "date",
+          "kind": "any"
+        },
+        {
+          "name": "layout",
+          "kind": "string"
+        },
+        {
+          "name": "timezone",
+          "kind": "string",
+          "optional": true
+        }
+      ],
+      "returns": "string",
+      "category": "date",
+      "description": "Formats a date (layouts: rfc3339, rfc3339_ms, date, datetime).",
+      "example": "formatDate(value.createdAt, \"date\", \"Europe/Berlin\")"
+    },
+    {
+      "name": "mask",
+      "call": "mask(value, style)",
+      "arity": {
+        "min": 2,
+        "max": 2
+      },
+      "params": [
+        {
+          "name": "value",
+          "kind": "any"
+        },
+        {
+          "name": "style",
+          "kind": "string"
+        }
+      ],
+      "returns": "string",
+      "category": "privacy",
+      "description": "Masks a value (styles: full, last4, email).",
+      "example": "mask(value.card, \"last4\")"
+    },
+    {
+      "name": "hash",
+      "call": "hash(value)",
+      "arity": {
+        "min": 1,
+        "max": 1
+      },
+      "params": [
+        {
+          "name": "value",
+          "kind": "any"
+        }
+      ],
+      "returns": "string",
+      "category": "privacy",
+      "description": "Salted SHA-256 hash (hex).",
+      "example": "hash(value.email)"
+    },
+    {
+      "name": "lookup",
+      "call": "lookup(table, key, default?)",
+      "arity": {
+        "min": 2,
+        "max": 3
+      },
+      "params": [
+        {
+          "name": "table",
+          "kind": "string"
+        },
+        {
+          "name": "key",
+          "kind": "any"
+        },
+        {
+          "name": "default",
+          "kind": "any",
+          "optional": true
+        }
+      ],
+      "returns": "any",
+      "category": "lookup",
+      "description": "Value of a lookup table row (table = lookup step id).",
+      "example": "lookup(\"countries\", value.cc, \"unknown\")"
+    }
+  ],
+  "formulaOperators": [
+    "==",
+    "!=",
+    "\u003c=",
+    "\u003e=",
+    "\u0026\u0026",
+    "||",
+    "+",
+    "-",
+    "*",
+    "/",
+    "%",
+    "\u003c",
+    "\u003e",
+    "!"
+  ],
+  "redactPresets": [
+    "credit_card",
+    "phone",
+    "email",
+    "iban"
+  ],
+  "stringCases": [
+    "upper",
+    "lower",
+    "title",
+    "trim"
+  ],
+  "mapStarts": [
+    "copy_input",
+    "empty"
+  ],
+  "sourceFormats": [
+    "avro",
+    "bytes",
+    "json",
+    "protobuf",
+    "string"
+  ],
+  "library": {
+    "pinnedKinds": [
+      "library",
+      "lookup"
+    ],
+    "versionSeparator": "@",
+    "stepIdSeparator": "/",
+    "stepIdForm": "\u003cstepId\u003e/\u003cref\u003e@\u003cversion\u003e/\u003cchildStepId\u003e",
+    "lookupTableNames": [
+      "\u003cstepId\u003e",
+      "\u003cref\u003e@\u003cversion\u003e",
+      "\u003cref\u003e"
+    ],
+    "maxDepth": 4
+  }
+}

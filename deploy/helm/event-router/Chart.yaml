@@ -1,0 +1,8 @@
+apiVersion: v2
+name: event-router
+description: Kafka Event Router — control-plane API (HA), data-plane workers, preview service and web UI.
+type: application
+version: 0.3.0
+appVersion: "0.2.0"
+kubeVersion: ">=1.27.0-0"
+keywords: [kafka, event-router]

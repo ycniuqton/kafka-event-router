@@ -1,0 +1,2 @@
+{"offset":2,"type":"limit","step":"split","path":"/branches/0/transform/steps/0","message":"too many output events: 4 \u003e 3"}
+{"offset":3,"type":"step","step":"split","path":"/branches/0/transform/steps/0","message":"type_mismatch on value.items: string is not an array"}

@@ -1,0 +1,5 @@
+.heading{padding:12px 16px;border-bottom:1px solid var(--ln);font-weight:600}
+.subheading{padding:12px 16px 4px;font-weight:600}
+.clear{padding:12px 16px;border-bottom:1px solid var(--ln);color:var(--tx2);font-size:12px}
+.end{height:10px}
+.none{padding:6px 16px;color:var(--tx3);font-size:12px}

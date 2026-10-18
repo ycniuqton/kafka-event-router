@@ -1,0 +1,2 @@
+{"branch":"main","topic":"typed","key":null,"value":{"b":true,"i":7,"n":42,"s":"12.5"},"headers":[]}
+{"branch":"main","topic":"typed","key":null,"value":{"b":false,"i":"7.5","n":null,"s":"{\"a\":1}"},"headers":[]}

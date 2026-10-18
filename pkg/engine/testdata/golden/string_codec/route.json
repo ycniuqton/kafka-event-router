@@ -1,0 +1,10 @@
+{
+  "apiVersion": "router/v1",
+  "name": "string-codec",
+  "source": { "connectionId": "c1", "topics": ["logs"], "format": { "type": "string" } },
+  "branches": [{
+    "id": "main",
+    "filter": { "type": "cond", "field": "value", "op": "starts_with", "value": "ERROR" },
+    "destination": { "connectionId": "c1", "topic": "errors", "format": { "type": "same_as_source" } }
+  }]
+}

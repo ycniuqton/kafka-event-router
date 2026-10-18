@@ -1,0 +1,16 @@
+{
+  "apiVersion": "router/v1",
+  "name": "drop-tests",
+  "source": { "connectionId": "c1", "topics": ["events"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "d1", "kind": "drop_if", "condition": { "type": "or", "children": [
+        { "type": "cond", "field": "value.test", "op": "eq", "value": true },
+        { "type": "cond", "field": "value.env", "op": "in", "values": ["dev", "qa"] }
+      ] } },
+      { "id": "s1", "kind": "set", "field": "value.kept", "source": { "from": "constant", "value": true } }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "events-prod" }
+  }]
+}

@@ -1,0 +1,37 @@
+{{- include "er.validate" . -}}
+{{- $ext := .Values.external -}}
+{{- $scheme := include "er.scheme" . -}}
+{{- $name := include "er.fullname" . -}}
+{{- $data := dict
+    "ROUTER_ENV" .Values.global.environment
+    "ROUTER_WORKSPACE_NAME" .Values.global.workspace
+    "ROUTER_PUBLIC_URL" .Values.global.publicURL
+    "ROUTER_WORKLOAD_AUDIENCE" .Values.workloadIdentity.audience
+    "ROUTER_CONTROL_PLANE_URL" (printf "%s://%s-api:%v" $scheme $name .Values.api.port)
+    "ROUTER_CONTROL_PLANE_INTERNAL_URL" (printf "%s://%s-api-internal:%v" $scheme $name .Values.api.internalPort)
+    "ROUTER_PREVIEW_URL" (printf "%s://%s-preview:%v" $scheme $name .Values.preview.port)
+    "ROUTER_OIDC_REDIRECT_URL" (default (printf "%s/auth/oidc/callback" (trimSuffix "/" .Values.global.publicURL)) $ext.oidc.redirectURL)
+    "ROUTER_OIDC_CLIENT_ID" $ext.oidc.clientID
+    "ROUTER_OIDC_ISSUER" $ext.oidc.issuer
+    "ROUTER_KAFKA_BOOTSTRAP" $ext.kafkaBootstrap
+    "ROUTER_VAULT_ADDR" $ext.vault.addr
+    "ROUTER_VAULT_TRANSIT_KEY" $ext.vault.transitKey
+    "ROUTER_VAULT_TRANSIT_MOUNT" $ext.vault.transitMount
+    "ROUTER_METRICS_BACKEND" $ext.metrics.backend
+    "ROUTER_METRICS_URL" $ext.metrics.url
+    "ROUTER_TRACING_EXPORTER" $ext.tracing.exporter
+    "ROUTER_TRACING_OTLP_ENDPOINT" $ext.tracing.otlpEndpoint -}}
+{{- $data = merge (deepCopy .Values.env) $data -}}
+# Plain settings for every Go component (env overrides the derived values; empty values are omitted).
+# Credentials are read from secret.existingSecret / secret.keyRefs, never from this ConfigMap.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}-env
+  labels: {{- include "er.labels" (dict "root" . "component" "config") | nindent 4 }}
+data:
+  {{- range $k, $v := $data }}
+  {{- if ne (toString $v) "" }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}
+  {{- end }}

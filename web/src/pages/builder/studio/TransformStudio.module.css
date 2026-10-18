@@ -1,0 +1,13 @@
+.studio{height:100%;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"input steps output"}
+.input{grid-area:input;border-right:1px solid var(--ln)}
+.steps{grid-area:steps;border-right:1px solid var(--ln)}
+.output{grid-area:output}
+.sideTabs{display:none}
+
+@media (max-width:1439px){
+  .studio{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"steps tabs" "steps side"}
+  .sideTabs{display:block;grid-area:tabs;padding:0 14px;background:var(--p1)}
+  .input,.output{grid-area:side}
+  .input{border-right:none}
+  .studio[data-pane="input"] .output,.studio[data-pane="output"] .input{display:none}
+}

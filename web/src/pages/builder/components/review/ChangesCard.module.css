@@ -1,0 +1,7 @@
+.card{display:flex;flex-direction:column;gap:6px;min-width:0}
+.title{font-weight:600}
+.section{display:flex;flex-direction:column;gap:2px}
+.sectionTitle{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em}
+.change{font:12px var(--font-mono);color:var(--tone);overflow-wrap:anywhere}
+.none{font-size:12px;color:var(--tx3)}
+.stale{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}

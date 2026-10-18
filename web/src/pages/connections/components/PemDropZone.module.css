@@ -1,0 +1,11 @@
+.field{display:flex;flex-direction:column;gap:6px}
+.label{font-size:12px;color:var(--tx2)}
+.zone{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px;border:1px dashed var(--ln2);border-radius:8px;text-align:center;color:var(--tx2);font-size:12px;cursor:pointer}
+.zone:hover{border-color:var(--tx3)}
+.over{border-color:var(--acc);background:color-mix(in oklch, var(--acc) 8%, transparent)}
+.mono{font-family:var(--font-mono)}
+.browse{font-size:11px;color:var(--tx3)}
+.file{display:none}
+.error{font-size:12px;color:var(--err)}
+.loaded{display:flex;align-items:center;justify-content:space-between;gap:8px;height:32px;padding:0 10px;border-radius:var(--radius-lg);background:var(--p3);font-size:12px}
+.link{border:none;background:none;color:var(--acc);cursor:pointer;font-size:12px}

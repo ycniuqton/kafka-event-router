@@ -1,0 +1,10 @@
+16:18:15 pinned worker (pid 1721004) to CPUs 0-5
+16:18:15 pinned kafka (pid 1699610) to CPUs 6-9
+16:18:15 case eos-kill-worker-22k: 1 route(s), 12 partition(s), 1 step(s)
+16:18:23 action host-probe at +0s: nohup test/stress/scripts/host-probe.sh test/stress/results/s7-eos/host-eos-kill-worker-22k.txt 900 >/dev/null 2>&1 &
+16:19:48 action kill-worker at +1m30s: kill -9 $(cat .local/run/worker.pid)
+16:19:58 action restart-worker at +1m40s: test/stress/scripts/workers.sh restart-main
+16:24:33 case eos-kill-worker-22k: max sustainable 0 ev/s, knee 22000 (p99_over_limit), lost 0, error ""
+16:24:38 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+16:24:38 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s7-eos/s7-eos.json

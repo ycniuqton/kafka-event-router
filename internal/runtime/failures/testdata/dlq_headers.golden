@@ -1,0 +1,12 @@
+trace=abc
+router.route_id=r1
+router.version=3
+router.branch=main
+router.step=s1
+router.error_type=decode_error
+router.error_message=decode error in step "s1": context canceled
+router.stack=
+router.source_topic=orders
+router.source_partition=2
+router.source_offset=41
+router.failed_at=2026-10-13T12:00:00Z

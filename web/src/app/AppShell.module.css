@@ -1,0 +1,4 @@
+.shell{height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--tx);overflow:hidden}
+.body{flex:1;display:flex;min-height:0}
+.main{flex:1;min-width:0;overflow:auto;position:relative}
+.loading{padding:24px 28px;color:var(--tx3);font-size:12px}

@@ -1,0 +1,26 @@
+name: s7-probe
+description: >
+  S7 follow-up — repeats kill-worker with a host I/O probe (dirty page cache, iowait, blocked tasks every 5 s) and
+  partition-ownership snapshots every 20 s, to explain the slow, erratic catch-up seen in s7 kill-worker at 45k.
+  Second case at 30k ev/s (~46% of the 65k knee) shows recovery with more headroom. Local only.
+target: local
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1, onError: dlq}
+  measure: {includeDlq: true}
+  load: {size: 1024, producers: 2, lanes: 4, streams: 512, steps: [{rate: 45000, duration: 6m}]}
+  drain: {timeout: 10m}
+cases:
+  - name: kill-worker-45k
+    actions:
+      - {at: 0s, name: host-probe, run: "nohup test/stress/scripts/host-probe.sh test/stress/results/s7-probe/host-kill-worker-45k.txt 900 >/dev/null 2>&1 &"}
+      - {at: 0s, name: spread-loop, run: "nohup sh -c 'for i in $(seq 1 40); do test/stress/scripts/group-spread.sh stress-s7- test/stress/results/s7-probe/spread-kill-worker-45k.txt; sleep 20; done' >/dev/null 2>&1 &"}
+      - {at: 90s, name: kill-worker, run: "kill -9 $(cat .local/run/worker.pid)"}
+      - {at: 100s, name: restart-worker, run: "test/stress/scripts/workers.sh restart-main"}
+  - name: kill-worker-30k
+    load: {steps: [{rate: 30000, duration: 6m}]}
+    actions:
+      - {at: 0s, name: host-probe, run: "nohup test/stress/scripts/host-probe.sh test/stress/results/s7-probe/host-kill-worker-30k.txt 900 >/dev/null 2>&1 &"}
+      - {at: 90s, name: kill-worker, run: "kill -9 $(cat .local/run/worker.pid)"}
+      - {at: 100s, name: restart-worker, run: "test/stress/scripts/workers.sh restart-main"}

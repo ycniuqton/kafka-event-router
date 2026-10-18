@@ -1,0 +1,1 @@
+{"offset":2,"type":"step","step":"b","path":"/branches/0/transform/steps/2","message":"convert_failed on value.b: strconv.ParseBool: parsing \"maybe\": invalid syntax"}

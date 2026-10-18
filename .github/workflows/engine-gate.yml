@@ -1,0 +1,28 @@
+# pipeline-engine PE-112: engine release gate (unit + golden, 60 s per fuzz target, bench thresholds)
+# plus the generated-types drift check. Locally: `make engine-gate` (ENGINE_FUZZTIME=10s for a quick run).
+name: engine-gate
+
+on:
+  pull_request:
+    paths: ["pkg/config/**", "pkg/engine/**", "cmd/routerctl/**", "cmd/gen-catalog/**", "web/src/api/generated/**", "Makefile"]
+  push:
+    branches: [main]
+
+jobs:
+  engine-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install go-jsonschema
+        run: go install github.com/atombender/go-jsonschema@v0.24.1
+      - name: Generated types and catalogue are up to date
+        run: make check-gen
+      - name: Engine gate
+        run: make engine-gate

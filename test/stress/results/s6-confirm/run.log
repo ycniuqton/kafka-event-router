@@ -1,0 +1,35 @@
+14:13:37 pinned worker (pid 1666287) to CPUs 0-5
+14:13:37 pinned kafka (pid 1583441) to CPUs 6-9
+14:13:37 case fair-w1: 1 route(s), 48 partition(s), 2 step(s)
+14:13:37 hook before: STRESS_MAIN_CPUS=0-5 test/stress/scripts/workers.sh scale 1
+14:14:23 action spread at +45s: test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-fair-w1.txt
+14:18:38 case fair-w1 step 0 (90000 ev/s): sustained (lag slope -2.3/s, p99 860.2 ms)
+14:24:28 case fair-w1: max sustainable 90000 ev/s, knee 100000 (lag_growing), lost 0, error ""
+14:24:33 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+14:24:33 case fair-w2: 1 route(s), 48 partition(s), 2 step(s)
+14:24:33 hook before: STRESS_WORKER_CPUS_1=0-2 STRESS_WORKER_CPUS_2=3-5 test/stress/scripts/workers.sh scale 2
+14:25:20 action spread at +45s: test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-fair-w2.txt
+14:29:35 case fair-w2 step 0 (90000 ev/s): sustained (lag slope 16.7/s, p99 364.5 ms)
+14:34:46 case fair-w2: max sustainable 100000 ev/s, knee 0 (), lost 0, error ""
+14:34:51 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+14:34:51 case fair-w3: 1 route(s), 48 partition(s), 2 step(s)
+14:34:51 hook before: STRESS_WORKER_CPUS_1=0-1 STRESS_WORKER_CPUS_2=2-3 STRESS_WORKER_CPUS_3=4-5 test/stress/scripts/workers.sh scale 3
+14:35:38 action spread at +45s: test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-fair-w3.txt
+14:39:53 case fair-w3 step 0 (70000 ev/s): sustained (lag slope -2.6/s, p99 323.6 ms)
+14:45:03 case fair-w3: max sustainable 80000 ev/s, knee 0 (), lost 0, error ""
+14:45:08 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+14:45:08 case c2-w1: 1 route(s), 48 partition(s), 2 step(s)
+14:45:08 hook before: STRESS_MAIN_CPUS=0-1 test/stress/scripts/workers.sh scale 1
+14:45:55 action spread at +45s: test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-c2-w1.txt
+14:50:10 case c2-w1 step 0 (40000 ev/s): sustained (lag slope -1.7/s, p99 434.2 ms)
+14:55:34 case c2-w1: max sustainable 40000 ev/s, knee 50000 (lag_growing), lost 0, error ""
+14:55:39 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+14:55:39 case c2-w2: 1 route(s), 48 partition(s), 2 step(s)
+14:55:39 hook before: STRESS_WORKER_CPUS_1=0-1 STRESS_WORKER_CPUS_2=2-3 test/stress/scripts/workers.sh scale 2
+14:56:26 action spread at +45s: test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-c2-w2.txt
+15:00:41 case c2-w2 step 0 (70000 ev/s): sustained (lag slope 10.7/s, p99 389.1 ms)
+15:07:22 hook after: STRESS_MAIN_CPUS=0-5 test/stress/scripts/workers.sh scale 1
+15:07:22 case c2-w2: max sustainable 70000 ev/s, knee 80000 (lag_growing), lost 0, error ""
+15:07:27 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+15:07:27 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s6-confirm/s6-confirm.json

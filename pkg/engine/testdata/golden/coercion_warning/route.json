@@ -1,0 +1,16 @@
+{
+  "apiVersion": "router/v1",
+  "name": "coercion",
+  "source": { "connectionId": "c1", "topics": ["payments"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "filter": { "type": "and", "children": [
+      { "type": "cond", "field": "value.amount", "op": "gt", "value": 100 },
+      { "type": "cond", "field": "value.currency", "op": "eq", "value": "EUR" }
+    ] },
+    "transform": { "steps": [
+      { "id": "c1", "kind": "convert_type", "field": "value.amount", "targetType": "number" }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "payments-eur" }
+  }]
+}

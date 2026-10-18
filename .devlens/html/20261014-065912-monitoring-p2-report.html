@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Monitoring P2 Report</title>
+<style>:root{--bg:#fff;--fg:#1b1f24;--mut:#59636e;--ln:#d1d9e0;--ok:#1a7f37}@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--fg:#e6edf3;--mut:#9198a1;--ln:#3d444d;--ok:#3fb950}}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,sans-serif;max-width:960px;margin:0 auto;padding:24px 16px}h1{font-size:20px}h2{font-size:16px;margin-top:24px}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid var(--ln);padding:6px 8px;text-align:left;vertical-align:top}code{font-size:12px}.ok{color:var(--ok);font-weight:600}.m{color:var(--mut)}</style></head><body>
+<h1>Monitoring — P2 implementation report</h1><p class="m">docs/features/monitoring · all P2 items done (BE 20, FE 8, tests 7)</p>
+<h2>Endpoints</h2><table><tr><th>Method / path</th><th>Notes</th></tr>
+<tr><td><code>GET/POST /api/v1/alert-rules</code>, <code>PATCH/DELETE /alert-rules/{id}</code>, <code>POST /alert-rules/{id}/test</code></td><td>alert.read / alert.write (route team), If-Match, write-only webhook secrets, audit <code>alert_rule.saved</code></td></tr>
+<tr><td><code>GET /api/v1/alerts</code>, <code>POST /alerts/{id}/ack</code></td><td>bell feed + per-user unread</td></tr>
+<tr><td><code>GET /api/v1/flow-map</code></td><td>connection / team / tag filters</td></tr>
+<tr><td><code>WS /api/v1/events</code></td><td>route.state_changed, deployment.status_changed, connection.health_changed, alert.fired, alert.resolved (+hello, resync)</td></tr></table>
+<h2>Migration</h2><p><code>1090_monitoring_alerts</code> (up + down)</p>
+<h2>Verified on the local stack</h2><ul>
+<li class="ok">Rule validation 422 paths, create 201 + ETag, PATCH 412 / 200 keeps secret</li>
+<li class="ok">Evaluator on leader: throughput_zero fired once, webhook <code>alert.fired</code> once, WS push, attention row; pause → resolved after 1 clean window, webhook <code>alert.resolved</code></li>
+<li class="ok">Ack + unread, unknown ack 404, self-metrics on <code>/metrics</code></li>
+<li class="ok">Playwright (real stack): rule from Settings tab → push toast + bell → route; flow map click</li></ul>
+</body></html>

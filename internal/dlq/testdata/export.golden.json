@@ -1,0 +1,74 @@
+[
+  {
+    "id": "cm91dGVyLmRscS5vcmRlcnN8MHw4ODQxNjI",
+    "routeId": "r3",
+    "routeName": "Order totals",
+    "failedAt": "2026-10-13T09:01:00Z",
+    "errorType": "step_error",
+    "message": "m",
+    "step": "s",
+    "stepLabel": "s",
+    "branch": "main",
+    "versionNo": 1,
+    "source": {
+      "topic": "orders",
+      "partition": 0,
+      "offset": 1
+    },
+    "resolution": null,
+    "stack": "TypeError: x\n    at transform (step-1.js:7:22)",
+    "key": {
+      "encoding": "utf8",
+      "data": "k1"
+    },
+    "value": {
+      "encoding": "json",
+      "data": {
+        "orderId": "ord_123",
+        "items": null
+      }
+    },
+    "headers": [
+      {
+        "key": "traceId",
+        "value": "ab12",
+        "encoding": "utf8"
+      },
+      {
+        "key": "bin",
+        "value": "/wA=",
+        "encoding": "base64"
+      }
+    ],
+    "masked": false
+  },
+  {
+    "id": "cm91dGVyLmRscS5vcmRlcnN8MXw3",
+    "routeId": "r3",
+    "routeName": "Order totals",
+    "failedAt": "2026-10-13T09:02:00Z",
+    "errorType": "decode_error",
+    "message": "m",
+    "step": "s",
+    "stepLabel": "s",
+    "branch": "main",
+    "versionNo": 1,
+    "source": {
+      "topic": "orders",
+      "partition": 0,
+      "offset": 2
+    },
+    "resolution": null,
+    "stack": "",
+    "key": {
+      "encoding": "json",
+      "data": null
+    },
+    "value": {
+      "encoding": "base64",
+      "data": "3q2+7w=="
+    },
+    "headers": [],
+    "masked": false
+  }
+]

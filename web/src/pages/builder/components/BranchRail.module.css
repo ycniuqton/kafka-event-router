@@ -1,0 +1,10 @@
+.branches{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px dashed var(--ln2);border-radius:8px;margin-bottom:10px}
+.title{font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:11px;border:1px solid var(--ln2);background:var(--p2);color:var(--tx2);cursor:pointer;font:11px var(--font-mono)}
+.chip[data-active]{border-color:var(--acc);color:var(--acc);background:color-mix(in oklch, var(--acc) 10%, transparent)}
+.remove{border:none;background:none;padding:0;color:var(--tx3);cursor:pointer;font-size:12px;line-height:1}
+.remove:hover{color:var(--err)}
+.rename{height:24px;padding:0 6px;border-radius:6px;border:1px solid var(--ln2);background:var(--p1);color:var(--tx);font:11px var(--font-mono);outline:none}
+.rename:focus{border-color:var(--acc)}
+.rename[data-invalid]{border-color:var(--err)}

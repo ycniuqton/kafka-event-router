@@ -1,0 +1,13 @@
+{
+  "apiVersion": "router/v1",
+  "name": "js-split",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "split", "kind": "js", "code": "golden:split-items" }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "order-items", "key": { "mode": "keep" } }
+  }],
+  "limits": { "maxOutputsPerEvent": 3 }
+}

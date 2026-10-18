@@ -1,0 +1,8 @@
+# BuildKit per-Dockerfile ignore list (build context = repository root).
+**
+!go.mod
+!go.sum
+!cmd/**
+!internal/**
+!pkg/**
+**/*_test.go

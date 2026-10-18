@@ -1,0 +1,14 @@
+10:01:18 pinned worker (pid 1640235) to CPUs 0-5
+10:01:18 pinned kafka (pid 1583441) to CPUs 6-9
+10:01:18 case n25: 25 route(s), 12 partition(s), 5 step(s)
+10:02:24 case n25 step 0 (5000 ev/s): lag_growing (lag slope 8184.0/s, p99 15073.3 ms)
+10:02:24 case n25: stopping load (knee: lag_growing)
+10:02:34 case n25: max sustainable 0 ev/s, knee 5000 (lag_growing), lost 0, error ""
+10:02:43 cleanup: archived 25 route(s), deleted 51 topic(s), 0 error(s)
+10:02:43 case n50: 50 route(s), 12 partition(s), 5 step(s)
+10:03:55 case n50 step 0 (5000 ev/s): lag_growing (lag slope 123944.4/s, p99 37748.7 ms)
+10:03:55 case n50: stopping load (knee: lag_growing)
+10:05:05 case n50: max sustainable 0 ev/s, knee 5000 (lag_growing), lost 0, error ""
+10:05:18 cleanup: archived 50 route(s), deleted 101 topic(s), 0 error(s)
+10:05:18 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s4-fanout.json

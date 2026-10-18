@@ -1,0 +1,12 @@
+16:53:24 case p12: 1 route(s), 12 partition(s), 11 step(s)
+16:54:26 case p12 step 0 (2000 ev/s): sustained (lag slope -0.7/s, p99 139.3 ms)
+16:55:26 case p12 step 1 (4000 ev/s): sustained (lag slope 4.0/s, p99 98.3 ms)
+16:56:27 case p12 step 2 (6000 ev/s): sustained (lag slope 6.5/s, p99 119.8 ms)
+16:57:26 case p12 step 3 (8000 ev/s): sustained (lag slope 2.0/s, p99 153.6 ms)
+16:58:27 case p12 step 4 (10000 ev/s): sustained (lag slope 85.2/s, p99 184.3 ms)
+16:59:27 case p12 step 5 (12500 ev/s): p99_over_limit (lag slope -709.3/s, p99 10354.7 ms)
+16:59:27 case p12: stopping load (knee: p99_over_limit)
+17:00:27 case p12: max sustainable 10000 ev/s, knee 12500 (p99_over_limit), lost 0, error ""
+17:00:32 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+17:00:32 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+results/stg-s2.json

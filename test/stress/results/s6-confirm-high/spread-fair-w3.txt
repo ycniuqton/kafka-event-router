@@ -1,0 +1,6 @@
+===== 2026-10-17T15:15:03-02:00
+
+GROUP                               CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                                   TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s6-101717073953-fair-w3-r0-g kgo-c5af6d28-12be-4b20-89a9-26fea4276d7c /127.0.0.1      kgo             16              -               stress-s6-101717073953-fair-w3-r0-in:0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15           -               -                   
+stress-s6-101717073953-fair-w3-r0-g kgo-3b90a25d-c42c-4f02-a54c-498d14880cea /127.0.0.1      kgo             16              -               stress-s6-101717073953-fair-w3-r0-in:16,19,20,23,24,27,28,31,32,35,36,39,40,43,44,47 -               -                   
+stress-s6-101717073953-fair-w3-r0-g kgo-8b10dbfe-d55f-4884-b1b7-5aa711e1a573 /127.0.0.1      kgo             16              -               stress-s6-101717073953-fair-w3-r0-in:17,18,21,22,25,26,29,30,33,34,37,38,41,42,45,46 -               -                   

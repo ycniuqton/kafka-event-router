@@ -1,0 +1,4 @@
+{"id":1,"test":true}
+{"id":2,"test":"true"}
+{"id":3,"env":"qa"}
+{"id":4,"env":"prod"}

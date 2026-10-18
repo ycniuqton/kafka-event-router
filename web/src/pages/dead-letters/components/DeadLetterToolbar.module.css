@@ -1,0 +1,7 @@
+.wrap{display:flex;flex-direction:column;border-bottom:1px solid var(--ln)}
+.bar{display:flex;align-items:center;gap:8px;padding:8px 14px;flex-wrap:wrap}
+.refine{display:flex;align-items:center;gap:8px;padding:0 14px 8px;flex-wrap:wrap}
+.search{flex:1;min-width:160px}
+.toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx2);white-space:nowrap;cursor:pointer}
+.check{margin:0;accent-color:var(--acc);cursor:pointer}
+.count{font-size:12px;color:var(--tx2);flex:1;white-space:nowrap}

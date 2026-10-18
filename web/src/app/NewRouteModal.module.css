@@ -1,0 +1,12 @@
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.card{border:1px solid var(--ln2);border-radius:var(--radius-xl);padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:10px;background:var(--p2);text-align:left;color:var(--tx)}
+.card:hover,.card:focus-visible{border-color:var(--acc);outline:none}
+.preview{height:54px;border-radius:var(--radius-md);background:var(--bg);display:flex;align-items:center;justify-content:center;gap:6px}
+.block{height:14px;width:22px;border-radius:3px}
+.src{background:var(--ln2)}
+.flt{background:var(--tx2)}
+.msk{background:var(--warn)}
+.dst{background:var(--acc);width:34px}
+.blank{width:60px;height:14px;border-radius:3px;border:1px dashed var(--ln2)}
+.title{font-weight:600}
+.description{font-size:12px;color:var(--tx2)}

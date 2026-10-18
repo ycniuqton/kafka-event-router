@@ -1,0 +1,6 @@
+{
+  "apiVersion": "router/v1",
+  "name": "decode-error",
+  "source": { "connectionId": "c1", "topics": ["raw"], "format": { "type": "json" } },
+  "branches": [{ "id": "main", "destination": { "connectionId": "c1", "topic": "clean" } }]
+}

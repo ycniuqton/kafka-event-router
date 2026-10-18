@@ -1,0 +1,3 @@
+{"cust_id":"C-1","first":"Ada","last":"Lovelace","spend":1200.5,"internal":"x"}
+{"cust_id":"C-2","first":"Bob","spend":10}
+{"first":"Nobody","spend":"7"}

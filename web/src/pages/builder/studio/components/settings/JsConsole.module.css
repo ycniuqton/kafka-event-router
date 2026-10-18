@@ -1,0 +1,8 @@
+.console{max-height:240px;overflow:auto;border-radius:var(--radius-md);background:var(--p2);font:11.5px/1.6 var(--font-mono)}
+.entry{display:flex;gap:8px;padding:4px 8px;border-bottom:1px solid var(--ln)}
+.entry:last-child{border-bottom:none}
+.entry[data-current="true"]{background:color-mix(in oklch, var(--acc) 10%, transparent)}
+.console .event{height:20px;padding:0 4px;font:11px var(--font-mono);color:var(--tx3)}
+.lines{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all}
+.error{color:var(--err)}
+.empty{padding:10px;border-radius:var(--radius-md);background:var(--p2);color:var(--tx3);font-size:12px}

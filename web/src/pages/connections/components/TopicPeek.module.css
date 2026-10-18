@@ -1,0 +1,11 @@
+.peek{border-top:1px solid var(--ln);background:var(--bg)}
+.status{border-top:1px solid var(--ln);background:var(--bg);padding:10px 12px;font-size:12px;color:var(--tx3)}
+.row{border-bottom:1px solid var(--ln)}
+.row:last-child{border-bottom:none}
+.line{display:block;width:100%;text-align:left;border:none;background:none;cursor:pointer;padding:6px 12px;font:11px/1.5 var(--font-mono);color:var(--tx2);word-break:break-all}
+.line:hover{background:var(--p2)}
+.offset{color:var(--tx3)}
+.tree{padding:4px 0 8px;background:var(--p1)}
+.retry{border:none;background:none;padding:0;color:var(--acc);text-decoration:underline;cursor:pointer;font:inherit}
+.maskedBar{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:11px;color:var(--tx3);border-bottom:1px solid var(--ln)}
+.masked{font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:4px;color:var(--warn);border:1px solid var(--warn)}

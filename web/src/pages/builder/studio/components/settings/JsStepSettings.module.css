@@ -1,0 +1,9 @@
+.toolbar{display:flex;align-items:center;gap:6px}
+.spacer{flex:1}
+.logs{padding:8px 10px;border-radius:var(--radius-md);background:var(--p2);font:11.5px var(--font-mono);white-space:pre-wrap}
+.actions{display:flex;gap:6px;align-items:center}
+.safety{flex:1;text-align:right;border:none;background:none;padding:0;cursor:pointer;font-size:10.5px;color:var(--tx3)}
+.safety:hover{color:var(--tx2)}
+.inline{display:flex;flex-direction:column;gap:8px}
+.fullScreen{position:fixed;inset:24px;z-index:var(--z-modal);display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:var(--radius-lg);border:1px solid var(--ln2);background:var(--p1);box-shadow:var(--shadow-pop);overflow:auto}
+.fullScreen > :nth-child(2){flex:1;min-height:0;height:auto}

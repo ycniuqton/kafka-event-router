@@ -1,0 +1,701 @@
+routes:
+  get:
+    tags: [routes]
+    operationId: listRoutes
+    summary: Routes of every team (reads are open); archived routes only with status=archived.
+    parameters:
+      - { name: q, in: query, schema: { type: string }, description: "Case-insensitive name search." }
+      - { name: status, in: query, schema: { type: string }, description: "Comma-separated RouteStatus values." }
+      - { name: connectionId, in: query, schema: { type: string } }
+      - { name: tag, in: query, schema: { type: string } }
+      - { name: teamId, in: query, schema: { type: string }, description: "Owner team ids, comma-separated or repeated (P2)." }
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page ordered by last change (newest first).
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/RouteSummary" } }
+                next_cursor: { type: [string, "null"] }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+  post:
+    tags: [routes]
+    operationId: createRoute
+    summary: Create a paused route with an optional draft; draft issues are listed, never blocking.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/RouteCreate" } } }
+    responses:
+      "201":
+        description: Created route.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDetail" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+route:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [routes]
+    operationId: getRoute
+    summary: Route detail with draft, active config and last deployment.
+    responses:
+      "200":
+        description: The route.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDetail" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+  patch:
+    tags: [routes]
+    operationId: updateRoute
+    summary: Save settings and/or the draft. Always saves a parseable draft and lists its issues.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/RoutePatch" } } }
+    responses:
+      "200":
+        description: Updated route with draft-mode `issues`.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDetail" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+  delete:
+    tags: [routes]
+    operationId: archiveRoute
+    summary: Archive (stop and hide) the route. Idempotent; there is no hard delete.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Archived. }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeDuplicate:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: duplicateRoute
+    summary: Copy the draft (or active config) into a new paused route named "<name>-copy…".
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: false
+      content: { application/json: { schema: { type: object, properties: { name: { type: string } } } } }
+    responses:
+      "201":
+        description: The copy.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDetail" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+routeValidate:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: validateRoute
+    summary: Validate a given draft (or the stored one) with doc-only and external-data rules.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              draft: { $ref: "#/components/schemas/RouteDocument" }
+              mode: { type: string, enum: [draft, deploy, rollback, import], default: draft }
+    responses:
+      "200":
+        description: Issues sorted by path; `valid` means no error-severity issue.
+        content: { application/json: { schema: { $ref: "#/components/schemas/ValidationResult" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+routeDeploy:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: deployRoute
+    summary: Validate (errors block), create the next version and deployment, switch the live version.
+    parameters:
+      - $ref: "../components/params.yaml#/IfMatch"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: false
+      content: { application/json: { schema: { type: object, properties: { changeNote: { type: string } } } } }
+    responses:
+      "202": { $ref: "#/components/responses/DeployAccepted" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "#/components/responses/InvalidConfig" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+routePause:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: pauseRoute
+    summary: Set desired state paused (runners stop). Idempotent; 409 for drafts and archived routes.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The route.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDetail" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+routeResume:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: resumeRoute
+    summary: Set desired state running. Idempotent; 409 for drafts and archived routes.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The route.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDetail" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+routeRollback:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: rollbackRoute
+    summary: Redeploy version N as a new version (origin rollback); the draft becomes N's config.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [version]
+            properties: { version: { type: integer, minimum: 1 }, changeNote: { type: string } }
+    responses:
+      "202": { $ref: "#/components/responses/DeployAccepted" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "#/components/responses/InvalidConfig" }
+routeDeployments:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [routes]
+    operationId: listRouteDeployments
+    summary: Deployments, newest first.
+    parameters:
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/Deployment" } }
+                next_cursor: { type: [string, "null"] }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeVersions:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [routes]
+    operationId: listRouteVersions
+    summary: Immutable versions, newest first.
+    parameters:
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/VersionSummary" } }
+                next_cursor: { type: [string, "null"] }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeVersion:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+    - { name: no, in: path, required: true, schema: { type: integer, minimum: 1 } }
+  get:
+    tags: [routes]
+    operationId: getRouteVersion
+    summary: One version with its full config.
+    responses:
+      "200":
+        description: The version.
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteVersion" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeDiff:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+    - { name: a, in: path, required: true, schema: { type: string }, description: "Version number, `active` or `draft`." }
+    - { name: b, in: path, required: true, schema: { type: string }, description: "Version number, `active` or `draft`." }
+  get:
+    tags: [routes]
+    operationId: diffRouteVersions
+    summary: Readable section-by-section diff; a missing side (e.g. no active version) is empty.
+    responses:
+      "200":
+        description: The diff.
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDiff" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routesBulk:
+  post:
+    tags: [routes]
+    operationId: bulkRoutes
+    summary: Apply pause, resume, add_tag or export to up to 200 routes; each id reports its own result (export adds one artifact).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [action, ids]
+            properties:
+              action: { type: string, enum: [pause, resume, add_tag, export] }
+              ids: { type: array, maxItems: 200, items: { type: string, format: uuid } }
+              tag: { type: string }
+              format: { type: string, enum: [yaml, json], description: "export only; default yaml." }
+    responses:
+      "200":
+        description: Per-id results.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                results:
+                  type: array
+                  items:
+                    type: object
+                    required: [id, ok]
+                    properties:
+                      id: { type: string }
+                      ok: { type: boolean }
+                      problem: { $ref: "../components/problem.yaml#/Problem" }
+                export: { $ref: "#/components/schemas/ExportArtifact" }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeUnarchive:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: unarchiveRoute
+    summary: Bring an archived route back as paused (P2). Idempotent for routes that are not archived.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The route.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/RouteDetail" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeExport:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [routes]
+    operationId: exportRoute
+    summary: Download one route document with connection names instead of ids (P2).
+    parameters:
+      - { name: format, in: query, schema: { type: string, enum: [yaml, json] }, description: "Default yaml." }
+      - { name: version, in: query, schema: { type: string }, description: "active, draft or a version number; default active, else draft." }
+    responses:
+      "200":
+        description: The document as an attachment.
+        headers: { Content-Disposition: { schema: { type: string } } }
+        content:
+          application/yaml: { schema: { type: string } }
+          application/json: { schema: { $ref: "#/components/schemas/RouteDocument" } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routesExport:
+  post:
+    tags: [routes]
+    operationId: exportRoutes
+    summary: Download several routes as one multi-document YAML stream or a JSON array (P2, audited).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ids]
+            properties:
+              ids: { type: array, minItems: 1, maxItems: 200, items: { type: string, format: uuid } }
+              format: { type: string, enum: [yaml, json] }
+              version: { type: string }
+    responses:
+      "200":
+        description: The documents as an attachment.
+        headers: { Content-Disposition: { schema: { type: string } } }
+        content:
+          application/yaml: { schema: { type: string } }
+          application/json:
+            schema:
+              oneOf:
+                - { $ref: "#/components/schemas/RouteDocument" }
+                - { type: array, items: { $ref: "#/components/schemas/RouteDocument" } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routesImport:
+  post:
+    tags: [routes]
+    operationId: importRoutes
+    summary: Import YAML / JSON route documents as drafts (never deploys); connection names resolve within the team (P2).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+      - { name: mode, in: query, schema: { type: string, enum: [create, upsert] }, description: "create skips existing names; upsert replaces their draft." }
+      - { name: dryRun, in: query, schema: { type: boolean } }
+      - { name: format, in: query, schema: { type: string, enum: [yaml, json] } }
+      - { name: teamId, in: query, schema: { type: string, format: uuid } }
+    requestBody:
+      required: true
+      content:
+        application/yaml: { schema: { type: string } }
+        application/json:
+          schema:
+            oneOf:
+              - type: object
+                required: [content]
+                properties: { content: { type: string }, format: { type: string, enum: [yaml, json] } }
+              - { $ref: "#/components/schemas/RouteDocument" }
+              - { type: array, items: { $ref: "#/components/schemas/RouteDocument" } }
+    responses:
+      "200":
+        description: One result per document.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dryRun, results]
+              properties:
+                dryRun: { type: boolean }
+                results: { type: array, items: { $ref: "#/components/schemas/ImportResult" } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeReplay:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [routes]
+    operationId: replayRoute
+    summary: Re-read the route's source from a point in time (P3, audited); the destination receives duplicates.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [from, confirm]
+            properties:
+              from: { type: string, format: date-time, description: "In the past and inside ROUTER_ROUTES_REPLAY_WINDOW (default 7 days)." }
+              confirm: { type: boolean, description: "Must be true: the destination will receive duplicates." }
+    responses:
+      "202":
+        description: The pending replay; progress via GET …/replays/{replayId} and WS route.replay_changed.
+        content: { application/json: { schema: { $ref: "#/components/schemas/Replay" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+routeReplayStatus:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+    - { name: replayId, in: path, required: true, schema: { type: string, format: uuid } }
+  get:
+    tags: [routes]
+    operationId: getRouteReplay
+    summary: Status of one replay (P3).
+    responses:
+      "200":
+        description: The replay.
+        content: { application/json: { schema: { $ref: "#/components/schemas/Replay" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+components:
+  responses:
+    DeployAccepted:
+      description: Version and deployment created; workers are notified after commit.
+      headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [deployment, version, route]
+            properties:
+              deployment: { $ref: "#/components/schemas/Deployment" }
+              version: { $ref: "#/components/schemas/RouteVersion" }
+              route: { $ref: "#/components/schemas/RouteDetail" }
+    InvalidConfig:
+      description: Blocking validation issues; `path` is the first error, `issues` lists all.
+      content:
+        application/problem+json:
+          schema:
+            allOf:
+              - { $ref: "../components/problem.yaml#/Problem" }
+              - type: object
+                properties: { issues: { type: array, items: { $ref: "#/components/schemas/Issue" } } }
+  schemas:
+    RouteStatus: { type: string, enum: [draft, running, paused, error, archived] }
+    DesiredState: { type: string, enum: [running, paused, archived] }
+    VersionOrigin: { type: string, enum: [deploy, rollback, auto_rollback, import] }
+    DeploymentStatus: { type: string, enum: [pending_approval, rolling_out, active, failed, superseded, rejected, cancelled] }
+    RouteDocument:
+      type: object
+      description: router/v1 route document (schema owned by pipeline-engine, pkg/config/schema/route.v1.schema.json).
+      additionalProperties: true
+    UserRef:
+      type: [object, "null"]
+      properties: { id: { type: string }, name: { type: string } }
+    Issue:
+      type: object
+      required: [code, severity, path, message]
+      properties:
+        code: { type: string }
+        severity: { type: string, enum: [error, warning] }
+        path: { type: string, description: JSON Pointer into the route document. }
+        message: { type: string }
+    ValidationResult:
+      type: object
+      required: [valid, issues]
+      properties:
+        valid: { type: boolean }
+        issues: { type: array, items: { $ref: "#/components/schemas/Issue" } }
+    RouteCreate:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 120 }
+        teamId: { type: string, format: uuid }
+        description: { type: string }
+        tags: { type: array, items: { type: string } }
+        draft: { $ref: "#/components/schemas/RouteDocument" }
+    RoutePatch:
+      type: object
+      properties:
+        name: { type: string, maxLength: 120 }
+        description: { type: string }
+        tags: { type: array, items: { type: string } }
+        replicas: { type: integer, minimum: 1, maximum: 64 }
+        draft: { $ref: "#/components/schemas/RouteDocument" }
+    RouteSummary:
+      type: object
+      required: [id, name, teamId, status, desiredState, tags, transform, destinations, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        teamId: { type: string }
+        teamName: { type: string }
+        tags: { type: array, items: { type: string } }
+        status: { $ref: "#/components/schemas/RouteStatus" }
+        desiredState: { $ref: "#/components/schemas/DesiredState" }
+        observedState: { type: [string, "null"], enum: [running, paused, error, null] }
+        activeVersion:
+          type: [object, "null"]
+          properties: { id: { type: string }, no: { type: integer } }
+        hasUndeployedDraft: { type: boolean }
+        source:
+          type: [object, "null"]
+          properties:
+            connectionId: { type: string }
+            connectionName: { type: string }
+            topics: { type: array, items: { type: string } }
+            topicPattern: { type: [string, "null"] }
+        filterSummary:
+          type: [object, "null"]
+          properties: { headline: { type: string }, more: { type: integer } }
+        transform: { type: string, enum: [none, visual, js] }
+        destinations:
+          type: array
+          items:
+            type: object
+            properties:
+              branchId: { type: string }
+              connectionId: { type: string }
+              connectionName: { type: string }
+              topic: { type: string }
+        branches:
+          type: array
+          description: One entry per branch (P2 branches); the first one also fills filterSummary.
+          items:
+            type: object
+            required: [id, transform, destination]
+            properties:
+              id: { type: string }
+              filterSummary:
+                type: [object, "null"]
+                properties: { headline: { type: string }, more: { type: integer } }
+              transform: { type: string, enum: [none, visual, js] }
+              destination:
+                type: object
+                properties:
+                  branchId: { type: string }
+                  connectionId: { type: string }
+                  connectionName: { type: string }
+                  topic: { type: string }
+        metrics:
+          type: [object, "null"]
+          properties:
+            eventsPerSec: { type: number }
+            matchPct: { type: number }
+            lag: { type: integer }
+            sparkline: { type: array, items: { type: number } }
+        updatedAt: { type: string, format: date-time }
+        updatedBy: { $ref: "#/components/schemas/UserRef" }
+    Replay:
+      type: object
+      required: [replayId, routeId, status, from, requestedAt, partitions]
+      properties:
+        replayId: { type: string, format: uuid }
+        routeId: { type: string, format: uuid }
+        status: { type: string, enum: [pending, stopping, resetting, done, failed] }
+        from: { type: string, format: date-time }
+        requestedAt: { type: string, format: date-time }
+        startedAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time }
+        error: { type: string }
+        partitions: { type: integer, description: "Source partitions whose offsets were reset." }
+    RouteDetail:
+      allOf:
+        - { $ref: "#/components/schemas/RouteSummary" }
+        - type: object
+          required: [description, replicas, revision]
+          properties:
+            description: { type: string }
+            replicas: { type: integer }
+            revision: { type: integer, description: "routes.row_version; also sent as ETag." }
+            draft: { oneOf: [{ $ref: "#/components/schemas/RouteDocument" }, { type: "null" }] }
+            active: { oneOf: [{ $ref: "#/components/schemas/RouteDocument" }, { type: "null" }] }
+            lastDeployment: { oneOf: [{ $ref: "#/components/schemas/Deployment" }, { type: "null" }] }
+            issues: { type: array, items: { $ref: "#/components/schemas/Issue" } }
+    Deployment:
+      type: object
+      required: [id, routeId, versionId, versionNo, status, requestedAt]
+      properties:
+        id: { type: string }
+        routeId: { type: string }
+        versionId: { type: string }
+        versionNo: { type: integer }
+        previousVersionId: { type: string }
+        status: { $ref: "#/components/schemas/DeploymentStatus" }
+        failureReason: { type: string }
+        requestedBy: { type: string }
+        approvedBy: { type: string }
+        requestedAt: { type: string, format: date-time }
+        approvedAt: { type: string, format: date-time }
+        startedAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time }
+    RouteVersion:
+      type: object
+      required: [id, routeId, no, config, configHash, origin, createdAt]
+      properties:
+        id: { type: string }
+        routeId: { type: string }
+        no: { type: integer }
+        config: { $ref: "#/components/schemas/RouteDocument" }
+        configHash: { type: string }
+        origin: { $ref: "#/components/schemas/VersionOrigin" }
+        basedOnId: { type: string }
+        basedOn: { type: integer }
+        author: { $ref: "#/components/schemas/UserRef" }
+        changeNote: { type: string }
+        createdAt: { type: string, format: date-time }
+    VersionSummary:
+      type: object
+      required: [no, origin, changeNote, createdAt, configHash, active]
+      properties:
+        no: { type: integer }
+        origin: { $ref: "#/components/schemas/VersionOrigin" }
+        basedOn: { type: integer }
+        author: { $ref: "#/components/schemas/UserRef" }
+        changeNote: { type: string }
+        createdAt: { type: string, format: date-time }
+        configHash: { type: string }
+        active: { type: boolean }
+        deploymentStatus: { oneOf: [{ $ref: "#/components/schemas/DeploymentStatus" }, { type: "null" }] }
+    ExportArtifact:
+      type: object
+      required: [format, mediaType, fileName, content]
+      properties:
+        format: { type: string, enum: [yaml, json] }
+        mediaType: { type: string }
+        fileName: { type: string }
+        content: { type: string }
+    ImportResult:
+      type: object
+      required: [index, name, action, issues]
+      properties:
+        index: { type: integer }
+        name: { type: string }
+        routeId: { type: string }
+        action: { type: string, enum: [created, draft_updated, skipped_exists, invalid, failed] }
+        issues: { type: array, items: { $ref: "#/components/schemas/Issue" } }
+    RouteDiff:
+      type: object
+      required: [a, b, sections]
+      properties:
+        a: { type: string }
+        b: { type: string }
+        sections:
+          type: array
+          items:
+            type: object
+            required: [section, lines]
+            properties:
+              section: { type: string, enum: [source, filter, transform, destination, settings] }
+              lines:
+                type: array
+                items:
+                  type: object
+                  required: [mark, text, path]
+                  properties:
+                    mark: { type: string, enum: ["+", "-", "~"] }
+                    text: { type: string }
+                    path: { type: string }

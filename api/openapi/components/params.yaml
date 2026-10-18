@@ -1,0 +1,32 @@
+Limit:
+  name: limit
+  in: query
+  schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+  description: Page size; values above 200 are clamped, values ≤ 0 are rejected (422).
+Cursor:
+  name: cursor
+  in: query
+  schema: { type: string }
+  description: Opaque cursor from a previous page's `next_cursor`.
+IfMatch:
+  name: If-Match
+  in: header
+  required: true
+  schema: { type: string, example: '"7"' }
+  description: ETag of the version being edited.
+IdParam:
+  name: id
+  in: path
+  required: true
+  schema: { type: string, format: uuid }
+CSRFToken:
+  name: X-CSRF-Token
+  in: header
+  schema: { type: string }
+  description: Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie.
+ETagHeader:
+  description: Strong entity tag of the returned row version.
+  schema: { type: string, example: '"7"' }
+RequestIDHeader:
+  description: ULID of the request (also in problem bodies and audit rows).
+  schema: { type: string }

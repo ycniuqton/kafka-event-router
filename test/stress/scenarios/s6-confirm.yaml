@@ -1,0 +1,62 @@
+name: s6-confirm
+description: >
+  S6 confirmation pass (5-min steps at the explore max and knee, 30 s warm-up) of s6-explore. Original text:
+  S6 exploration pass — scale-out 1 -> 2 -> 3 workers, one route with replicas = workers, 48 partitions, 1 KB,
+  maxInFlight 5000 (so each replica is CPU-bound, not in-flight-bound). Two CPU layouts:
+  "fair" splits the same 6 cores 0-5 across the workers (0-5 | 0-2,3-5 | 0-1,2-3,4-5): total CPU constant, shows the
+  cost of splitting; "c2" gives every worker its own 2 cores (0-1 | 0-1,2-3 | = fair-w3): CPU grows with workers,
+  shows scaling. 1-min steps (20 s warm-up); s6-confirm re-checks the knees with 5-min steps. Partition ownership is
+  snapshotted into results/s6-confirm/spread-<case>.txt. Local only (workers.sh).
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+targetExtras:
+  local:
+    metrics:
+      - {name: worker-2, source: {kind: http, url: "http://127.0.0.1:8091/metrics"}}
+      - {name: worker-3, source: {kind: http, url: "http://127.0.0.1:8092/metrics"}}
+    processes:
+      - {name: worker-2, pid: {kind: file, path: .local/run/stress-worker-2.pid}}
+      - {name: worker-3, pid: {kind: file, path: .local/run/stress-worker-3.pid}}
+defaults:
+  partitions: 48
+  routes: {count: 1, maxInFlight: 5000}
+  load:
+    size: 1024
+    producers: 3
+    lanes: 4
+    streams: 512
+  drain: {timeout: 5m}
+cases:
+  - name: fair-w1
+    load: {steps: [{rate: 90000, duration: 5m}, {rate: 100000, duration: 5m}]}
+    routes: {replicas: 1}
+    hooks: {before: ["STRESS_MAIN_CPUS=0-5 test/stress/scripts/workers.sh scale 1"]}
+    actions:
+      - {at: 45s, name: spread, run: "test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-fair-w1.txt"}
+  - name: fair-w2
+    load: {steps: [{rate: 90000, duration: 5m}, {rate: 100000, duration: 5m}]}
+    routes: {replicas: 2}
+    hooks: {before: ["STRESS_WORKER_CPUS_1=0-2 STRESS_WORKER_CPUS_2=3-5 test/stress/scripts/workers.sh scale 2"]}
+    actions:
+      - {at: 45s, name: spread, run: "test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-fair-w2.txt"}
+  - name: fair-w3
+    load: {steps: [{rate: 70000, duration: 5m}, {rate: 80000, duration: 5m}]}
+    routes: {replicas: 3}
+    hooks: {before: ["STRESS_WORKER_CPUS_1=0-1 STRESS_WORKER_CPUS_2=2-3 STRESS_WORKER_CPUS_3=4-5 test/stress/scripts/workers.sh scale 3"]}
+    actions:
+      - {at: 45s, name: spread, run: "test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-fair-w3.txt"}
+  - name: c2-w1
+    load: {steps: [{rate: 40000, duration: 5m}, {rate: 50000, duration: 5m}]}
+    routes: {replicas: 1}
+    hooks: {before: ["STRESS_MAIN_CPUS=0-1 test/stress/scripts/workers.sh scale 1"]}
+    actions:
+      - {at: 45s, name: spread, run: "test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-c2-w1.txt"}
+  - name: c2-w2
+    load: {steps: [{rate: 70000, duration: 5m}, {rate: 80000, duration: 5m}]}
+    routes: {replicas: 2}
+    hooks:
+      before: ["STRESS_WORKER_CPUS_1=0-1 STRESS_WORKER_CPUS_2=2-3 test/stress/scripts/workers.sh scale 2"]
+      after: ["STRESS_MAIN_CPUS=0-5 test/stress/scripts/workers.sh scale 1"]
+    actions:
+      - {at: 45s, name: spread, run: "test/stress/scripts/group-spread.sh stress-s6- test/stress/results/s6-confirm/spread-c2-w2.txt"}

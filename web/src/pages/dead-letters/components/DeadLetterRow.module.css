@@ -1,0 +1,6 @@
+.row{align-items:start}
+.check{margin:2px 0 0;accent-color:var(--acc);cursor:pointer}
+.kind{font-size:12px;color:var(--err);font-weight:500}
+.body{min-width:0}
+.meta{font-size:11px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resolution{margin-right:6px}

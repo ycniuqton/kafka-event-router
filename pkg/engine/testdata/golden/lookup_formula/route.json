@@ -1,0 +1,17 @@
+{
+  "apiVersion": "router/v1",
+  "name": "lookup-formula",
+  "source": { "connectionId": "c1", "topics": ["payments"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "countries", "kind": "lookup", "field": "value.cc", "to": "value.country",
+        "rows": [ { "key": "DE", "value": "Germany" }, { "key": "FR", "value": "France" } ], "defaultValue": "Unknown" },
+      { "id": "vat", "kind": "lookup", "field": "value.cc", "to": "value.vatRate",
+        "rows": [ { "key": "DE", "value": 0.19 }, { "key": "FR", "value": 0.2 } ] },
+      { "id": "gross", "kind": "set", "field": "value.gross", "source": { "from": "formula", "expr": "round(value.net * (1 + coalesce(value.vatRate, 0)), 2)" } },
+      { "id": "label", "kind": "set", "field": "value.label", "source": { "from": "formula", "expr": "concat(upper(value.cc), \"-\", lookup(\"countries\", value.cc, \"n/a\"))" } }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "payments-enriched" }
+  }]
+}

@@ -1,0 +1,6 @@
+.grants{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.label{font-size:12px;color:var(--tx2)}
+.note{font-size:12px;color:var(--tx2)}
+.teams{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.team{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--p2);border:1px solid var(--ln)}
+.link{font-size:12px;color:var(--acc)}

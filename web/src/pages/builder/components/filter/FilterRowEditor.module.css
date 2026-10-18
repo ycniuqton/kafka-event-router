@@ -1,0 +1,12 @@
+.row{display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;border:1px solid var(--ln2);background:var(--p1)}
+.row[data-result="true"]{border-color:var(--ok);background:color-mix(in oklch, var(--ok) 8%, var(--p1))}
+.row[data-result="false"]{border-color:var(--err);background:color-mix(in oklch, var(--err) 8%, var(--p1))}
+.field{width:240px;padding:0 6px;border-radius:5px}
+.op{width:120px;padding:0 6px;border-radius:5px;font-size:12px}
+.value{flex:1;min-width:0;border-radius:5px}
+.result{font:11px var(--font-mono);width:52px;flex:none}
+.row[data-result="true"] .result{color:var(--ok)}
+.row[data-result="false"] .result{color:var(--err)}
+.del{width:26px;height:26px;border:none;background:none;color:var(--tx3);cursor:pointer;font-size:16px;flex:none}
+.del:hover{color:var(--err)}
+.row[data-fresh]{box-shadow:0 0 0 2px color-mix(in oklch, var(--acc) 40%, transparent)}

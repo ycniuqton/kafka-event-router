@@ -1,0 +1,15 @@
+{
+  "apiVersion": "router/v1",
+  "name": "hash-copy-move",
+  "source": { "connectionId": "c1", "topics": ["users"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "c", "kind": "copy", "from": "value.email", "to": "value.emailHash" },
+      { "id": "h", "kind": "hash", "field": "value.emailHash" },
+      { "id": "m", "kind": "move", "from": "value.traceId", "to": "headers.traceId" },
+      { "id": "r", "kind": "remove", "fields": ["value.email"] }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "users-hashed" }
+  }]
+}

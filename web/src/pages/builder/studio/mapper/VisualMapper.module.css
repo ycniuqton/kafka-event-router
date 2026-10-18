@@ -1,0 +1,35 @@
+.mapper{display:flex;flex-direction:column;gap:8px;min-width:0}
+.expanded{position:fixed;inset:24px;z-index:var(--z-modal);padding:14px;border-radius:var(--radius-lg);border:1px solid var(--ln2);background:var(--p1);box-shadow:var(--shadow-pop);overflow:auto}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.spacer{flex:1}
+.columns{position:relative;display:grid;grid-template-columns:minmax(140px,2fr) minmax(220px,3fr);gap:18px;min-width:0}
+.inputColumn,.outputColumn{display:flex;flex-direction:column;gap:2px;min-width:0}
+.columnTitle{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--tx3);margin-bottom:2px}
+.inputRow{display:flex;align-items:center;gap:6px;padding:2px 4px 2px calc(4px + var(--depth, 0) * 12px);border-radius:6px;cursor:grab;font-size:11.5px;min-width:0}
+.inputRow:hover{background:var(--p2)}
+.inputRow[data-unmapped="true"]{color:var(--tx3)}
+.inputRow[data-unmapped="true"] .detail{color:var(--tx3)}
+.outputTree{display:flex;flex-direction:column;gap:4px;min-height:48px;padding:4px;border:1px dashed var(--ln2);border-radius:8px}
+.groupRow{display:flex;align-items:center;gap:6px;padding:2px 4px 2px calc(4px + var(--depth, 0) * 14px);font-size:11.5px}
+.entryRow{display:flex;align-items:center;gap:6px;padding-left:calc(var(--depth, 0) * 14px);min-width:0;flex-wrap:wrap}
+.entryRow[data-removed="true"] .name{text-decoration:line-through;color:var(--tx3)}
+.name{width:110px;flex:none}
+.groupInput{width:120px}
+.source{display:flex;align-items:center;gap:4px;flex:1;min-width:160px}
+.kind{width:112px;flex:none}
+.grow{flex:1;min-width:0}
+.entryActions{display:flex;gap:2px}
+.removed{flex:1;font-size:11px;color:var(--tx3);font-style:italic}
+.dropHint{padding:10px;text-align:center;color:var(--tx3);font-size:11.5px}
+.unmappedNote{font-size:11px;color:var(--tx3)}
+.mono{font-family:var(--font-mono)}
+.detail{color:var(--tx3);font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+.formula{position:relative;display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+.formulaSign{font-family:var(--font-mono);color:var(--acc)}
+.suggestions{position:absolute;top:100%;left:14px;right:0;z-index:var(--z-popover);margin:2px 0 0;padding:4px;list-style:none;border:1px solid var(--ln2);border-radius:8px;background:var(--p1);box-shadow:var(--shadow-pop)}
+.suggestion{display:flex;justify-content:space-between;gap:8px;padding:3px 6px;border-radius:5px;font-size:11.5px;cursor:pointer}
+.suggestion[data-active="true"]{background:var(--p2)}
+.live{font-family:var(--font-mono);font-size:11px;color:var(--ok);white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.connector{fill:none;stroke:var(--acc);stroke-width:1.5}
+.connectorEnd{fill:var(--acc)}

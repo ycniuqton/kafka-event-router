@@ -1,0 +1,18 @@
+05:47:18 pinned worker (pid 1609930) to CPUs 0-5
+05:47:18 pinned kafka (pid 1583441) to CPUs 6-9
+05:47:18 case p12-mif5000: 1 route(s), 12 partition(s), 12 step(s)
+05:48:19 case p12-mif5000 step 0 (5000 ev/s): sustained (lag slope -1.0/s, p99 19.5 ms)
+05:49:19 case p12-mif5000 step 1 (10000 ev/s): sustained (lag slope 0.7/s, p99 20.0 ms)
+05:50:19 case p12-mif5000 step 2 (15000 ev/s): sustained (lag slope 0.6/s, p99 20.7 ms)
+05:51:19 case p12-mif5000 step 3 (20000 ev/s): sustained (lag slope 0.3/s, p99 21.2 ms)
+05:52:19 case p12-mif5000 step 4 (30000 ev/s): sustained (lag slope -3.6/s, p99 37.4 ms)
+05:53:19 case p12-mif5000 step 5 (40000 ev/s): sustained (lag slope 2.1/s, p99 42.5 ms)
+05:54:19 case p12-mif5000 step 6 (50000 ev/s): sustained (lag slope -4.3/s, p99 145.4 ms)
+05:55:19 case p12-mif5000 step 7 (65000 ev/s): sustained (lag slope -59.1/s, p99 114.7 ms)
+05:56:19 case p12-mif5000 step 8 (80000 ev/s): sustained (lag slope 521.4/s, p99 942.1 ms)
+05:57:19 case p12-mif5000 step 9 (100000 ev/s): lag_growing (lag slope 13808.4/s, p99 19136.5 ms)
+05:57:19 case p12-mif5000: stopping load (knee: lag_growing)
+05:57:49 case p12-mif5000: max sustainable 80000 ev/s, knee 100000 (lag_growing), lost 0, error ""
+05:57:54 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+05:57:54 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s2-explore/p12-mif5000/s2-explore.json

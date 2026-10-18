@@ -1,0 +1,15 @@
+{
+  "apiVersion": "router/v1",
+  "name": "convert-types",
+  "source": { "connectionId": "c1", "topics": ["raw"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "n", "kind": "convert_type", "field": "value.n", "targetType": "number", "onFailure": "null" },
+      { "id": "i", "kind": "convert_type", "field": "value.i", "targetType": "integer", "onFailure": "keep" },
+      { "id": "b", "kind": "convert_type", "field": "value.b", "targetType": "boolean" },
+      { "id": "s", "kind": "convert_type", "field": "value.s", "targetType": "string" }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "typed" }
+  }]
+}

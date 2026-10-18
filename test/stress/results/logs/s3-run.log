@@ -1,0 +1,17 @@
+09:07:03 pinned worker (pid 1640235) to CPUs 0-5
+09:07:03 pinned kafka (pid 1583441) to CPUs 6-9
+09:07:03 case r10: 10 route(s), 1 partition(s), 1 step(s)
+09:10:14 case r10: max sustainable 100 ev/s, knee 0 (), lost 0, error ""
+09:10:14 case r50: 50 route(s), 1 partition(s), 1 step(s)
+09:13:30 case r50: max sustainable 500 ev/s, knee 0 (), lost 0, error ""
+09:13:30 case r100: 100 route(s), 1 partition(s), 1 step(s)
+09:16:49 case r100: max sustainable 1000 ev/s, knee 0 (), lost 0, error ""
+09:16:49 case r250: 250 route(s), 1 partition(s), 1 step(s)
+09:20:56 case r250: max sustainable 2500 ev/s, knee 0 (), lost 0, error ""
+09:20:56 case r500: 500 route(s), 1 partition(s), 1 step(s)
+09:26:36 case r500: max sustainable 5000 ev/s, knee 0 (), lost 0, error ""
+09:26:36 case r1000: 1000 route(s), 1 partition(s), 1 step(s)
+09:40:36 case r1000: max sustainable 10000 ev/s, knee 0 (), lost 0, error ""
+09:43:47 cleanup: archived 1000 route(s), deleted 3000 topic(s), 0 error(s)
+09:43:47 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s3-many-routes.json

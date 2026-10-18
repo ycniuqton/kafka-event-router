@@ -1,0 +1,8 @@
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0}
+.summary{font:11px var(--font-mono);color:var(--ok);white-space:nowrap}
+.summary[data-failing="true"]{color:var(--err)}
+.jump{border:none;background:none;padding:0;color:var(--err);cursor:pointer;font-size:11px;text-decoration:underline;white-space:nowrap}
+.body{flex:1;min-height:0;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.empty{padding:18px;border:1px dashed var(--ln2);border-radius:8px;text-align:center;color:var(--tx2);font-size:12px}
+.readOnly{padding:8px 10px;border-radius:8px;background:var(--p2);color:var(--tx2);font-size:12px}
+.magic{display:flex;gap:6px;flex-wrap:wrap}

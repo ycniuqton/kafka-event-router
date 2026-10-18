@@ -1,0 +1,3 @@
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.search{flex:1;min-width:200px;max-width:340px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}

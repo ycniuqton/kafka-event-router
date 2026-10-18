@@ -1,0 +1,285 @@
+{
+ "summary": {
+  "loaded": 3,
+  "processed": 3,
+  "passed": 3,
+  "filtered": 0,
+  "errors": 0,
+  "dropped": 0,
+  "incomplete": false,
+  "durationMs": 0,
+  "branches": [
+   {
+    "branch": "main",
+    "passed": 3,
+    "filtered": 0,
+    "errors": 0,
+    "dropped": 0
+   }
+  ]
+ },
+ "issues": [],
+ "results": [
+  {
+   "seq": 0,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "r1",
+       "kind": "rename",
+       "patch": [
+        {
+         "op": "remove",
+         "path": "/value/cust_id"
+        },
+        {
+         "op": "add",
+         "path": "/value/customerId",
+         "value": "C-1"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "m1",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/email",
+         "value": "j*******@example.com"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 2,
+       "id": "m2",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/card",
+         "value": "************1111"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 3,
+       "id": "m3",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/pin",
+         "value": "****"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "customers-public",
+       "key": null,
+       "value": {
+        "card": "************1111",
+        "customerId": "C-1",
+        "email": "j*******@example.com",
+        "pin": "****"
+       },
+       "headers": [],
+       "sizeBytes": 90,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "seq": 1,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "r1",
+       "kind": "rename",
+       "patch": [
+        {
+         "op": "remove",
+         "path": "/value/cust_id"
+        },
+        {
+         "op": "add",
+         "path": "/value/customerId",
+         "value": "C-2"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "m1",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/email",
+         "value": "*@x.com"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 2,
+       "id": "m2",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/card",
+         "value": "**"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 3,
+       "id": "m3",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/pin",
+         "value": "****"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "customers-public",
+       "key": null,
+       "value": {
+        "card": "**",
+        "customerId": "C-2",
+        "email": "*@x.com",
+        "pin": "****"
+       },
+       "headers": [],
+       "sizeBytes": 63,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "seq": 2,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [],
+     "steps": [
+      {
+       "index": 0,
+       "id": "r1",
+       "kind": "rename",
+       "patch": [],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 1,
+       "id": "m1",
+       "kind": "mask",
+       "patch": [
+        {
+         "op": "replace",
+         "path": "/value/email",
+         "value": "************"
+        }
+       ],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 2,
+       "id": "m2",
+       "kind": "mask",
+       "patch": [],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      },
+      {
+       "index": 3,
+       "id": "m3",
+       "kind": "mask",
+       "patch": [],
+       "durationUs": 0,
+       "logs": [],
+       "error": null
+      }
+     ],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "customers-public",
+       "key": null,
+       "value": {
+        "email": "************"
+       },
+       "headers": [],
+       "sizeBytes": 24,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "masked": false
+}

@@ -1,0 +1,160 @@
+===== 2026-10-17T16:05:50-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-e7554658-5571-44ea-9790-f19a9da19630 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:06:17-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-e7554658-5571-44ea-9790-f19a9da19630 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:06:43-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-e7554658-5571-44ea-9790-f19a9da19630 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:07:08-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-e7554658-5571-44ea-9790-f19a9da19630 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:07:33-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             0               -               -                                                                      -               -                   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-e7554658-5571-44ea-9790-f19a9da19630 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:07:58-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:08:24-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:08:49-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:09:14-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:09:39-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:10:04-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:10:30-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:10:55-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:11:20-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:11:45-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-45k-r0-g kgo-37d1dfba-10e8-484a-9584-8f44bbfdc65d /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-45k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:12:10-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-2a3f4db7-3819-49a9-aada-660742c35631 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:12:35-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-2a3f4db7-3819-49a9-aada-660742c35631 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:13:01-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-2a3f4db7-3819-49a9-aada-660742c35631 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:13:29-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-2a3f4db7-3819-49a9-aada-660742c35631 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:13:58-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-2a3f4db7-3819-49a9-aada-660742c35631 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             0               -               -                                                                      -               -                   
+===== 2026-10-17T16:14:24-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:14:49-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:15:14-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:15:39-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:16:05-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:16:30-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:16:55-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:17:20-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:17:45-02:00
+
+GROUP                                       CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                     TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718054174-kill-worker-30k-r0-g kgo-0b4eaacb-ae25-40d4-b485-3afa541a91e0 /127.0.0.1      kgo             12              -               stress-s7-101718054174-kill-worker-30k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:18:10-02:00
+===== 2026-10-17T16:18:32-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-61612139-43c1-4474-962d-5cbba686d8ac /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:18:57-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-61612139-43c1-4474-962d-5cbba686d8ac /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:19:22-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-61612139-43c1-4474-962d-5cbba686d8ac /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:19:47-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-61612139-43c1-4474-962d-5cbba686d8ac /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:20:12-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-61612139-43c1-4474-962d-5cbba686d8ac /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-53c22165-cab9-4dbd-a3bf-16a47923d5b5 /127.0.0.1      kgo             0               -               -                                                                          -               -                   
+===== 2026-10-17T16:20:36-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-53c22165-cab9-4dbd-a3bf-16a47923d5b5 /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:21:02-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-53c22165-cab9-4dbd-a3bf-16a47923d5b5 /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:21:27-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-53c22165-cab9-4dbd-a3bf-16a47923d5b5 /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:21:52-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-53c22165-cab9-4dbd-a3bf-16a47923d5b5 /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   
+===== 2026-10-17T16:22:17-02:00
+
+GROUP                                           CONSUMER-ID                              HOST            CLIENT-ID       #PARTITIONS     CURRENT-EPOCH   CURRENT-ASSIGNMENT                                                         TARGET-EPOCH    TARGET-ASSIGNMENT   
+stress-s7-101718181580-eos-kill-worker-22k-r0-g kgo-53c22165-cab9-4dbd-a3bf-16a47923d5b5 /127.0.0.1      kgo             12              -               stress-s7-101718181580-eos-kill-worker-22k-r0-in:0,1,2,3,4,5,6,7,8,9,10,11 -               -                   

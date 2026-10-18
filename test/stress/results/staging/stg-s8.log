@@ -1,0 +1,5 @@
+17:09:36 case soak-40m: 1 route(s), 12 partition(s), 1 step(s)
+17:49:53 case soak-40m: max sustainable 7000 ev/s, knee 0 (), lost 0, error ""
+17:49:58 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+17:49:58 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+results/stg-s8.json

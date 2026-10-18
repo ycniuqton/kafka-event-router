@@ -1,0 +1,508 @@
+routeDLQ:
+  get:
+    tags: [dead-letters]
+    operationId: listRouteDeadLetters
+    summary: Unresolved dead letters of a route (DLQ topics of all versions), newest first.
+    description: |
+      Requires `dlq.read`. Reads DLQ topics on demand with manual assignment and no consumer group.
+      A scan is bounded by 10 s / 10 MiB; `truncated=true` means the budget stopped it and `next_cursor` continues.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "#/components/parameters/DLQLimit"
+      - $ref: "../components/params.yaml#/Cursor"
+      - $ref: "#/components/parameters/ErrorType"
+      - $ref: "#/components/parameters/Since"
+      - $ref: "#/components/parameters/Until"
+      - $ref: "#/components/parameters/Step"
+      - $ref: "#/components/parameters/Version"
+      - $ref: "#/components/parameters/Text"
+      - $ref: "#/components/parameters/IncludeResolved"
+    responses:
+      "200":
+        description: One page.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterPage" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+routeDLQSummary:
+  get:
+    tags: [dead-letters]
+    operationId: getRouteDeadLetterSummary
+    summary: Unresolved counts of a route (tab label, dashboard card); cached 15 s.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+    responses:
+      "200":
+        description: The summary.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterSummary" } } }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeDLQItem:
+  get:
+    tags: [dead-letters]
+    operationId: getRouteDeadLetter
+    summary: One dead letter with original key, value, headers and failure details.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "#/components/parameters/DLQId"
+    responses:
+      "200":
+        description: The detail.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterDetail" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeDLQRetry:
+  post:
+    tags: [dead-letters]
+    operationId: retryRouteDeadLetters
+    summary: Re-run selected dead letters through the route's active version and produce to the destination (≤ 500 per call).
+    description: Requires `dlq.act`. Sent and filtered events become resolved; failed events stay and are only reported.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterSelection" } } }
+    responses:
+      "200":
+        description: Per-event outcomes.
+        content: { application/json: { schema: { $ref: "#/components/schemas/RetryReport" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeDLQDiscard:
+  post:
+    tags: [dead-letters]
+    operationId: discardRouteDeadLetters
+    summary: Mark selected dead letters discarded (≤ 500 per call).
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterSelection" } } }
+    responses:
+      "200":
+        description: The result.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DiscardReport" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeDLQExport:
+  get:
+    tags: [dead-letters]
+    operationId: exportRouteDeadLetters
+    summary: Download selected (`ids`) or filtered dead letters as a JSON array of detail objects (≤ 10,000).
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - name: ids
+        in: query
+        schema: { type: string }
+        description: Comma-separated dead-letter ids; when absent the filters select.
+      - $ref: "#/components/parameters/ErrorType"
+      - $ref: "#/components/parameters/Since"
+      - $ref: "#/components/parameters/Until"
+      - $ref: "#/components/parameters/Step"
+      - $ref: "#/components/parameters/Version"
+      - $ref: "#/components/parameters/Text"
+      - name: format
+        in: query
+        schema: { type: string, enum: [json, ndjson], default: json }
+    responses:
+      "200":
+        description: "The file (`Content-Disposition: attachment`); values masked per SampleVisibility."
+        content:
+          application/json: { schema: { type: array, items: { $ref: "#/components/schemas/DeadLetterDetail" } } }
+          application/x-ndjson: { schema: { type: string, description: "One DeadLetterDetail JSON object per line." } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeDLQRestore:
+  post:
+    tags: [dead-letters]
+    operationId: restoreRouteDeadLetters
+    summary: Un-resolve discarded dead letters still inside DLQ retention (≤ 500 per call, P2).
+    description: Requires `dlq.act`. Non-discarded events are skipped (`not_discarded`), expired ones (`expired`). Audited as `dlq.restored`.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterSelection" } } }
+    responses:
+      "200":
+        description: The result.
+        content: { application/json: { schema: { $ref: "#/components/schemas/RestoreReport" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeDLQJobs:
+  get:
+    tags: [dead-letters]
+    operationId: listRouteDeadLetterJobs
+    summary: Newest bulk jobs of a route (P2).
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+    responses:
+      "200":
+        description: Up to 20 jobs, newest first.
+        content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: "#/components/schemas/DeadLetterJob" } } } } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+  post:
+    tags: [dead-letters]
+    operationId: createRouteDeadLetterJob
+    summary: Queue a background retry/discard of every unresolved dead letter matching a filter (any size, P2).
+    description: Requires `dlq.act`. Runners in every API instance claim jobs (SKIP LOCKED), apply pages of ≤ 500 and keep a resumable cursor.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [action, match]
+            properties:
+              action: { type: string, enum: [retry, discard] }
+              match: { $ref: "#/components/schemas/Match" }
+    responses:
+      "202":
+        description: The queued job.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterJob" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+dlqJob:
+  get:
+    tags: [dead-letters]
+    operationId: getDeadLetterJob
+    summary: Status and progress of a bulk job.
+    parameters:
+      - $ref: "#/components/parameters/JobId"
+    responses:
+      "200":
+        description: The job.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterJob" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+dlqJobCancel:
+  post:
+    tags: [dead-letters]
+    operationId: cancelDeadLetterJob
+    summary: Cancel a job (queued → cancelled at once; running → stops after the current page).
+    parameters:
+      - $ref: "#/components/parameters/JobId"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The job.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterJob" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+routeDLQStudio:
+  post:
+    tags: [dead-letters]
+    operationId: openDeadLetterInStudio
+    summary: Create a preview sample session holding this dead letter and return the builder deep link.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "#/components/parameters/DLQId"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The link.
+        content: { application/json: { schema: { $ref: "#/components/schemas/StudioLink" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+globalDLQ:
+  get:
+    tags: [dead-letters]
+    operationId: listDeadLetters
+    summary: Dead letters across every route the caller may read, merged newest first.
+    parameters:
+      - $ref: "#/components/parameters/DLQLimit"
+      - $ref: "../components/params.yaml#/Cursor"
+      - $ref: "#/components/parameters/ErrorType"
+      - $ref: "#/components/parameters/Since"
+      - $ref: "#/components/parameters/Until"
+      - $ref: "#/components/parameters/Step"
+      - $ref: "#/components/parameters/Version"
+      - $ref: "#/components/parameters/Text"
+      - $ref: "#/components/parameters/IncludeResolved"
+      - name: routeId
+        in: query
+        schema: { type: string }
+        description: Comma-separated route ids to restrict to.
+    responses:
+      "200":
+        description: One page; routes whose DLQ could not be read are listed in `warnings`.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterPage" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+globalDLQSummary:
+  get:
+    tags: [dead-letters]
+    operationId: getDeadLetterSummary
+    summary: Unresolved total for the nav badge, per route.
+    responses:
+      "200":
+        description: The summary.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unresolved, byErrorType, approximate, routes]
+              properties:
+                unresolved: { type: integer }
+                byErrorType: { type: object, additionalProperties: { type: integer } }
+                approximate: { type: boolean }
+                routes:
+                  type: array
+                  items:
+                    type: object
+                    required: [routeId, routeName, unresolved, byErrorType, approximate]
+                    properties:
+                      routeId: { type: string }
+                      routeName: { type: string }
+                      unresolved: { type: integer }
+                      byErrorType: { type: object, additionalProperties: { type: integer } }
+                      approximate: { type: boolean }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+components:
+  parameters:
+    DLQLimit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    DLQId:
+      name: dlqId
+      in: path
+      required: true
+      schema: { type: string }
+      description: Opaque dead-letter id (base64url of DLQ topic, partition and offset).
+    ErrorType:
+      name: errorType
+      in: query
+      schema: { type: string, example: "step_error,timeout" }
+      description: Comma-separated error types.
+    Step:
+      name: step
+      in: query
+      schema: { type: string }
+      description: Failing step id (exact).
+    Version:
+      name: version
+      in: query
+      schema: { type: integer, minimum: 1 }
+      description: Route version that wrote the dead letter.
+    Text:
+      name: q
+      in: query
+      schema: { type: string }
+      description: Case-insensitive text in the error message.
+    IncludeResolved:
+      name: includeResolved
+      in: query
+      schema: { type: boolean, default: false }
+      description: Also list retried/filtered/discarded events with their resolution.
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Since:
+      name: since
+      in: query
+      schema: { type: string, format: date-time }
+    Until:
+      name: until
+      in: query
+      schema: { type: string, format: date-time }
+  schemas:
+    ErrorType:
+      type: string
+      enum: [decode_error, step_error, timeout, output_invalid, unknown]
+    SourcePosition:
+      type: object
+      required: [topic, partition, offset]
+      properties:
+        topic: { type: string }
+        partition: { type: integer }
+        offset: { type: integer, format: int64 }
+    Destination:
+      type: object
+      required: [topic, partition, offset]
+      properties:
+        topic: { type: string }
+        partition: { type: integer }
+        offset: { type: integer, format: int64 }
+    Resolution:
+      type: [object, "null"]
+      required: [state, by, at]
+      properties:
+        state: { type: string, enum: [retried, filtered, discarded] }
+        by: { type: string }
+        at: { type: string, format: date-time }
+        destination: { $ref: "#/components/schemas/Destination" }
+        jobId: { type: string }
+    DeadLetter:
+      type: object
+      required: [id, routeId, routeName, failedAt, errorType, message, step, stepLabel, branch, versionNo, source, resolution]
+      properties:
+        id: { type: string }
+        routeId: { type: string }
+        routeName: { type: string }
+        failedAt: { type: string, format: date-time }
+        errorType: { $ref: "#/components/schemas/ErrorType" }
+        message: { type: string }
+        step: { type: string }
+        stepLabel: { type: string, description: "Human label of the failing step (\"Step 2 · JavaScript\"); the step id when unknown." }
+        branch: { type: string }
+        versionNo: { type: integer }
+        source: { $ref: "#/components/schemas/SourcePosition" }
+        resolution: { $ref: "#/components/schemas/Resolution" }
+        deliveryMode: { type: string, enum: [at_least_once, exactly_once], description: "Delivery mode of the route's active version (absent for undeployed routes); retries of exactly_once routes are delivered at-least-once (P3)." }
+    EncodedValue:
+      type: object
+      required: [encoding, data]
+      properties:
+        encoding: { type: string, enum: [json, utf8, base64, avro, protobuf] }
+        data: {}
+        schemaId: { type: integer, description: "Registry schema id of avro/protobuf values." }
+    EncodedHeader:
+      type: object
+      required: [key, value, encoding]
+      properties:
+        key: { type: string }
+        value: { type: string }
+        encoding: { type: string, enum: [utf8, base64] }
+    DeadLetterDetail:
+      allOf:
+        - $ref: "#/components/schemas/DeadLetter"
+        - type: object
+          required: [stack, key, value, headers, masked]
+          properties:
+            stack: { type: string }
+            key: { $ref: "#/components/schemas/EncodedValue" }
+            value: { $ref: "#/components/schemas/EncodedValue" }
+            headers: { type: array, items: { $ref: "#/components/schemas/EncodedHeader" } }
+            masked: { type: boolean }
+    DeadLetterPage:
+      type: object
+      description: Cursor page (`next_cursor` as in PageMeta) plus scan statistics.
+      required: [items, next_cursor, scanned, truncated]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/DeadLetter" } }
+        next_cursor: { type: [string, "null"] }
+        scanned: { type: integer }
+        truncated: { type: boolean }
+        warnings:
+          type: array
+          items:
+            type: object
+            required: [reason]
+            properties:
+              routeId: { type: string }
+              reason: { type: string, enum: [dlq_topic_missing, scan_failed] }
+    DeadLetterSummary:
+      type: object
+      required: [unresolved, byErrorType, oldestAt, newestAt, approximate]
+      properties:
+        unresolved: { type: integer }
+        byErrorType: { type: object, additionalProperties: { type: integer } }
+        oldestAt: { type: [string, "null"], format: date-time }
+        newestAt: { type: [string, "null"], format: date-time }
+        approximate: { type: boolean }
+    DeadLetterSelection:
+      type: object
+      description: Exactly one of `ids` or `match`.
+      properties:
+        ids: { type: array, items: { type: string }, maxItems: 500 }
+        match: { $ref: "#/components/schemas/Match" }
+        expectedCount: { type: integer, description: "409 when the matching count changed." }
+    Match:
+      type: object
+      properties:
+        errorType: { type: array, items: { $ref: "#/components/schemas/ErrorType" } }
+        since: { type: string, format: date-time }
+        until: { type: string, format: date-time }
+        step: { type: string }
+        version: { type: integer }
+        q: { type: string }
+        includeResolved: { type: boolean }
+    DeadLetterJob:
+      type: object
+      required: [jobId, routeId, action, status, total, processed, counts, createdAt]
+      properties:
+        jobId: { type: string }
+        routeId: { type: string }
+        routeName: { type: string }
+        action: { type: string, enum: [retry, discard] }
+        match: { type: object }
+        status: { type: string, enum: [queued, running, cancel_requested, cancelled, succeeded, failed] }
+        total: { type: integer }
+        processed: { type: integer }
+        counts: { type: object, additionalProperties: { type: integer } }
+        error: { type: string }
+        requestedBy: { type: string }
+        createdAt: { type: string, format: date-time }
+        startedAt: { type: [string, "null"], format: date-time }
+        finishedAt: { type: [string, "null"], format: date-time }
+    RestoreReport:
+      type: object
+      required: [restored, skipped, remaining]
+      properties:
+        restored: { type: integer }
+        skipped: { type: array, items: { $ref: "#/components/schemas/ItemResult" } }
+        failed: { type: array, items: { $ref: "#/components/schemas/ItemResult" } }
+        remaining: { type: integer }
+        warnings: { type: array, items: { type: string } }
+    ItemResult:
+      type: object
+      required: [id, outcome]
+      properties:
+        id: { type: string }
+        outcome: { type: string, enum: [sent, filtered, failed, skipped, discarded, restored] }
+        destination: { $ref: "#/components/schemas/Destination" }
+        errorType: { type: string, enum: [step_error, timeout, output_invalid, decode_error, compile, destination] }
+        message: { type: string }
+        reason: { type: string, enum: [locked, already_resolved, expired, not_found, not_discarded] }
+    RetryReport:
+      type: object
+      required: [activeVersionNo, results, counts, remaining]
+      properties:
+        activeVersionNo: { type: integer }
+        results: { type: array, items: { $ref: "#/components/schemas/ItemResult" } }
+        counts: { type: object, additionalProperties: { type: integer } }
+        remaining: { type: integer }
+        warnings: { type: array, items: { type: string, enum: [state_not_saved] } }
+        deliveryMode: { type: string, enum: [at_least_once, exactly_once], description: "Delivery mode of the version the retry ran through (P3)." }
+        deliveredAtLeastOnce: { type: boolean, description: "True for exactly_once routes: retries produce outside the route's consumer transaction, so they are delivered at-least-once (P3)." }
+    DiscardReport:
+      type: object
+      required: [discarded, skipped, remaining]
+      properties:
+        discarded: { type: integer }
+        skipped: { type: array, items: { $ref: "#/components/schemas/ItemResult" } }
+        failed: { type: array, items: { $ref: "#/components/schemas/ItemResult" } }
+        remaining: { type: integer }
+        warnings: { type: array, items: { type: string } }
+    StudioLink:
+      type: object
+      required: [sessionId, sampleIndex, builderUrl]
+      properties:
+        sessionId: { type: string }
+        sampleIndex: { type: integer }
+        builderUrl: { type: string, example: "/routes/r3/edit?sample=0&session=ses_1&step=transform" }

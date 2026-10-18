@@ -1,0 +1,41 @@
+# Go
+/bin/
+*.exe
+*.test
+*.out
+coverage.*
+go.work
+go.work.sum
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Node / web
+node_modules/
+web/dist/
+web/.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Local development state (deploy/dev): logs, pids, binaries, env with secrets
+.local/
+
+# Built binaries at repo root (go build ./cmd/...)
+/preview
+/routerctl
+/worker
+
+# Generated test output
+test-results/
+playwright-report/
+test/acceptance/report/
+test/stress/results/s1-profiles/*.test
+test/stress/results/s1-profiles/*.pprof

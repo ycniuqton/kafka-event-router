@@ -1,0 +1,203 @@
+{
+  "a": {
+    "apiVersion": "router/v1",
+    "name": "orders",
+    "source": {
+      "connectionId": "c1",
+      "topics": [
+        "order-events"
+      ],
+      "format": {
+        "type": "json"
+      },
+      "consumerGroup": "router.orders"
+    },
+    "branches": [
+      {
+        "id": "main",
+        "filter": {
+          "type": "and",
+          "children": [
+            {
+              "type": "cond",
+              "field": "value.eventType",
+              "op": "eq",
+              "value": "OrderPaid"
+            },
+            {
+              "type": "cond",
+              "field": "value.amount",
+              "op": "gt",
+              "value": 100
+            }
+          ]
+        },
+        "transform": {
+          "steps": [
+            {
+              "kind": "rename",
+              "from": "value.cust_id",
+              "to": "value.customerId"
+            },
+            {
+              "kind": "mask",
+              "field": "value.email",
+              "style": "email"
+            }
+          ]
+        },
+        "destination": {
+          "connectionId": "c2",
+          "topic": "orders-public",
+          "partitioning": "by_key"
+        }
+      }
+    ],
+    "errorPolicy": {
+      "onError": "dlq",
+      "maxRetries": 3
+    }
+  },
+  "b": {
+    "apiVersion": "router/v1",
+    "name": "orders",
+    "source": {
+      "connectionId": "c1",
+      "topics": [
+        "order-events",
+        "payment-events"
+      ],
+      "format": {
+        "type": "json"
+      },
+      "consumerGroup": "router.orders"
+    },
+    "branches": [
+      {
+        "id": "main",
+        "filter": {
+          "type": "and",
+          "children": [
+            {
+              "type": "cond",
+              "field": "value.eventType",
+              "op": "eq",
+              "value": "OrderPaid"
+            },
+            {
+              "type": "cond",
+              "field": "value.amount",
+              "op": "gt",
+              "value": 200
+            },
+            {
+              "type": "cond",
+              "field": "value.country",
+              "op": "in",
+              "values": [
+                "DE",
+                "FR"
+              ]
+            }
+          ]
+        },
+        "transform": {
+          "steps": [
+            {
+              "kind": "rename",
+              "from": "value.cust_id",
+              "to": "value.customerId"
+            },
+            {
+              "kind": "hash",
+              "field": "value.email"
+            }
+          ]
+        },
+        "destination": {
+          "connectionId": "c2",
+          "topic": "orders-public",
+          "partitioning": "round_robin"
+        }
+      }
+    ],
+    "errorPolicy": {
+      "onError": "skip",
+      "maxRetries": 3
+    },
+    "limits": {
+      "maxInFlight": 500
+    }
+  },
+  "expected": {
+    "a": "a",
+    "b": "b",
+    "sections": [
+      {
+        "section": "source",
+        "lines": [
+          {
+            "mark": "+",
+            "text": "topic payment-events",
+            "path": "/source/topics/1"
+          }
+        ]
+      },
+      {
+        "section": "filter",
+        "lines": [
+          {
+            "mark": "~",
+            "text": "amount \u003e 100 → amount \u003e 200",
+            "path": "/branches/0/filter/children/1"
+          },
+          {
+            "mark": "+",
+            "text": "country is one of DE, FR",
+            "path": "/branches/0/filter/children/2"
+          }
+        ]
+      },
+      {
+        "section": "transform",
+        "lines": [
+          {
+            "mark": "-",
+            "text": "step 2: mask {\"field\":\"value.email\",\"style\":\"email\"}",
+            "path": "/branches/0/transform/steps/1"
+          },
+          {
+            "mark": "+",
+            "text": "step 2: hash {\"field\":\"value.email\"}",
+            "path": "/branches/0/transform/steps/1"
+          }
+        ]
+      },
+      {
+        "section": "destination",
+        "lines": [
+          {
+            "mark": "~",
+            "text": "partitioning by_key → partitioning round_robin",
+            "path": "/branches/0/destination"
+          }
+        ]
+      },
+      {
+        "section": "settings",
+        "lines": [
+          {
+            "mark": "~",
+            "text": "on error dlq → on error skip",
+            "path": "/errorPolicy"
+          },
+          {
+            "mark": "+",
+            "text": "limit maxInFlight 500",
+            "path": "/limits/maxInFlight"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1639 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eventrouter.dev/schemas/route.v1.schema.json",
+  "title": "RouteConfig",
+  "description": "Route configuration document (router/v1): source, branches (filter, transform, destination), error policy, delivery and limits.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "name",
+    "source",
+    "branches"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$ref": "#/$defs/apiVersion"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "branches": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/branch"
+      }
+    },
+    "errorPolicy": {
+      "$ref": "#/$defs/errorPolicy"
+    },
+    "delivery": {
+      "$ref": "#/$defs/delivery"
+    },
+    "limits": {
+      "$ref": "#/$defs/limits"
+    }
+  },
+  "$defs": {
+    "source": {
+      "title": "Source",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connectionId",
+        "format"
+      ],
+      "properties": {
+        "connectionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "topicPattern": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "goJSONSchema": {
+            "type": "string"
+          }
+        },
+        "startFrom": {
+          "$ref": "#/$defs/startFrom"
+        },
+        "format": {
+          "$ref": "#/$defs/format"
+        },
+        "keyFormat": {
+          "$ref": "#/$defs/format"
+        },
+        "consumerGroup": {
+          "type": "string"
+        }
+      }
+    },
+    "startFrom": {
+      "title": "StartFrom",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/startMode"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "offsets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "format": {
+      "title": "Format",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/formatType"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "messageType": {
+          "type": "string"
+        }
+      }
+    },
+    "branch": {
+      "title": "Branch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "destination"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "filter": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/filterNode"
+            }
+          ],
+          "goJSONSchema": {
+            "type": "FilterNode"
+          }
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        },
+        "destination": {
+          "$ref": "#/$defs/destination"
+        }
+      }
+    },
+    "transform": {
+      "title": "Transform",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "steps": {
+          "$ref": "#/$defs/steps"
+        }
+      }
+    },
+    "destination": {
+      "title": "Destination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connectionId",
+        "topic"
+      ],
+      "properties": {
+        "connectionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1
+        },
+        "key": {
+          "$ref": "#/$defs/keyPolicy"
+        },
+        "partitioning": {
+          "$ref": "#/$defs/partitioningMode"
+        },
+        "headers": {
+          "$ref": "#/$defs/headerPolicy"
+        },
+        "format": {
+          "$ref": "#/$defs/destinationFormat"
+        },
+        "createTopic": {
+          "$ref": "#/$defs/createTopic"
+        }
+      }
+    },
+    "keyPolicy": {
+      "title": "KeyPolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/keyMode"
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "field"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "field"
+        ]
+      }
+    },
+    "headerPolicy": {
+      "title": "HeaderPolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/headerMode"
+        },
+        "keep": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "add": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/headerEntry"
+          }
+        }
+      }
+    },
+    "headerEntry": {
+      "title": "HeaderEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "destinationFormat": {
+      "title": "DestinationFormat",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/destinationFormatType"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "messageType": {
+          "type": "string"
+        }
+      }
+    },
+    "createTopic": {
+      "title": "CreateTopic",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "partitions"
+      ],
+      "properties": {
+        "partitions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "retentionMs": {
+          "type": "integer",
+          "minimum": -1
+        }
+      }
+    },
+    "errorPolicy": {
+      "title": "ErrorPolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "onError"
+      ],
+      "properties": {
+        "onError": {
+          "$ref": "#/$defs/errorAction"
+        },
+        "dlqTopic": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dlqConnectionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Connection of the DLQ topic; absent means the source connection."
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    },
+    "delivery": {
+      "title": "Delivery",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/deliveryMode"
+        }
+      }
+    },
+    "limits": {
+      "title": "Limits",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "jsTimeoutMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "jsMemoryMb": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 512
+        },
+        "maxInFlight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "maxOutputsPerEvent": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "maxOutputBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10485760
+        }
+      }
+    },
+    "filterNode": {
+      "title": "FilterNode",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/nodeType"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/filterNode"
+          }
+        },
+        "child": {
+          "$ref": "#/$defs/filterNode"
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "op": {
+          "$ref": "#/$defs/opName"
+        },
+        "value": {},
+        "values": {
+          "type": "array"
+        },
+        "from": {},
+        "to": {},
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "unit": {
+          "$ref": "#/$defs/durationUnit"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "and",
+                  "or"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "children"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "not"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "child"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "cond"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "op"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "expr"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "code"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "in",
+                  "not_in"
+                ]
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "values"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "between"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "const": "within_last"
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "amount",
+              "unit"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "op": {
+                "enum": [
+                  "eq",
+                  "ne",
+                  "gt",
+                  "gte",
+                  "lt",
+                  "lte",
+                  "contains",
+                  "starts_with",
+                  "ends_with",
+                  "regex",
+                  "before",
+                  "after"
+                ]
+              }
+            },
+            "required": [
+              "op"
+            ]
+          },
+          "then": {
+            "required": [
+              "value"
+            ]
+          }
+        }
+      ]
+    },
+    "steps": {
+      "title": "Steps",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    },
+    "step": {
+      "title": "Step",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "kind": {
+          "$ref": "#/$defs/stepKind"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Disabled steps are skipped; absent means enabled."
+        },
+        "strict": {
+          "type": "boolean",
+          "description": "Missing fields raise a step error instead of a no-op; absent means false."
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/valueSource"
+        },
+        "value": {},
+        "style": {
+          "$ref": "#/$defs/maskStyle"
+        },
+        "targetType": {
+          "$ref": "#/$defs/convertTarget"
+        },
+        "onFailure": {
+          "$ref": "#/$defs/convertFailure"
+        },
+        "condition": {
+          "$ref": "#/$defs/filterNode"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Library name: a transform (library step) or a lookup table (lookup step without rows)."
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Pinned library version of ref; library steps expand it inline at compile time."
+        },
+        "separator": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8,
+          "description": "Key separator of flatten; absent means \".\"."
+        },
+        "preset": {
+          "$ref": "#/$defs/redactPreset"
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Custom RE2 pattern of redact_pattern."
+        },
+        "replacement": {
+          "type": "string",
+          "description": "Replacement text of redact_pattern; absent means \"[REDACTED]\"."
+        },
+        "layout": {
+          "$ref": "#/$defs/dateLayout"
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "description": "IANA time zone; absent means UTC."
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
+        },
+        "case": {
+          "$ref": "#/$defs/stringCase"
+        },
+        "rows": {
+          "$ref": "#/$defs/lookupRows"
+        },
+        "defaultValue": {},
+        "thenSteps": {
+          "$ref": "#/$defs/steps"
+        },
+        "elseSteps": {
+          "$ref": "#/$defs/steps"
+        },
+        "header": {
+          "type": "string",
+          "minLength": 1
+        },
+        "newHeader": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "$ref": "#/$defs/mapStart"
+        },
+        "target": {
+          "$ref": "#/$defs/mapField"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "rename",
+                  "copy",
+                  "move"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "from",
+              "to"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "remove",
+                  "keep_only"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "fields"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "set"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "source"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "default_if_missing"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "value"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "set_key"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "source"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "mask"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "style"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "hash"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "convert_type"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "targetType"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "drop_if"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "condition"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "js"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "code"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "library"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "ref",
+              "version"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "flatten"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "redact_pattern"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field"
+            ],
+            "anyOf": [
+              {
+                "required": [
+                  "preset"
+                ]
+              },
+              {
+                "required": [
+                  "pattern"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "format_date"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "layout"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "round"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "decimals"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "string_case"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "case"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "lookup"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field"
+            ],
+            "anyOf": [
+              {
+                "required": [
+                  "rows"
+                ]
+              },
+              {
+                "required": [
+                  "ref",
+                  "version"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "if_else"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "condition",
+              "thenSteps"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "split_array"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "wrap"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "unwrap"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "header_add"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "header",
+              "source"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "header_remove"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "header"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "header_rename"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "header",
+              "newHeader"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "header_copy_to_payload"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "header",
+              "field"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "header_copy_from_payload"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "field",
+              "header"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "map"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "target"
+            ]
+          }
+        }
+      ]
+    },
+    "valueSource": {
+      "title": "ValueSource",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/valueSourceKind"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "expr": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "$ref": "#/$defs/metadataName"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "from": {
+                "const": "field"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          },
+          "then": {
+            "required": [
+              "path"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "from": {
+                "const": "constant"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          },
+          "then": {
+            "required": [
+              "value"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "from": {
+                "const": "formula"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          },
+          "then": {
+            "required": [
+              "expr"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "from": {
+                "const": "metadata"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          },
+          "then": {
+            "required": [
+              "name"
+            ]
+          }
+        }
+      ]
+    },
+    "lookupRows": {
+      "title": "LookupRows",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/lookupRow"
+      }
+    },
+    "apiVersion": {
+      "title": "APIVersion",
+      "type": "string",
+      "enum": [
+        "router/v1"
+      ]
+    },
+    "startMode": {
+      "title": "StartMode",
+      "type": "string",
+      "enum": [
+        "latest",
+        "earliest",
+        "timestamp",
+        "offsets"
+      ]
+    },
+    "formatType": {
+      "title": "FormatType",
+      "type": "string",
+      "enum": [
+        "json",
+        "avro",
+        "protobuf",
+        "string",
+        "bytes"
+      ]
+    },
+    "partitioningMode": {
+      "title": "PartitioningMode",
+      "type": "string",
+      "enum": [
+        "same_as_source",
+        "by_key",
+        "round_robin"
+      ]
+    },
+    "keyMode": {
+      "title": "KeyMode",
+      "type": "string",
+      "enum": [
+        "keep",
+        "field",
+        "none"
+      ]
+    },
+    "headerMode": {
+      "title": "HeaderMode",
+      "type": "string",
+      "enum": [
+        "keep_all",
+        "keep_selected",
+        "drop_all"
+      ]
+    },
+    "destinationFormatType": {
+      "title": "DestinationFormatType",
+      "type": "string",
+      "enum": [
+        "same_as_source",
+        "json",
+        "avro",
+        "protobuf",
+        "string",
+        "bytes"
+      ]
+    },
+    "errorAction": {
+      "title": "ErrorAction",
+      "type": "string",
+      "enum": [
+        "dlq",
+        "skip",
+        "pause"
+      ]
+    },
+    "deliveryMode": {
+      "title": "DeliveryMode",
+      "type": "string",
+      "enum": [
+        "at_least_once",
+        "exactly_once"
+      ]
+    },
+    "nodeType": {
+      "title": "NodeType",
+      "type": "string",
+      "enum": [
+        "and",
+        "or",
+        "not",
+        "cond",
+        "expr"
+      ]
+    },
+    "opName": {
+      "title": "OpName",
+      "type": "string",
+      "enum": [
+        "eq",
+        "ne",
+        "gt",
+        "gte",
+        "lt",
+        "lte",
+        "between",
+        "in",
+        "not_in",
+        "contains",
+        "starts_with",
+        "ends_with",
+        "regex",
+        "exists",
+        "not_exists",
+        "is_empty",
+        "before",
+        "after",
+        "within_last"
+      ]
+    },
+    "durationUnit": {
+      "title": "DurationUnit",
+      "type": "string",
+      "enum": [
+        "seconds",
+        "minutes",
+        "hours",
+        "days"
+      ]
+    },
+    "stepKind": {
+      "title": "StepKind",
+      "type": "string",
+      "enum": [
+        "rename",
+        "remove",
+        "keep_only",
+        "copy",
+        "move",
+        "set",
+        "default_if_missing",
+        "set_key",
+        "mask",
+        "hash",
+        "convert_type",
+        "drop_if",
+        "js",
+        "library",
+        "flatten",
+        "redact_pattern",
+        "format_date",
+        "round",
+        "string_case",
+        "lookup",
+        "if_else",
+        "split_array",
+        "wrap",
+        "unwrap",
+        "header_add",
+        "header_remove",
+        "header_rename",
+        "header_copy_to_payload",
+        "header_copy_from_payload",
+        "map"
+      ]
+    },
+    "maskStyle": {
+      "title": "MaskStyle",
+      "type": "string",
+      "enum": [
+        "full",
+        "last4",
+        "email"
+      ]
+    },
+    "convertTarget": {
+      "title": "ConvertTarget",
+      "type": "string",
+      "enum": [
+        "string",
+        "number",
+        "integer",
+        "boolean"
+      ]
+    },
+    "convertFailure": {
+      "title": "ConvertFailure",
+      "type": "string",
+      "enum": [
+        "error",
+        "null",
+        "keep"
+      ]
+    },
+    "valueSourceKind": {
+      "title": "ValueSourceKind",
+      "type": "string",
+      "enum": [
+        "field",
+        "constant",
+        "formula",
+        "metadata"
+      ]
+    },
+    "metadataName": {
+      "title": "MetadataName",
+      "type": "string",
+      "enum": [
+        "topic",
+        "partition",
+        "offset",
+        "timestamp",
+        "route_name",
+        "route_version"
+      ]
+    },
+    "lookupRow": {
+      "title": "LookupRow",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {}
+      }
+    },
+    "redactPreset": {
+      "title": "RedactPreset",
+      "type": "string",
+      "enum": [
+        "credit_card",
+        "phone",
+        "email",
+        "iban"
+      ]
+    },
+    "dateLayout": {
+      "title": "DateLayout",
+      "type": "string",
+      "enum": [
+        "rfc3339",
+        "rfc3339_ms",
+        "date",
+        "datetime"
+      ]
+    },
+    "stringCase": {
+      "title": "StringCase",
+      "type": "string",
+      "enum": [
+        "upper",
+        "lower",
+        "title",
+        "trim"
+      ]
+    },
+    "mapStart": {
+      "title": "MapStart",
+      "type": "string",
+      "enum": [
+        "copy_input",
+        "empty"
+      ]
+    },
+    "mapField": {
+      "title": "MapField",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "One node of the map step target tree under value: a leaf with a value source, a removal, or nested fields.",
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/valueSource"
+        },
+        "remove": {
+          "type": "boolean"
+        },
+        "fields": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/mapField"
+          }
+        }
+      }
+    }
+  }
+}

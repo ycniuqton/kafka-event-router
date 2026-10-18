@@ -1,0 +1,1 @@
+# taskset -c 10-13 .local/bin/loadgen produce --brokers 127.0.0.1:39092 --topic stress-s7-101717212070-kill-kafka-r0-in --steps 22500:6m0s --lanes 4 --streams 256 --stream-prefix p1 --keys roundrobin --size 1024 --acks all --linger 5ms --compression none --bad-ratio 0 --interval 5s --stop-on-eof

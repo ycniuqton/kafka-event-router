@@ -1,0 +1,4 @@
+.tabs{display:flex;gap:18px;border-bottom:1px solid var(--ln)}
+.tab{height:36px;padding:0;border:none;border-bottom:2px solid transparent;background:none;color:var(--tx2);cursor:pointer;font-weight:500;font-size:13px}
+.tab:hover{color:var(--tx)}
+.active{color:var(--tx);border-bottom-color:var(--acc)}

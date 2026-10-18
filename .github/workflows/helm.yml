@@ -1,0 +1,80 @@
+# platform-core PC-73: Helm chart lint + schema validation, and a kind install smoke
+# (api with 2 ready replicas after the migrate pre-install hook applied every migration).
+name: helm
+
+on:
+  pull_request:
+    paths: ["deploy/helm/**", "deploy/docker/**", "cmd/**", "internal/**", "pkg/**", ".github/workflows/helm.yml"]
+  push:
+    branches: [main]
+
+env:
+  CHART: deploy/helm/event-router
+  KUBE_VERSION: 1.30.0
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with: { version: v3.19.0 }
+      - name: Install kubeconform
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.7.0/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/
+      - name: helm lint
+        run: |
+          helm lint "$CHART"
+          helm lint "$CHART" -f "$CHART/ci/tls-values.yaml"
+          helm lint "$CHART" -f "$CHART/ci/ha-values.yaml"
+      - name: helm template | kubeconform
+        run: |
+          for values in "" "-f $CHART/ci/tls-values.yaml" "-f $CHART/ci/ha-values.yaml" "-f $CHART/ci/kind-values.yaml"; do
+            helm template er "$CHART" $values | kubeconform -strict -summary -kubernetes-version "$KUBE_VERSION" -
+          done
+
+  kind-smoke:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with: { version: v3.19.0 }
+      - uses: helm/kind-action@v1
+        with: { cluster_name: er, node_image: "kindest/node:v1.30.0" }
+      - name: Build images
+        run: |
+          for c in api worker preview; do
+            docker build -f deploy/docker/go.Dockerfile --build-arg CMD=$c -t event-router/$c:ci .
+          done
+          docker build -f deploy/docker/web.Dockerfile -t event-router/web:ci .
+          for c in api worker preview web; do kind load docker-image event-router/$c:ci --name er; done
+      - name: Backing services
+        run: |
+          kubectl create namespace er
+          kubectl -n er apply -f "$CHART/ci/kind-deps.yaml"
+          kubectl -n er rollout status deploy/postgres deploy/redis --timeout=180s
+      - name: helm install (migrate hook runs first)
+        run: helm install er "$CHART" -n er -f "$CHART/ci/kind-values.yaml" --wait --timeout 10m
+      - name: Assert api replicas and schema
+        run: |
+          ready=$(kubectl -n er get deploy er-event-router-api -o jsonpath='{.status.readyReplicas}')
+          test "$ready" = "2" || { echo "api ready replicas: $ready"; exit 1; }
+          workers=$(kubectl -n er get statefulset er-event-router-worker -o jsonpath='{.status.readyReplicas}')
+          test "$workers" = "2" || { echo "worker ready replicas: $workers"; exit 1; }
+          kubectl -n er exec deploy/er-event-router-api -- /app migrate status | tee /tmp/status
+          grep -q "dirty=false" /tmp/status
+          applied=$(sed -E 's/.*applied=([0-9]+).*/\1/' /tmp/status); latest=$(sed -E 's/.*latest=([0-9]+).*/\1/' /tmp/status)
+          test "$applied" = "$latest"
+      - name: Readiness through the service
+        run: |
+          kubectl -n er run probe --rm -i --restart=Never --image=curlimages/curl:8.10.1 -- \
+            curl -sf http://er-event-router-api:8080/readyz
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          kubectl -n er get all,jobs,events --sort-by=.lastTimestamp | tail -80
+          kubectl -n er logs deploy/er-event-router-api --tail=100 || true

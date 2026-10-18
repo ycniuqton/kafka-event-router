@@ -1,0 +1,8 @@
+.card{display:flex;flex-direction:column;gap:10px;padding:14px}
+.head{display:flex;gap:8px;align-items:center}
+.name{font-weight:500;flex:1;min-width:0}
+.flow{display:flex;flex-direction:column;gap:4px;font:12px var(--font-mono)}
+.block{padding:6px 8px;border:1px solid var(--ln2);border-radius:var(--radius-md);overflow-wrap:anywhere}
+.middle{border-style:dashed;color:var(--tx2)}
+.foot{display:flex;align-items:center;gap:10px}
+.metrics{display:flex;gap:14px;flex:1;flex-wrap:wrap}

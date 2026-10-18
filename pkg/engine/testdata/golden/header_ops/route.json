@@ -1,0 +1,19 @@
+{
+  "apiVersion": "router/v1",
+  "name": "header-ops",
+  "source": { "connectionId": "c1", "topics": ["events"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "from-payload", "kind": "header_copy_from_payload", "field": "value.tenant", "header": "x-tenant" },
+      { "id": "to-payload", "kind": "header_copy_to_payload", "header": "x-tenant", "field": "value.meta.tenant" },
+      { "id": "rename", "kind": "header_rename", "header": "x-tenant", "newHeader": "tenant" },
+      { "id": "add", "kind": "header_add", "header": "x-day", "source": { "from": "formula", "expr": "formatDate(value.at, \"date\", \"Europe/Berlin\")" } },
+      { "id": "remove", "kind": "header_remove", "header": "tenant" },
+      { "id": "redact", "kind": "redact_pattern", "field": "value.note", "preset": "email" },
+      { "id": "unwrap", "kind": "unwrap", "field": "value.meta" },
+      { "id": "wrap", "kind": "wrap", "field": "value.data" }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "events-out" }
+  }]
+}

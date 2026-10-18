@@ -1,0 +1,24 @@
+File: js-1KB.test
+Build ID: 5d60e87e16ba553e2fdf92cfc262ae17534161dc
+Type: cpu
+Time: 2026-10-17 04:25:30 -02
+Duration: 15.68s, Total samples = 15.60s (99.49%)
+Showing nodes accounting for 9.65s, 61.86% of 15.60s total
+Dropped 624 nodes (cum <= 0.08s)
+Showing top 15 nodes out of 221
+      flat  flat%   sum%        cum   cum%
+     5.84s 37.44% 37.44%      5.84s 37.44%  runtime._ExternalCode
+     1.44s  9.23% 46.67%      2.55s 16.35%  github.com/tetratelabs/wazero/internal/engine/wazevo.(*callEngine).callWithStack
+     0.49s  3.14% 49.81%      0.49s  3.14%  runtime.memmove
+     0.32s  2.05% 51.86%      0.32s  2.05%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.afterGoFunctionCallEntrypoint
+     0.25s  1.60% 53.46%      0.26s  1.67%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.(*instruction).Uses
+     0.20s  1.28% 54.74%      0.93s  5.96%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/regalloc.(*Allocator[go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.instruction,go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.labelPosition,go.shape.*uint8]).allocBlock
+     0.19s  1.22% 55.96%      0.19s  1.22%  runtime.asyncPreempt
+     0.18s  1.15% 57.12%      0.18s  1.15%  github.com/tetratelabs/wazero/internal/wasm.(*ModuleInstance).FailIfClosed
+     0.15s  0.96% 58.08%      0.15s  0.96%  runtime.memclrNoHeapPointers
+     0.13s  0.83% 58.91%      0.15s  0.96%  github.com/tetratelabs/wazero/internal/engine/wazevo/ssa.(*dominatorSparseTree).buildSparseTable
+     0.11s  0.71% 59.62%      0.12s  0.77%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/regalloc.(*regInUseSet[go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.instruction,go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.labelPosition,go.shape.*uint8]).range_ (inline)
+     0.10s  0.64% 60.26%      0.12s  0.77%  runtime.tryDeferToSpanScan
+     0.09s  0.58% 60.83%      0.09s  0.58%  github.com/tetratelabs/wazero/internal/engine/wazevo/wazevoapi.VarLength[go.shape.uint64].View
+     0.08s  0.51% 61.35%      0.08s  0.51%  internal/runtime/maps.ctrlGroup.matchH2
+     0.08s  0.51% 61.86%      0.28s  1.79%  runtime.newproc1

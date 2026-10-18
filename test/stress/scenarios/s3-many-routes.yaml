@@ -1,0 +1,22 @@
+name: s3-many-routes
+description: >
+  S3 — route count 10 -> 50 -> 100 -> 250 -> 500 -> 1000 at a low per-route rate (10 ev/s/route), incremental (routes
+  of earlier cases stay deployed). Records per-route deploy->running latency, worker goroutines/RSS/CPU, producer
+  clients, Kafka lag and e2e latency per step. The worker needs ROUTER_WORKER_CAPACITY >= 1000 (default 100):
+  ROUTER_WORKER_CAPACITY=1200 deploy/dev/run.sh restart worker. Scheduler cycle and PG connections are read from the
+  api/worker logs and pg_stat_activity (see README) — not sampled by the runner.
+target: local
+incremental: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 1
+  routes: {topology: per_route, deployConcurrency: 16}
+  load: {size: 1024, lanes: 2, streams: 1000}
+  drain: {timeout: 3m}
+cases:
+  - {name: r10, routes: {count: 10}, load: {steps: [{rate: 100, duration: 3m}]}}
+  - {name: r50, routes: {count: 50}, load: {steps: [{rate: 500, duration: 3m}]}}
+  - {name: r100, routes: {count: 100}, load: {steps: [{rate: 1000, duration: 3m}]}}
+  - {name: r250, routes: {count: 250}, load: {steps: [{rate: 2500, duration: 3m}]}}
+  - {name: r500, routes: {count: 500}, load: {steps: [{rate: 5000, duration: 3m}]}}
+  - {name: r1000, routes: {count: 1000}, load: {steps: [{rate: 10000, duration: 3m}]}}

@@ -1,0 +1,6 @@
+.field{display:flex;flex-direction:column;gap:6px}
+.label{font-size:12px;color:var(--tx2)}
+.dateRow{display:flex;align-items:center;gap:8px}
+.date{height:32px;width:240px;padding:0 8px;border-radius:var(--radius-md);border:1px solid var(--ln2);background:var(--p1);color:var(--tx);outline:none}
+.date:focus{border-color:var(--acc)}
+.hint{font-size:12px;color:var(--tx3)}

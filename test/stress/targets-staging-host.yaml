@@ -1,0 +1,27 @@
+# On-host staging target: stressrun and loadgen both run ON the staging server (/opt/event-router/stress) against the
+# DEV listener 127.0.0.1:29092; the worker sees Kafka as kafka:19092. Secrets: a 3-key file next to the binaries.
+staging:
+  envTag: dev
+  secretsFile: /opt/event-router/stress/login.env
+  api:
+    baseURL: "${secret:STAGING_URL}"
+    login: dex
+    email: "${secret:STAGING_LOGIN_EMAIL}"
+    password: "${secret:STAGING_LOGIN_PASSWORD}"
+  kafka:
+    platformBootstrap: kafka:19092
+    runnerBootstrap: 127.0.0.1:29092
+    loadgenBootstrap: 127.0.0.1:29092
+    topicConfig: {retention.bytes: "268435456", segment.bytes: "33554432", retention.ms: "1800000"}
+  loadgen:
+    binary: /opt/event-router/stress/loadgen
+  metrics:
+    - name: worker
+      source:
+        kind: command
+        command: "docker exec event-router-staging-worker-1 /busybox/wget -qO- http://127.0.0.1:8081/metrics"
+  processes:
+    - name: worker
+      pid: {kind: command, command: "docker inspect -f {{.State.Pid}} event-router-staging-worker-1"}
+    - name: kafka
+      pid: {kind: command, command: "docker inspect -f {{.State.Pid}} event-router-staging-kafka-1"}

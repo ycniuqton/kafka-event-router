@@ -1,0 +1,29 @@
+15:21:20 pinned worker (pid 1666287) to CPUs 0-5
+15:21:20 pinned kafka (pid 1583441) to CPUs 6-9
+15:21:20 case kill-worker: 1 route(s), 12 partition(s), 1 step(s)
+15:22:52 action kill-worker at +1m30s: kill -9 $(cat .local/run/worker.pid)
+15:23:02 action restart-worker at +1m40s: test/stress/scripts/workers.sh restart-main
+15:30:17 case kill-worker: max sustainable 0 ev/s, knee 45000 (lag_growing), lost 0, error ""
+15:30:22 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+15:30:22 case restart-kafka: 1 route(s), 12 partition(s), 1 step(s)
+15:31:53 action restart-kafka at +1m30s: test/stress/infra.sh stop && test/stress/infra.sh start
+15:36:33 case restart-kafka: max sustainable 0 ev/s, knee 45000 (p99_over_limit), lost 0, error ""
+15:36:38 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+15:36:38 case kill-kafka: 1 route(s), 12 partition(s), 1 step(s)
+15:38:09 action kill-kafka at +1m30s: kill -9 $(cat .local/run/stress-kafka.pid)
+15:38:19 action start-kafka at +1m40s: test/stress/infra.sh start
+15:42:49 case kill-kafka: max sustainable 0 ev/s, knee 45000 (p99_over_limit), lost 0, error ""
+15:42:55 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+15:42:55 case dlq-50pct-recipe: 1 route(s), 12 partition(s), 1 step(s)
+15:49:06 case dlq-50pct-recipe: max sustainable 45000 ev/s, knee 0 (), lost 0, error ""
+15:49:11 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+15:49:11 case dlq-50pct-js: 1 route(s), 12 partition(s), 1 step(s)
+15:55:22 case dlq-50pct-js: max sustainable 3500 ev/s, knee 0 (), lost 0, error ""
+15:55:27 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+15:55:27 case exactly-once-kill-worker: 1 route(s), 12 partition(s), 1 step(s)
+15:56:58 action kill-worker at +1m30s: kill -9 $(cat .local/run/worker.pid)
+15:57:08 action restart-worker at +1m40s: test/stress/scripts/workers.sh restart-main
+16:05:23 case exactly-once-kill-worker: max sustainable 0 ev/s, knee 45000 (lag_growing), lost 0, error ""
+16:05:28 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+16:05:28 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s7/s7-failure-under-load.json

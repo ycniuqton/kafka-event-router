@@ -1,0 +1,43 @@
+{
+  "apiVersion": "router/v1",
+  "name": "order-paid-to-partner",
+  "source": {
+    "connectionId": "conn_orders_prod",
+    "topics": ["order-events"],
+    "topicPattern": null,
+    "startFrom": { "mode": "latest" },
+    "format": { "type": "json" },
+    "consumerGroup": "router.order-paid-to-partner"
+  },
+  "branches": [
+    {
+      "id": "main",
+      "filter": {
+        "type": "and",
+        "children": [
+          { "type": "cond", "field": "value.eventType", "op": "eq", "value": "OrderPaid" },
+          { "type": "cond", "field": "value.amount", "op": "gt", "value": 100 }
+        ]
+      },
+      "transform": {
+        "steps": [
+          { "kind": "rename", "from": "value.cust_id", "to": "value.customerId" },
+          { "kind": "mask", "field": "value.email", "style": "email" },
+          { "kind": "library", "ref": "mask-customer-pii", "version": 3 },
+          { "kind": "js", "code": "function transform(event, ctx) { return event; }" }
+        ]
+      },
+      "destination": {
+        "connectionId": "conn_partner",
+        "topic": "orders-public",
+        "key": { "mode": "keep" },
+        "partitioning": "by_key",
+        "headers": { "mode": "keep_selected", "keep": ["traceId"] },
+        "format": { "type": "json" }
+      }
+    }
+  ],
+  "errorPolicy": { "onError": "dlq", "dlqTopic": "router.dlq.order-paid-to-partner", "maxRetries": 3 },
+  "delivery": { "mode": "at_least_once" },
+  "limits": { "jsTimeoutMs": 50, "jsMemoryMb": 64, "maxInFlight": 1000 }
+}

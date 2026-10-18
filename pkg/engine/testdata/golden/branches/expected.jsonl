@@ -1,0 +1,4 @@
+{"branch":"high-value","topic":"orders-high","key":"o-1","value":{"amount":1500,"email":"big@spender.com","orderId":"o-1","tier":"gold","type":"sale"},"headers":[]}
+{"branch":"audit","topic":"orders-audit","key":null,"value":{"amount":1500,"email":"b**@spender.com","orderId":"o-1","type":"sale"},"headers":[]}
+{"branch":"audit","topic":"orders-audit","key":null,"value":{"amount":20,"email":"s****@buyer.org","orderId":"o-2","type":"refund"},"headers":[]}
+{"branch":"refunds","topic":"orders-refunds","key":null,"value":{"amount":20,"email":"small@buyer.org","orderId":"o-2","type":"refund"},"headers":[]}

@@ -1,0 +1,2 @@
+{"branch":"main","topic":"order-lines","key":"A","value":{"item_qty":1,"item_sku":"A","orderId":"o-1"},"headers":[]}
+{"branch":"main","topic":"order-lines","key":"B","value":{"item_qty":2,"item_sku":"B","orderId":"o-1"},"headers":[]}

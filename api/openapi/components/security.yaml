@@ -1,0 +1,10 @@
+securitySchemes:
+  sessionCookie:
+    type: apiKey
+    in: cookie
+    name: er_session
+    description: HttpOnly session cookie set by OIDC or dev login; mutations also need X-CSRF-Token.
+  bearerToken:
+    type: http
+    scheme: bearer
+    description: "API token (`ert_…`) created at /auth/tokens; acts as its owner, limited by its scopes (read ⊂ write ⊂ admin)."

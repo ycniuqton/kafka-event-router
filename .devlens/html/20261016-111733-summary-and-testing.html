@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Summary and Testing</title>
+<style>:root{--bg:#f4f5f6;--p:#fff;--tx:#16191c;--tx2:#545c64;--ln:#e2e5e8;--acc:#2563eb;--code:#eef0f2}
+@media(prefers-color-scheme:dark){:root{--bg:#0c0e10;--p:#121518;--tx:#e6e8eb;--tx2:#a1a8b0;--ln:#242a30;--acc:#7aa7ff;--code:#1e2328}}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.55 system-ui,sans-serif}main{max-width:900px;margin:0 auto;padding:24px 16px}
+h1{font-size:22px}h2{font-size:16px;margin:26px 0 8px}section{background:var(--p);border:1px solid var(--ln);border-radius:8px;padding:12px 16px;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 8px;border-bottom:1px solid var(--ln);text-align:left;vertical-align:top}th{color:var(--tx2);font-weight:500}
+pre,code{font-family:ui-monospace,monospace;font-size:12px;background:var(--code);border-radius:4px}pre{padding:10px;overflow-x:auto;white-space:pre-wrap}code{padding:1px 4px}li{margin:4px 0}</style></head><body><main>
+<h1>Kafka Event Router: what's built and how to test it</h1>
+<p style="color:var(--tx2)">917 of 930 plan items done (MVP, P2, P3). The 13 open items: 11 cancelled by decisions, 2 need the wasi-sdk toolchain (a fallback is in use).</p>
+<h2>What was built</h2><section><table>
+<tr><th>Area</th><th>Contents</th></tr>
+<tr><td>Frontend <code>web/</code></td><td>React 19 + TS, migrated from the design: Dashboard + flow map, Routes, Route detail (overview, live tail, DLQ, history, settings), Builder + Transform Studio (recipes, JS/Monaco, mapper, by-example, AI assist, test cases), Connections, Library, Dead letters, Audit, Settings, login</td></tr>
+<tr><td>Backend (Go)</td><td><code>cmd/api</code> REST + WebSocket, RBAC, approvals, audit, scheduler, alerts · <code>cmd/worker</code> route runners, at-least-once / exactly-once, DLQ, hot reload · <code>cmd/preview</code> samples + preview runs · <code>pkg/engine</code> filter, recipes, formulas · <code>pkg/sandbox</code> QuickJS in WASM</td></tr>
+<tr><td>Infra</td><td>Postgres migrations, docker-compose (local + staging), Helm chart, Vault, Dex OIDC</td></tr>
+<tr><td>Docs</td><td><code>docs/</code>: 11 folders, each with requirements, design and checklist plan; decisions in <code>docs/README.md</code></td></tr>
+<tr><td>Environments</td><td>Staging <code>http://104.234.195.126</code> (old MVP build). Local dev: code here, using staging Postgres/Redis/Kafka through an SSH tunnel</td></tr></table></section>
+<h2>A. Test by hand in the browser (local, newest code)</h2><section><ol>
+<li>Open <code>http://150.241.227.64:5173/login</code>, leave the email empty, click Sign in. You are admin.</li>
+<li><b>Connections</b> → New: bootstrap <code>127.0.0.1:29092</code>, security None → Test. Every step should be ticked.</li>
+<li>Create topics <code>dev-me-in</code> and <code>dev-me-out</code> (Browse topics → Create, or let them auto-create).</li>
+<li><b>+ New route</b> → Filter &amp; forward. Source <code>dev-me-in</code>. Filter <code>value.eventType equals OrderPaid</code>. In Transform, add Mask on <code>email</code>. Destination <code>dev-me-out</code>. Review → Deploy.</li>
+<li>Send events from this machine (command below), then watch Route detail → Overview / Live tail, and Dead letters for the bad event.</li></ol>
+<pre>ssh root@104.234.195.126 'docker exec -i event-router-staging-kafka-1 /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server kafka:19092 --topic dev-me-in' &lt;&lt;'X'
+{"eventType":"OrderPaid","orderId":"o1","email":"john@mail.com","amount":120}
+{"eventType":"OrderCreated","orderId":"o2","email":"ann@mail.com","amount":30}
+not-json
+X
+# read the output (expect only o1, email masked)
+ssh root@104.234.195.126 'docker exec event-router-staging-kafka-1 /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:19092 --topic dev-me-out --from-beginning --timeout-ms 8000'</pre>
+<p>Expected: only <code>o1</code> arrives with its email masked; <code>not-json</code> shows in Dead letters as a decode error. Name your topics <code>dev-…</code>, because Kafka is shared with staging.</p></section>
+<h2>B. Automated tests (from /home/dev/project/event_router)</h2><section><pre>export PATH=$HOME/.local/go/bin:$PATH; source ~/.nvm/nvm.sh
+go test ./...                              # all Go unit, golden and fuzz tests + test/e2e (fake Kafka)
+cd web &amp;&amp; npx vitest run                    # 357 frontend unit tests
+cd web &amp;&amp; npx playwright test               # 47 browser E2E specs against the local stack (needs it running)
+deploy/dev/dev.sh status                   # tunnel + api/worker/preview/web health
+deploy/dev/run.sh logs api -f              # follow logs (api|worker|preview|web)</pre></section>
+<h2>C. Staging</h2><section><p><code>http://104.234.195.126</code> → Sign in with SSO, using <code>STAGING_LOGIN_EMAIL</code> / <code>STAGING_LOGIN_PASSWORD</code> from <code>~/.secrets/event-router-staging.env</code>. It runs the older MVP build; run <code>deploy/staging/deploy.sh</code> to update it (not done yet; waiting for your go).</p></section>
+<h2>Not verified</h2><section><ul><li>Chaos/failover and Helm-on-cluster tests: written, but there is no Kubernetes or Toxiproxy here</li><li>Engine throughput below the 100k ev/s target; Go <code>-race</code> not run (no C compiler)</li><li>Visual check of the UI was done only in headless Chromium</li></ul></section>
+</main></body></html>

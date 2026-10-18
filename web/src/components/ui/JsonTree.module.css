@@ -1,0 +1,18 @@
+.tree{font:11.5px/1.7 var(--font-mono);padding:2px 0}
+.line{display:flex;gap:6px;padding-right:12px;padding-left:calc(10px + var(--depth) * 16px);align-items:baseline}
+.clickable{cursor:pointer}
+.clickable:hover{background:color-mix(in oklch, var(--acc) 12%, transparent)}
+.toggle{border:none;background:none;padding:0;color:var(--tx3);cursor:pointer;font:inherit;width:10px;margin-left:-14px;text-align:center}
+.key{color:var(--ckey)}
+.value{word-break:break-all}
+.string{color:var(--cstr)}
+.number{color:var(--cnum)}
+.other{color:var(--warn)}
+.summary{color:var(--tx3)}
+.mark{width:10px;flex:none;margin-left:-12px;color:var(--tx3)}
+.added{background:color-mix(in oklch, var(--ok) 13%, transparent)}
+.added .mark{color:var(--ok)}
+.changed{background:color-mix(in oklch, var(--warn) 13%, transparent)}
+.changed .mark{color:var(--warn)}
+.selectedLine{background:color-mix(in oklch, var(--acc) 12%, transparent)}
+.trailing{margin-left:auto;display:flex;gap:4px}

@@ -1,0 +1,17 @@
+[
+ {"name": "rename field", "before": {"value": {"cust_id": 1040, "a": 1}}, "after": {"value": {"customerId": 1040, "a": 1}},
+  "patch": [{"op": "remove", "path": "/value/cust_id"}, {"op": "add", "path": "/value/customerId", "value": 1040}]},
+ {"name": "replace scalar", "before": {"value": {"email": "jane@x.com"}}, "after": {"value": {"email": "****@x.com"}},
+  "patch": [{"op": "replace", "path": "/value/email", "value": "****@x.com"}]},
+ {"name": "array grow", "before": {"value": {"items": [1]}}, "after": {"value": {"items": [1, 2, 3]}},
+  "patch": [{"op": "add", "path": "/value/items/1", "value": 2}, {"op": "add", "path": "/value/items/2", "value": 3}]},
+ {"name": "array shrink", "before": {"value": {"items": [1, 2, 3]}}, "after": {"value": {"items": [1]}},
+  "patch": [{"op": "remove", "path": "/value/items/2"}, {"op": "remove", "path": "/value/items/1"}]},
+ {"name": "type change", "before": {"value": {"amount": "100"}}, "after": {"value": {"amount": 100}},
+  "patch": [{"op": "replace", "path": "/value/amount", "value": 100}]},
+ {"name": "escaped keys", "before": {"value": {}}, "after": {"value": {"a/b": 1, "c~d": 2}},
+  "patch": [{"op": "add", "path": "/value/a~1b", "value": 1}, {"op": "add", "path": "/value/c~0d", "value": 2}]},
+ {"name": "null value", "before": {"value": {"x": 1}}, "after": {"value": {"x": null}},
+  "patch": [{"op": "replace", "path": "/value/x", "value": null}]},
+ {"name": "unchanged", "before": {"value": {"x": [1, {"y": true}]}}, "after": {"value": {"x": [1, {"y": true}]}}, "patch": []}
+]

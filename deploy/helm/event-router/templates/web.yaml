@@ -1,0 +1,142 @@
+{{- define "er.webNginxConf" -}}
+{{- $api := printf "%s://%s-api:%v" (include "er.scheme" .) (include "er.fullname" .) .Values.api.port -}}
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen {{ .Values.web.port }};
+    server_name _;
+    root /usr/share/nginx/html;
+    client_max_body_size 10m;
+    {{- if and .Values.tls.enabled .Values.web.verifyUpstreamTLS }}
+    proxy_ssl_trusted_certificate {{ .Values.tls.mountPath }}/ca.crt;
+    proxy_ssl_verify on;
+    proxy_ssl_server_name on;
+    {{- end }}
+
+    location = /nginx-health {
+        access_log off;
+        return 200 "ok\n";
+    }
+
+    location /api/ {
+        proxy_pass {{ $api }};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 1h;
+    }
+
+    location /auth/ {
+        proxy_pass {{ $api }};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    location / {
+        add_header Cache-Control "no-cache";
+        try_files $uri $uri/ /index.html;
+    }
+}
+{{- end -}}
+{{- $c := dict "root" . "component" "web" -}}
+{{- $verify := and .Values.tls.enabled .Values.web.verifyUpstreamTLS -}}
+# nginx config replacing the image default (which targets the compose host "api"): SPA + /api, /auth proxy.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "er.fullname" . }}-web-nginx
+  labels: {{- include "er.labels" $c | nindent 4 }}
+data:
+  default.conf: |-
+    {{- include "er.webNginxConf" . | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "er.fullname" . }}-web
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels: {{- include "er.selector" $c | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "er.selector" $c | nindent 8 }}
+      annotations:
+        checksum/nginx: {{ include "er.webNginxConf" . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "er.fullname" . }}-web
+      automountServiceAccountToken: false
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "er.scheduling" $c | nindent 6 }}
+      containers:
+        - name: web
+          image: {{ include "er.image" (dict "root" . "image" "web") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports:
+            - { name: http, containerPort: {{ .Values.web.port }} }
+          readinessProbe:
+            httpGet: { path: /nginx-health, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /nginx-health, port: http }
+            periodSeconds: 10
+            failureThreshold: 6
+          resources: {{- toYaml .Values.web.resources | nindent 12 }}
+          volumeMounts:
+            - { name: nginx-conf, mountPath: /etc/nginx/conf.d, readOnly: true }
+            - { name: nginx-cache, mountPath: /var/cache/nginx }
+            - { name: nginx-run, mountPath: /var/run }
+            - { name: tmp, mountPath: /tmp }
+            {{- if $verify }}
+            - { name: tls, mountPath: {{ .Values.tls.mountPath }}, readOnly: true }
+            {{- end }}
+      volumes:
+        - name: nginx-conf
+          configMap: { name: {{ include "er.fullname" . }}-web-nginx }
+        - { name: nginx-cache, emptyDir: {} }
+        - { name: nginx-run, emptyDir: {} }
+        - { name: tmp, emptyDir: {} }
+        {{- if $verify }}
+        - name: tls
+          secret: { secretName: {{ .Values.tls.secretName }}, items: [{ key: ca.crt, path: ca.crt }] }
+        {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "er.fullname" . }}-web
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  selector: {{- include "er.selector" $c | nindent 4 }}
+  ports:
+    - { name: http, port: {{ .Values.web.port }}, targetPort: http }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "er.fullname" . }}-web
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.web.pdb.minAvailable }}
+  selector:
+    matchLabels: {{- include "er.selector" $c | nindent 6 }}

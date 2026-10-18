@@ -1,0 +1,3 @@
+{"branch":"main","topic":"payments-enriched","key":null,"value":{"cc":"DE","country":"Germany","gross":119,"label":"DE-Germany","net":100,"vatRate":0.19},"headers":[]}
+{"branch":"main","topic":"payments-enriched","key":null,"value":{"cc":"FR","country":"France","gross":11.99,"label":"FR-France","net":9.99,"vatRate":0.2},"headers":[]}
+{"branch":"main","topic":"payments-enriched","key":null,"value":{"cc":"xx","country":"Unknown","gross":5,"label":"XX-n/a","net":"5"},"headers":[]}

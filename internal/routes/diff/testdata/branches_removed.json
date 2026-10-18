@@ -1,0 +1,119 @@
+{
+  "a": {
+    "apiVersion": "router/v1",
+    "name": "split",
+    "source": {
+      "connectionId": "c1",
+      "topics": [
+        "t"
+      ],
+      "format": {
+        "type": "json"
+      }
+    },
+    "branches": [
+      {
+        "id": "eu",
+        "filter": {
+          "type": "cond",
+          "field": "value.region",
+          "op": "eq",
+          "value": "eu"
+        },
+        "destination": {
+          "connectionId": "c2",
+          "topic": "eu"
+        }
+      },
+      {
+        "id": "us",
+        "filter": {
+          "type": "cond",
+          "field": "value.region",
+          "op": "eq",
+          "value": "us"
+        },
+        "destination": {
+          "connectionId": "c2",
+          "topic": "us"
+        }
+      }
+    ]
+  },
+  "b": {
+    "apiVersion": "router/v1",
+    "name": "split",
+    "source": {
+      "connectionId": "c1",
+      "topics": [
+        "t"
+      ],
+      "format": {
+        "type": "json"
+      }
+    },
+    "branches": [
+      {
+        "id": "eu",
+        "filter": {
+          "type": "cond",
+          "field": "value.region",
+          "op": "eq",
+          "value": "eu"
+        },
+        "destination": {
+          "connectionId": "c3",
+          "topic": "eu"
+        }
+      }
+    ]
+  },
+  "expected": {
+    "a": "a",
+    "b": "b",
+    "sections": [
+      {
+        "section": "source",
+        "lines": []
+      },
+      {
+        "section": "filter",
+        "lines": [
+          {
+            "mark": "-",
+            "text": "[us] region is us",
+            "path": "/branches/1/filter"
+          }
+        ]
+      },
+      {
+        "section": "transform",
+        "lines": []
+      },
+      {
+        "section": "destination",
+        "lines": [
+          {
+            "mark": "~",
+            "text": "connection c2 → connection c3",
+            "path": "/branches/0/destination/connectionId"
+          },
+          {
+            "mark": "-",
+            "text": "[us] connection c2",
+            "path": "/branches/1/destination/connectionId"
+          },
+          {
+            "mark": "-",
+            "text": "[us] topic us",
+            "path": "/branches/1/destination/topic"
+          }
+        ]
+      },
+      {
+        "section": "settings",
+        "lines": []
+      }
+    ]
+  }
+}

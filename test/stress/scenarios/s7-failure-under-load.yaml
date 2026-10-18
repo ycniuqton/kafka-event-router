@@ -1,0 +1,51 @@
+name: s7-failure-under-load
+description: >
+  S7 — failures under load at ~70% of the S2 p12 knee (65k ev/s with the default maxInFlight 1000 -> 45k ev/s; the
+  JS DLQ case runs at ~70% of the S5 "js" knee). Zero lost events required: every acknowledged event must reach the
+  output or the DLQ (measure includes DLQ topics). Cases: kill -9 the worker and restart it 10 s later; graceful
+  Kafka restart; kill -9 Kafka and restart it 10 s later; 50% of events fail into the DLQ (recipe convert_type error,
+  and JS throw); exactly-once + kill -9 worker. Duplicates are allowed for at_least_once and reported. Partition
+  ownership snapshots go to results/s7/spread-<case>.txt. Local only.
+target: local
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1, onError: dlq}
+  measure: {includeDlq: true}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+    steps: [{rate: 45000, duration: 6m}]
+  drain: {timeout: 10m}
+cases:
+  - name: kill-worker
+    actions:
+      - {at: 90s, name: kill-worker, run: "kill -9 $(cat .local/run/worker.pid)"}
+      - {at: 100s, name: restart-worker, run: "test/stress/scripts/workers.sh restart-main"}
+  - name: restart-kafka
+    actions:
+      - {at: 90s, name: restart-kafka, run: "test/stress/infra.sh stop && test/stress/infra.sh start"}
+  - name: kill-kafka
+    actions:
+      - {at: 90s, name: kill-kafka, run: "kill -9 $(cat .local/run/stress-kafka.pid)"}
+      - {at: 100s, name: start-kafka, run: "test/stress/infra.sh start"}
+  - name: dlq-50pct-recipe
+    load: {badRatio: 0.5}
+    routes:
+      steps:
+        raw:
+          - kind: if_else
+            condition: {type: cond, field: value.bad, op: eq, value: true}
+            thenSteps:
+              - {kind: convert_type, field: value.customer.email, targetType: number, onFailure: error}
+  - name: dlq-50pct-js
+    routes: {js: throw_on_bad}
+    load: {badRatio: 0.5, steps: [{rate: 3500, duration: 6m}]}
+  - name: exactly-once-kill-worker
+    routes: {delivery: exactly_once}
+    measure: {readCommitted: true}
+    actions:
+      - {at: 90s, name: kill-worker, run: "kill -9 $(cat .local/run/worker.pid)"}
+      - {at: 100s, name: restart-worker, run: "test/stress/scripts/workers.sh restart-main"}

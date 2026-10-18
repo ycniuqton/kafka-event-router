@@ -1,0 +1,4 @@
+.value{word-break:break-all;color:var(--warn)}
+.value[data-kind="string"]{color:var(--cstr)}
+.value[data-kind="number"]{color:var(--cnum)}
+.summary{color:var(--tx3)}

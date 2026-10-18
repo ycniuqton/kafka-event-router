@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"tYpe\":\"and\",\"Children\":[{\"tYpe\":\"not\",\"Child\":{\"tYpe\":\"cond\",\"field\":\"value\",\"op\":\"in\",\"vAlue\":[0E0]}}]}")

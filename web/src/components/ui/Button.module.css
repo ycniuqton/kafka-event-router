@@ -1,0 +1,17 @@
+.button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--radius-md);border:1px solid var(--ln2);background:var(--p2);color:var(--tx);cursor:pointer;font-weight:500;white-space:nowrap;line-height:1}
+.button:disabled{opacity:.4;cursor:not-allowed}
+.button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.secondary:hover:not(:disabled){border-color:var(--tx3)}
+.primary{border-color:transparent;background:var(--acc);color:var(--acctx);font-weight:600}
+.primary:hover:not(:disabled){filter:brightness(1.08)}
+.ghost{border-color:transparent;background:none;color:var(--tx2)}
+.ghost:hover:not(:disabled){color:var(--tx);background:var(--p3)}
+.danger{color:var(--err)}
+.danger:hover:not(:disabled){border-color:var(--err)}
+.sm{height:26px;padding:0 8px;font-size:12px;border-radius:5px}
+.md{height:30px;padding:0 12px;font-size:13px}
+.lg{height:32px;padding:0 14px;font-size:13px;border-radius:var(--radius-lg)}
+.square.sm{width:26px;padding:0}
+.square.md{width:30px;padding:0}
+.square.lg{width:32px;padding:0}
+.block{width:100%}

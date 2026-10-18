@@ -1,0 +1,225 @@
+config:
+  servers: [{ url: / }]
+  get:
+    tags: [auth]
+    operationId: getAuthConfig
+    summary: Sign-in options advertised by the server.
+    security: []
+    responses:
+      "200":
+        description: Enabled login modes.
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AuthConfig" }
+oidcLogin:
+  servers: [{ url: / }]
+  get:
+    tags: [auth]
+    operationId: beginOidcLogin
+    summary: Start OIDC login (302 to the identity provider).
+    security: []
+    parameters:
+      - name: return_to
+        in: query
+        schema: { type: string, example: /routes }
+        description: Relative path to return to after login.
+    responses:
+      "302":
+        description: "Redirect to the IdP (or to /login?error=idp_unavailable)."
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+oidcCallback:
+  servers: [{ url: / }]
+  get:
+    tags: [auth]
+    operationId: completeOidcLogin
+    summary: OIDC redirect target; sets session cookies.
+    security: []
+    parameters:
+      - { name: code, in: query, required: true, schema: { type: string } }
+      - { name: state, in: query, required: true, schema: { type: string } }
+    responses:
+      "302":
+        description: "Redirect to return_to, or to /login?error=state|idp_unavailable|invalid_token|conflict."
+devLogin:
+  servers: [{ url: / }]
+  post:
+    tags: [auth]
+    operationId: devLogin
+    summary: Local-only dev login; seeds the default team and an admin user.
+    security: []
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            properties:
+              email: { type: string, format: email }
+    responses:
+      "204": { description: Session cookies set. }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+logout:
+  servers: [{ url: / }]
+  post:
+    tags: [auth]
+    operationId: logout
+    summary: Revoke the current session and clear cookies.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Logged out. }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+me:
+  get:
+    tags: [auth]
+    operationId: getCurrentUser
+    summary: Current principal, teams and CSRF token.
+    responses:
+      "200":
+        description: Current user.
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CurrentUser" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+tokens:
+  get:
+    tags: [auth]
+    operationId: listApiTokens
+    summary: The caller's active (non-revoked) API tokens; secrets are never returned.
+    security: [{ sessionCookie: [] }]
+    responses:
+      "200":
+        description: Tokens, newest first, plus the scopes a token may be created with.
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApiTokenList" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "429": { $ref: "../components/problem.yaml#/responses/RateLimited" }
+  post:
+    tags: [auth]
+    operationId: createApiToken
+    summary: Create an API token; the secret is shown once in the response.
+    security: [{ sessionCookie: [] }]
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiTokenCreate" }
+    responses:
+      "201":
+        description: Created; `token` is the only time the secret is visible.
+        headers:
+          Location: { schema: { type: string } }
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ApiTokenCreated" }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "429": { $ref: "../components/problem.yaml#/responses/RateLimited" }
+token:
+  delete:
+    tags: [auth]
+    operationId: revokeApiToken
+    summary: Revoke one of the caller's API tokens (it stops working immediately).
+    security: [{ sessionCookie: [] }]
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Revoked. }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "429": { $ref: "../components/problem.yaml#/responses/RateLimited" }
+components:
+  schemas:
+    ApiTokenScope:
+      type: string
+      enum: [read, write, admin]
+      description: "read: GET only; write: read + changes; admin: everything the owner may do."
+    ApiToken:
+      type: object
+      required: [id, name, prefix, scopes, expires_at, last_used_at, created_at, status]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        prefix: { type: string, example: ert_AbCd1234, description: "First characters of the secret, for recognition." }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/ApiTokenScope" }
+        expires_at: { type: [string, "null"], format: date-time }
+        last_used_at: { type: [string, "null"], format: date-time, description: Updated in batches about every minute. }
+        created_at: { type: string, format: date-time }
+        status: { type: string, enum: [active, expired] }
+    ApiTokenList:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor, scopes]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/ApiToken" }
+        next_cursor: { type: [string, "null"] }
+        scopes:
+          type: array
+          items: { $ref: "#/components/schemas/ApiTokenScope" }
+    ApiTokenCreate:
+      type: object
+      additionalProperties: false
+      required: [name, scopes]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100, example: ci-deploy }
+        scopes:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/ApiTokenScope" }
+        expires_in_days: { type: integer, minimum: 1, maximum: 365, default: 90 }
+    ApiTokenCreated:
+      allOf:
+        - $ref: "#/components/schemas/ApiToken"
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, example: ert_AbCd1234…, description: "The secret; store it now, it is never shown again." }
+    AuthConfig:
+      type: object
+      required: [modes, workspace]
+      properties:
+        modes:
+          type: array
+          items: { type: string, enum: [oidc, dev, api_token] }
+        oidc_login_url: { type: string }
+        dev_login_url: { type: string }
+        workspace: { type: string }
+    TeamRole:
+      type: object
+      required: [id, name, role]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        role: { type: string, enum: [viewer, editor, approver, admin] }
+    CurrentUser:
+      type: object
+      required: [id, email, display_name, initials, teams, workspace, csrf_token]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        display_name: { type: string }
+        initials: { type: string }
+        teams:
+          type: array
+          items: { $ref: "#/components/schemas/TeamRole" }
+        workspace: { type: string }
+        csrf_token: { type: string }
+      additionalProperties: true
+      description: Features may add members (access-control adds `access`).

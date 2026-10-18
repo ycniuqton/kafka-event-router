@@ -1,0 +1,148 @@
+{{- /* Data-plane worker: stable ROUTER_WORKER_ID from the pod name, zone from the topology label, cache volume. */ -}}
+{{- $v := .Values.worker -}}
+{{- $c := dict "root" . "component" "worker" -}}
+{{- $name := printf "%s-worker" (include "er.fullname" .) -}}
+{{- $sts := eq $v.kind "StatefulSet" -}}
+{{- $pvc := and $sts $v.cache.persistence.enabled -}}
+apiVersion: apps/v1
+kind: {{ $v.kind }}
+metadata:
+  name: {{ $name }}
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  {{- if not $v.hpa.enabled }}
+  replicas: {{ $v.replicas }}
+  {{- end }}
+  {{- if $sts }}
+  serviceName: {{ $name }}-headless
+  podManagementPolicy: Parallel
+  updateStrategy: { type: RollingUpdate }
+  {{- else }}
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  {{- end }}
+  minReadySeconds: 10
+  selector:
+    matchLabels: {{- include "er.selector" $c | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "er.selector" $c | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ $name }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: {{ $v.terminationGracePeriodSeconds }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- include "er.scheduling" $c | nindent 6 }}
+      containers:
+        - name: worker
+          image: {{ include "er.image" (dict "root" . "image" "worker") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          ports:
+            - { name: http, containerPort: {{ $v.port }} }
+          envFrom: {{- include "er.envFrom" . | nindent 12 }}
+          env:
+            - { name: ROUTER_SERVICE, value: worker }
+            - { name: ROUTER_HTTP_ADDR, value: {{ printf ":%v" $v.port | quote }} }
+            - { name: ROUTER_WORKLOAD_TOKEN_FILE, value: {{ .Values.workloadIdentity.tokenPath | quote }} }
+            - name: ROUTER_WORKER_ID
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            {{- if $v.zone.fromTopologyLabel }}
+            - name: ROUTER_WORKER_ZONE
+              valueFrom: { fieldRef: { fieldPath: {{ printf "metadata.labels['%s']" $v.zone.label | quote }} } }
+            {{- else }}
+            - { name: ROUTER_WORKER_ZONE, value: {{ $v.zone.value | quote }} }
+            {{- end }}
+            - { name: ROUTER_WORKER_CAPACITY, value: {{ $v.capacity | quote }} }
+            - { name: ROUTER_WORKER_CACHE_DIR, value: {{ $v.cache.mountPath | quote }} }
+            - { name: ROUTER_WORKER_VERSION, value: {{ include "er.tag" . | quote }} }
+            {{- include "er.secretKeyRefs" . | nindent 12 }}
+            {{- include "er.tlsEnv" (dict "root" . "api" false) | nindent 12 }}
+            {{- include "er.componentEnv" $v.env | nindent 12 }}
+          {{- include "er.probes" $c | nindent 10 }}
+          resources: {{- toYaml $v.resources | nindent 12 }}
+          volumeMounts:
+            - { name: workload-token, mountPath: {{ dir .Values.workloadIdentity.tokenPath }}, readOnly: true }
+            - { name: cache, mountPath: {{ $v.cache.mountPath }} }
+            {{- include "er.goVolumeMounts" . | nindent 12 }}
+      volumes:
+        {{- include "er.workloadTokenVolume" . | nindent 8 }}
+        {{- include "er.goVolumes" . | nindent 8 }}
+        {{- if not $pvc }}
+        - name: cache
+          emptyDir: { sizeLimit: {{ $v.cache.sizeLimit }} }
+        {{- end }}
+  {{- if $pvc }}
+  volumeClaimTemplates:
+    - metadata:
+        name: cache
+        labels: {{- include "er.selector" $c | nindent 10 }}
+      spec:
+        accessModes: {{- toYaml $v.cache.persistence.accessModes | nindent 10 }}
+        {{- with $v.cache.persistence.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests: { storage: {{ $v.cache.sizeLimit }} }
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  selector: {{- include "er.selector" $c | nindent 4 }}
+  ports:
+    - { name: http, port: {{ $v.port }}, targetPort: http }
+{{- if $sts }}
+---
+# Governing headless Service of the StatefulSet (stable per-pod DNS: <pod>.<name>-headless).
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}-headless
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector: {{- include "er.selector" $c | nindent 4 }}
+  ports:
+    - { name: http, port: {{ $v.port }}, targetPort: http }
+{{- end }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $name }}
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  {{- if hasKey $v.pdb "maxUnavailable" }}
+  maxUnavailable: {{ $v.pdb.maxUnavailable }}
+  {{- else }}
+  minAvailable: {{ $v.pdb.minAvailable }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "er.selector" $c | nindent 6 }}
+{{- if $v.hpa.enabled }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $name }}
+  labels: {{- include "er.labels" $c | nindent 4 }}
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: {{ $v.kind }}, name: {{ $name }} }
+  minReplicas: {{ $v.hpa.minReplicas }}
+  maxReplicas: {{ $v.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: {{ $v.hpa.targetCPUUtilizationPercentage }} }
+{{- end }}

@@ -1,0 +1,9 @@
+17:01:32 case r10: 10 route(s), 1 partition(s), 1 step(s)
+17:03:40 case r10: max sustainable 100 ev/s, knee 0 (), lost 0, error ""
+17:03:40 case r50: 50 route(s), 1 partition(s), 1 step(s)
+17:05:58 case r50: max sustainable 500 ev/s, knee 0 (), lost 0, error ""
+17:05:58 case r80: 80 route(s), 1 partition(s), 1 step(s)
+17:08:14 case r80: max sustainable 0 ev/s, knee 800 (p99_over_limit), lost 0, error ""
+17:08:27 cleanup: archived 80 route(s), deleted 240 topic(s), 0 error(s)
+17:08:27 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+results/stg-s3.json

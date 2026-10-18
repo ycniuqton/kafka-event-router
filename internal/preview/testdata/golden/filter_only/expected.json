@@ -1,0 +1,189 @@
+{
+ "summary": {
+  "loaded": 5,
+  "processed": 5,
+  "passed": 2,
+  "filtered": 3,
+  "errors": 0,
+  "dropped": 0,
+  "incomplete": false,
+  "durationMs": 0,
+  "branches": [
+   {
+    "branch": "main",
+    "passed": 2,
+    "filtered": 3,
+    "errors": 0,
+    "dropped": 0
+   }
+  ]
+ },
+ "issues": [],
+ "results": [
+  {
+   "seq": 0,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter/children/1",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": true
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-paid",
+       "key": null,
+       "value": {
+        "amount": 150,
+        "eventType": "OrderPaid",
+        "id": 1
+       },
+       "headers": [],
+       "sizeBytes": 45,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "seq": 1,
+   "status": "filtered",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": false
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 2,
+   "status": "filtered",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter/children/1",
+       "result": false
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 3,
+   "status": "filtered",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "filtered",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter/children/1",
+       "result": false
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": false
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": []
+    }
+   ]
+  },
+  {
+   "seq": 4,
+   "status": "passed",
+   "error": null,
+   "branches": [
+    {
+     "branch": "main",
+     "status": "passed",
+     "filter": [
+      {
+       "path": "/branches/0/filter/children/0",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter/children/1",
+       "result": true
+      },
+      {
+       "path": "/branches/0/filter",
+       "result": true
+      }
+     ],
+     "steps": [],
+     "error": null,
+     "outputs": [
+      {
+       "topic": "orders-paid",
+       "key": null,
+       "value": {
+        "amount": 100.5,
+        "eventType": "OrderPaid",
+        "id": 5
+       },
+       "headers": [],
+       "sizeBytes": 47,
+       "valid": true,
+       "validationError": null
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "masked": false
+}

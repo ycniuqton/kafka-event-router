@@ -1,0 +1,10 @@
+.hint{font-size:12px;color:var(--tx2)}
+.box{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--ln2);border-radius:var(--radius-lg);background:var(--p2);min-height:44px}
+.box:focus-within{border-color:var(--acc)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 4px 0 8px;border-radius:5px;background:var(--p3);font:12px var(--font-mono)}
+.remove{border:none;background:none;color:var(--tx3);cursor:pointer;font-size:14px;line-height:1}
+.remove:hover{color:var(--tx)}
+.input{flex:1;min-width:140px;height:26px;border:none;background:transparent;color:var(--tx);font:12px var(--font-mono);outline:none}
+.input::placeholder{color:var(--tx3)}
+.invalid{background:color-mix(in oklch, var(--err) 16%, transparent);color:var(--err)}
+.error{font-size:12px;color:var(--err)}

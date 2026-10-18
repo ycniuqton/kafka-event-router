@@ -1,0 +1,21 @@
+{
+  "apiVersion": "router/v1",
+  "name": "mapper",
+  "source": { "connectionId": "c1", "topics": ["crm"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "map", "kind": "map", "start": "empty", "target": { "fields": {
+        "customer": { "fields": {
+          "id": { "source": { "from": "field", "path": "value.cust_id" } },
+          "fullName": { "source": { "from": "formula", "expr": "trim(concat(value.first, \" \", value.last))" } },
+          "tier": { "source": { "from": "formula", "expr": "if(value.spend > 1000, \"gold\", \"standard\")" } }
+        } },
+        "total": { "source": { "from": "formula", "expr": "round(value.spend * 1.19, 2)" } },
+        "source": { "source": { "from": "constant", "value": "crm" } },
+        "receivedFrom": { "source": { "from": "metadata", "name": "topic" } }
+      } } }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "customers" }
+  }]
+}

@@ -1,0 +1,18 @@
+04:53:36 pinned worker (pid 1603994) to CPUs 0-5
+04:53:36 pinned kafka (pid 1583441) to CPUs 6-9
+04:53:36 case p12: 1 route(s), 12 partition(s), 12 step(s)
+04:54:37 case p12 step 0 (5000 ev/s): sustained (lag slope -0.2/s, p99 19.5 ms)
+04:55:37 case p12 step 1 (10000 ev/s): sustained (lag slope 0.1/s, p99 20.2 ms)
+04:56:37 case p12 step 2 (15000 ev/s): sustained (lag slope 3.3/s, p99 20.5 ms)
+04:57:37 case p12 step 3 (20000 ev/s): sustained (lag slope -1.0/s, p99 21.2 ms)
+04:58:37 case p12 step 4 (30000 ev/s): sustained (lag slope -0.8/s, p99 24.6 ms)
+04:59:37 case p12 step 5 (40000 ev/s): sustained (lag slope 0.1/s, p99 89.1 ms)
+05:00:37 case p12 step 6 (50000 ev/s): sustained (lag slope 0.8/s, p99 151.6 ms)
+05:01:37 case p12 step 7 (65000 ev/s): sustained (lag slope -88.0/s, p99 303.1 ms)
+05:02:37 case p12 step 8 (80000 ev/s): lag_growing (lag slope 11981.1/s, p99 17301.5 ms)
+05:02:37 case p12: stopping load (knee: lag_growing)
+05:05:37 case p12: lag not drained within 3m0s
+05:07:38 case p12: max sustainable 65000 ev/s, knee 80000 (lag_growing), lost 0, error ""
+05:07:43 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+05:07:43 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s2-explore/p12/s2-explore.json

@@ -1,0 +1,7 @@
+{"id":1,"sku":"SKU-123","qty":5}
+{"id":2,"sku":"SKU-1234","qty":5}
+{"id":3,"createdAt":"2025-12-31T12:00:00Z","status":"open"}
+{"id":4,"createdAt":"2025-12-31T12:00:00Z","status":"void"}
+{"id":5,"createdAt":"2025-12-01T00:00:00Z"}
+{"id":6,"labels":["vip","eu"],"note":"","paidAt":1735603200000}
+{"id":7,"labels":["eu"],"paidAt":"2025-01-01T00:00:00Z"}

@@ -1,0 +1,1 @@
+# taskset -c 10-13 .local/bin/loadgen produce --brokers 127.0.0.1:39092 --topic stress-s5-101712525175-baseline-r0-in --steps 10000:1m0s,15000:1m0s,20000:1m0s,25000:1m0s,28750:1m0s,32500:1m0s,36250:1m0s,40000:1m0s,45000:1m0s --lanes 4 --streams 256 --stream-prefix p0 --keys roundrobin --size 1024 --acks all --linger 5ms --compression none --bad-ratio 0 --interval 5s --stop-on-eof

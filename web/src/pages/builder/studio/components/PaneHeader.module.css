@@ -1,0 +1,4 @@
+.header{padding:10px 14px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:8px;min-height:45px}
+.raised{background:var(--p1)}
+.title{font-weight:600;white-space:nowrap}
+.grow{flex:1}

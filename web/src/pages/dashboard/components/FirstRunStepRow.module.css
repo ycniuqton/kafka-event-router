@@ -1,0 +1,8 @@
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--ln)}
+.badge{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;border:1px solid var(--ln2);color:var(--tx2);font:500 11px var(--font-mono)}
+.row[data-tone] .badge{border-color:var(--tone);color:var(--tone)}
+.row[aria-current] .badge{border-color:var(--acc);color:var(--acc)}
+.text{flex:1;min-width:0}
+.title{font-weight:500}
+.row[data-tone] .title{color:var(--tx2);text-decoration:line-through}
+.description{color:var(--tx2);font-size:12px}

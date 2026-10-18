@@ -1,0 +1,7 @@
+.rows{display:flex;flex-direction:column;gap:6px}
+.row{display:flex;align-items:center;gap:6px;max-width:420px}
+.eq{color:var(--tx3)}
+.del{width:22px;height:22px;border:none;background:none;color:var(--tx3);cursor:pointer;font-size:15px;flex:none}
+.del:hover{color:var(--err)}
+.add{align-self:flex-start;border:none;background:none;padding:0;color:var(--acc);cursor:pointer;font-size:12px}
+.add:hover{text-decoration:underline}

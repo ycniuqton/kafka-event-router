@@ -1,0 +1,15 @@
+10:11:23 pinned worker (pid 1658919) to CPUs 0-5
+10:11:23 pinned kafka (pid 1583441) to CPUs 6-9
+10:11:23 case p1: 1 route(s), 1 partition(s), 3 step(s)
+10:16:24 case p1 step 0 (25000 ev/s): sustained (lag slope -1.1/s, p99 109.6 ms)
+10:21:24 case p1 step 1 (30000 ev/s): sustained (lag slope -10.1/s, p99 471.0 ms)
+10:27:06 case p1: max sustainable 30000 ev/s, knee 35000 (lag_growing), lost 0, error ""
+10:27:12 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+10:27:12 case p12: 1 route(s), 12 partition(s), 4 step(s)
+10:32:12 case p12 step 0 (40000 ev/s): sustained (lag slope 0.7/s, p99 47.6 ms)
+10:37:12 case p12 step 1 (50000 ev/s): sustained (lag slope 1.1/s, p99 172.0 ms)
+10:42:12 case p12 step 2 (57500 ev/s): sustained (lag slope 0.8/s, p99 202.8 ms)
+10:47:17 case p12: max sustainable 65000 ev/s, knee 0 (), lost 0, error ""
+10:47:23 cleanup: archived 1 route(s), deleted 3 topic(s), 0 error(s)
+10:47:23 cleanup: archived 0 route(s), deleted 0 topic(s), 0 error(s)
+test/stress/results/s2-confirm-final/s2-confirm.json

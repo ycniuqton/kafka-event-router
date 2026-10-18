@@ -1,0 +1,45 @@
+{
+  "scenario": "broker-baseline",
+  "recordedAt": "2026-10-17T03:44:00-02:00",
+  "purpose": "Raw capacity of the local stress Kafka; the router can never exceed these numbers.",
+  "broker": {
+    "kafka": "4.4.0 (Scala 2.13), KRaft single node broker+controller",
+    "jdk": "Temurin 21.0.12.1+1",
+    "bootstrap": "127.0.0.1:39092",
+    "controller": "127.0.0.1:39093",
+    "cpuAffinity": "6-9 (4 cores)",
+    "heap": "-Xms4g -Xmx4g",
+    "logDir": "~/.local/stress/kafka-data",
+    "disk": "virtio /dev/vda, dd 1 MiB O_DIRECT write = 405 MB/s",
+    "host": "14 cores, 31 GB RAM"
+  },
+  "workload": { "topic": "stress-smoke", "partitions": 12, "replicationFactor": 1, "recordSizeBytes": 1024, "acks": "all", "compression": "none" },
+  "producer": [
+    { "name": "1 producer, client defaults", "clientCpus": "10-13", "records": 3000000, "throughput": "unlimited",
+      "recPerSec": 138102, "mbPerSec": 134.87, "latencyMs": { "avg": 44.13, "p50": 3, "p95": 253, "p99": 398, "p999": 461, "max": 523 } },
+    { "name": "1 producer, linger.ms=10 batch.size=256KiB", "clientCpus": "10-13", "records": 6000000, "throughput": "unlimited",
+      "recPerSec": 177410, "mbPerSec": 173.25, "latencyMs": { "avg": 45.13, "p50": 2, "p95": 247, "p99": 1085, "p999": 1286, "max": 1403 } },
+    { "name": "3 producers in parallel, linger.ms=10 batch.size=256KiB", "clientCpus": "0-5,10-13", "records": 12000000, "throughput": "unlimited",
+      "wallSeconds": 34.5, "aggregateRecPerSec": 347000, "aggregateMbPerSec": 339,
+      "perProducerRecPerSec": [127073, 126163, 123697], "latencyMs": { "p50": "24-88", "p99": "3754-3936", "max": 4763 },
+      "brokerCpuSeconds": 36.35, "brokerCoresUsed": 1.05 },
+    { "name": "1 producer throttled 100k/s, linger.ms=5", "clientCpus": "10-13", "records": 3000000,
+      "recPerSec": 99917, "mbPerSec": 97.57, "latencyMs": { "avg": 3.57, "p50": 2, "p95": 5, "p99": 45, "p999": 148, "max": 536 } },
+    { "name": "1 producer throttled 200k/s (not reached), linger.ms=5", "clientCpus": "10-13", "records": 6000000,
+      "recPerSec": 167893, "mbPerSec": 163.96, "latencyMs": { "avg": 156.67, "p50": 2, "p95": 1697, "p99": 2475, "p999": 2670, "max": 2719 } }
+  ],
+  "consumer": [
+    { "name": "1 consumer, fetch.min.bytes=1MiB max.partition.fetch.bytes=4MiB", "clientCpus": "10-13", "records": 10000000,
+      "recPerSec": 246957, "mbPerSec": 241.17 },
+    { "name": "3 consumers one group", "clientCpus": "0-5,10-13", "records": 18000000, "wallSeconds": 34.3,
+      "aggregateRecPerSec": 560000, "aggregateMbPerSec": 550, "perConsumerRecPerSec": [187588, 188719, 293590] }
+  ],
+  "summary": {
+    "produceCeilingRecPerSec": 347000,
+    "produceCeilingMbPerSec": 339,
+    "produceSustainableLowLatencyRecPerSec": 100000,
+    "produceSustainableNote": "At 100k/s p99=45 ms; at >=140k/s (single producer) p99 grows to 0.4-2.5 s. Bound by disk write-back (broker used ~1 of 4 pinned cores), not CPU.",
+    "consumeCeilingRecPerSec": 560000,
+    "routerImplication": "End-to-end router (consume + produce on the same broker) is capped near ~150-170k ev/s of 1 KB for p99<1s; budget for the produce side ~100k ev/s with low latency."
+  }
+}

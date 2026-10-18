@@ -1,0 +1,30 @@
+/* Design tokens, copied verbatim from the Event Router design prototype. Theme is chosen by data-theme on <html>. */
+[data-theme="dark"]{--bg:#0c0e10;--p1:#121518;--p2:#171b1f;--p3:#1e2328;--ln:#242a30;--ln2:#323940;--tx:#e6e8eb;--tx2:#a1a8b0;--tx3:#6b737c;--acc:oklch(0.74 0.12 240);--acctx:#0b0d0f;--ok:oklch(0.76 0.14 155);--warn:oklch(0.81 0.13 80);--err:oklch(0.69 0.18 25);--info:oklch(0.74 0.12 240);--off:#7d858e;--prod:oklch(0.74 0.12 330);--cstr:#d6c6a2;--cnum:oklch(0.79 0.09 290);--ckey:#8e98a3;color-scheme:dark}
+[data-theme="light"]{--bg:#f4f5f6;--p1:#ffffff;--p2:#f8f9fa;--p3:#eef0f2;--ln:#e2e5e8;--ln2:#d0d5da;--tx:#16191c;--tx2:#545c64;--tx3:#868e96;--acc:oklch(0.52 0.14 245);--acctx:#ffffff;--ok:oklch(0.55 0.14 155);--warn:oklch(0.62 0.13 70);--err:oklch(0.55 0.19 25);--info:oklch(0.52 0.14 245);--off:#868e96;--prod:oklch(0.52 0.14 330);--cstr:#7a5a1e;--cnum:oklch(0.48 0.14 290);--ckey:#5b6570;color-scheme:light}
+
+/* Additive, theme-independent tokens (not in the prototype, derived from its repeated literals). */
+:root{
+  --font-sans:Geist,system-ui,sans-serif;
+  --font-mono:"Geist Mono",ui-monospace,monospace;
+  --radius-xs:3px;--radius-sm:4px;--radius-md:6px;--radius-lg:7px;--radius-xl:10px;--radius-2xl:12px;
+  --shadow-pop:0 12px 32px rgba(0,0,0,.35);
+  --shadow-drawer:-12px 0 32px rgba(0,0,0,.25);
+  --shadow-toast:0 8px 24px rgba(0,0,0,.3);
+  --scrim-modal:rgba(0,0,0,.5);
+  --scrim-drawer:rgba(0,0,0,.35);
+  --topbar-h:52px;--nav-w:216px;
+  --z-popover:40;--z-drawer-scrim:50;--z-drawer:55;--z-modal:60;--z-toast:90;
+}
+
+/* Tone hooks: any element with data-tone exposes --tone for its CSS module to use. */
+[data-tone="ok"]{--tone:var(--ok)}
+[data-tone="warn"]{--tone:var(--warn)}
+[data-tone="err"]{--tone:var(--err)}
+[data-tone="off"]{--tone:var(--off)}
+[data-tone="info"]{--tone:var(--info)}
+[data-tone="acc"]{--tone:var(--acc)}
+[data-tone="prod"]{--tone:var(--prod)}
+[data-tone="muted"]{--tone:var(--tx3)}
+[data-tone="code"]{--tone:var(--cnum)}
+[data-tone="text"]{--tone:var(--tx)}
+[data-tone="text2"]{--tone:var(--tx2)}

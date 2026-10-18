@@ -1,0 +1,31 @@
+name: s5-explore-cpu
+description: >
+  S5 CPU-bound variant — same rule shapes as s5-explore but maxInFlight 5000 so the route is limited by worker CPU
+  (S2 p12-mif5000: 80k ev/s) instead of the in-flight window. 1-min steps (20 s warm-up) from 50k.
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 20s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1, maxInFlight: 5000}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+    steps:
+      - {rate: 50000, duration: 1m}
+      - {rate: 57500, duration: 1m}
+      - {rate: 65000, duration: 1m}
+      - {rate: 72500, duration: 1m}
+      - {rate: 80000, duration: 1m}
+      - {rate: 87500, duration: 1m}
+      - {rate: 95000, duration: 1m}
+      - {rate: 105000, duration: 1m}
+  drain: {timeout: 3m}
+cases:
+  - {name: baseline}
+  - {name: f50, routes: {filter: {conditions: 50}}}
+  - {name: s5, routes: {steps: {count: 5, kind: set}}}
+  - {name: s20, routes: {steps: {count: 20, kind: set}}}
+  - {name: f50-s20, routes: {filter: {conditions: 50}, steps: {count: 20, kind: set}}}

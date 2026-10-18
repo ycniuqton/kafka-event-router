@@ -1,0 +1,45 @@
+{{- if .Values.migrate.enabled }}
+{{- $db := get .Values.secret.keyRefs "ROUTER_DATABASE_URL" | default (dict "name" .Values.secret.existingSecret "key" "ROUTER_DATABASE_URL") }}
+# Applies schema migrations before the api rolls out (advisory lock 7001 keeps concurrent runs safe).
+# Hooks run before the release's regular resources exist, so the Job reads the pre-existing Secret only.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "er.fullname" . }}-migrate
+  labels: {{- include "er.labels" (dict "root" . "component" "migrate") | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.migrate.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migrate.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels: {{- include "er.selector" (dict "root" . "component" "migrate") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.nodeSelector }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scheduling.tolerations }}
+      tolerations: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: {{ include "er.image" (dict "root" . "image" "api") }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["migrate", "up"]
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          env:
+            - { name: ROUTER_ENV, value: {{ .Values.global.environment | quote }} }
+            - { name: ROUTER_LOG_LEVEL, value: {{ default "info" .Values.env.ROUTER_LOG_LEVEL | quote }} }
+            - name: ROUTER_DATABASE_URL
+              valueFrom: { secretKeyRef: { name: {{ $db.name }}, key: {{ $db.key }} } }
+          resources: {{- toYaml .Values.migrate.resources | nindent 12 }}
+{{- end }}

@@ -1,0 +1,19 @@
+---
+apiVersion: router/v1
+name: audit-merge
+source:
+  connectionId: orders-prod
+  format:
+    messageType: acme.Audit
+    subject: audit-value
+    type: protobuf
+  topicPattern: ^audit\..*$
+branches:
+  - destination:
+      connectionId: partner
+      createTopic:
+        partitions: 6
+      topic: audit-all
+    id: main
+limits:
+  maxEventBytes: 1048576

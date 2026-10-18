@@ -1,0 +1,51 @@
+name: s2-explore
+description: >
+  S2 exploration pass — same routes as s2-single-route-ramp but 1-min steps (20 s warm-up) to locate the knee of each
+  case quickly. The knee is then confirmed with 5-min steps around it (s2-single-route-ramp with a narrowed ramp).
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 20s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1, maxInFlight: 1000}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+    steps: &ramp
+      - {rate: 5000, duration: 1m}
+      - {rate: 10000, duration: 1m}
+      - {rate: 15000, duration: 1m}
+      - {rate: 20000, duration: 1m}
+      - {rate: 30000, duration: 1m}
+      - {rate: 40000, duration: 1m}
+      - {rate: 50000, duration: 1m}
+      - {rate: 65000, duration: 1m}
+      - {rate: 80000, duration: 1m}
+      - {rate: 100000, duration: 1m}
+      - {rate: 130000, duration: 1m}
+      - {rate: 160000, duration: 1m}
+  drain: {timeout: 3m}
+cases:
+  - {name: p1, partitions: 1}
+  - {name: p3, partitions: 3}
+  - {name: p12, partitions: 12}
+  - {name: p48, partitions: 48}
+  - {name: p12-mif100, partitions: 12, routes: {maxInFlight: 100}}
+  - {name: p12-mif5000, partitions: 12, routes: {maxInFlight: 5000}}
+  - name: p12-10kb
+    partitions: 12
+    load:
+      size: 10240
+      steps:
+        - {rate: 1000, duration: 1m}
+        - {rate: 2000, duration: 1m}
+        - {rate: 4000, duration: 1m}
+        - {rate: 6000, duration: 1m}
+        - {rate: 8000, duration: 1m}
+        - {rate: 10000, duration: 1m}
+        - {rate: 12000, duration: 1m}
+        - {rate: 15000, duration: 1m}
+        - {rate: 20000, duration: 1m}
+        - {rate: 25000, duration: 1m}

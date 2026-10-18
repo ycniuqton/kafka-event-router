@@ -1,0 +1,9 @@
+.chart{display:flex;flex-direction:column;gap:4px}
+.plot{display:block;width:100%;height:var(--chart-h);border-bottom:1px solid var(--ln)}
+.toned{fill:var(--tone)}
+.neutral{fill:var(--p3)}
+.hit{fill:transparent}
+.hit:hover{fill:color-mix(in oklch, var(--tx) 6%, transparent)}
+.labels{display:flex;font:10.5px var(--font-mono);color:var(--tx2)}
+.labels>span{flex:1;text-align:center;min-width:0}
+.muted{color:var(--tx3)}

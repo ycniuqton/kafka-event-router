@@ -1,0 +1,4 @@
+.hint{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:6px 10px;margin:6px 10px;border-radius:var(--radius-md);background:color-mix(in oklch, var(--warn) 12%, transparent);font-size:12px}
+.lock{color:var(--warn);font-size:9px}
+.title{font-weight:600;color:var(--tx)}
+.reason{color:var(--tx2)}

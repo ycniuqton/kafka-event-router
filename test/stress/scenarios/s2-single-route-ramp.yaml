@@ -1,0 +1,53 @@
+name: s2-single-route-ramp
+description: >
+  S2 — one route, end-to-end ramp. Max sustainable rate = last step with lag flat (slope <= max(50, 1% of rate)/s
+  after 30 s warm-up) for the whole 5 min step AND p99 end-to-end < 1 s. Varies source partitions (1/3/12/48)
+  and limits.maxInFlight. 1 KB JSON, no filter/transform (codec-bound baseline).
+target: local
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1, maxInFlight: 1000}
+  load:
+    size: 1024
+    producers: 2
+    lanes: 4
+    streams: 512
+    steps: &ramp
+      - {rate: 2000, duration: 5m}
+      - {rate: 5000, duration: 5m}
+      - {rate: 10000, duration: 5m}
+      - {rate: 15000, duration: 5m}
+      - {rate: 20000, duration: 5m}
+      - {rate: 30000, duration: 5m}
+      - {rate: 40000, duration: 5m}
+      - {rate: 50000, duration: 5m}
+      - {rate: 65000, duration: 5m}
+      - {rate: 80000, duration: 5m}
+      - {rate: 100000, duration: 5m}
+      - {rate: 130000, duration: 5m}
+      - {rate: 160000, duration: 5m}
+  drain: {timeout: 5m}
+cases:
+  - {name: p1, partitions: 1}
+  - {name: p3, partitions: 3}
+  - {name: p12, partitions: 12}
+  - {name: p48, partitions: 48}
+  - {name: p12-mif100, partitions: 12, routes: {maxInFlight: 100}}
+  - {name: p12-mif5000, partitions: 12, routes: {maxInFlight: 5000}}
+  - name: p12-10kb
+    partitions: 12
+    load: {size: 10240}
+  - name: p12-100kb
+    partitions: 12
+    load:
+      size: 102400
+      steps:
+        - {rate: 500, duration: 5m}
+        - {rate: 1000, duration: 5m}
+        - {rate: 2000, duration: 5m}
+        - {rate: 4000, duration: 5m}
+        - {rate: 6000, duration: 5m}
+        - {rate: 8000, duration: 5m}
+        - {rate: 12000, duration: 5m}

@@ -1,0 +1,28 @@
+name: stg-s2
+description: Staging S2 short ramp - one route, 12 partitions, 1 KB, default maxInFlight, 1-min steps, stop on knee.
+target: staging
+stopOnKnee: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 20s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {count: 1, maxInFlight: 1000}
+  load:
+    size: 1024
+    producers: 1
+    lanes: 4
+    streams: 512
+    steps:
+      - {rate: 2000, duration: 1m}
+      - {rate: 4000, duration: 1m}
+      - {rate: 6000, duration: 1m}
+      - {rate: 8000, duration: 1m}
+      - {rate: 10000, duration: 1m}
+      - {rate: 12500, duration: 1m}
+      - {rate: 15000, duration: 1m}
+      - {rate: 17500, duration: 1m}
+      - {rate: 20000, duration: 1m}
+      - {rate: 25000, duration: 1m}
+      - {rate: 30000, duration: 1m}
+  drain: {timeout: 3m}
+cases:
+  - {name: p12}

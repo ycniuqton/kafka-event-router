@@ -1,0 +1,6 @@
+.row{display:flex;gap:8px;padding:6px 16px;font-size:12px;color:var(--tx2)}
+.line{flex:1;min-width:0}
+.actor{color:var(--tx);font-weight:500}
+.route{color:var(--tx)}
+.detail{font-family:var(--font-mono)}
+.when{color:var(--tx3);white-space:nowrap}

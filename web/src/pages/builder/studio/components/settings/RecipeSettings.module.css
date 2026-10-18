@@ -1,0 +1,6 @@
+.row{display:flex;gap:6px;align-items:center}
+.grow{flex:1;min-width:0}
+.op{color:var(--tx3)}
+.start{align-self:flex-start}
+.condition{display:flex;flex-direction:column;gap:4px;min-width:0}
+.combinator{align-self:flex-start;height:20px;padding:0 8px;border-radius:10px;border:1px solid var(--ln2);background:transparent;color:var(--tx2);font-size:10.5px;cursor:pointer}

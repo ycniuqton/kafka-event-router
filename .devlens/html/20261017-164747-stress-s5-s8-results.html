@@ -1,0 +1,55 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stress S5–S8 Results</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a65;--line:#e3e1da;--accent:#9a4a1c;--ok:#2f6b3a;--bad:#a12a2a;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#171716;--fg:#ecebe6;--muted:#a3a29b;--line:#34332f;--accent:#e08a52;--ok:#7fc28a;--bad:#ef7d7d;--card:#1f1f1d}}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1100px;margin:0 auto}h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:32px 0 8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+p.sub{color:var(--muted);margin:0 0 16px}.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}th{font-weight:600}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}code{font-size:12.5px}.kpi{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0}
+.kpi div{background:var(--card);border:1px solid var(--line);padding:10px 14px;border-radius:6px;min-width:180px}.kpi b{display:block;font-size:20px;color:var(--accent)}
+</style></head><body><main>
+<h1>Stress S5–S8 results (local)</h1>
+<p class="sub">2026-10-17 · Kafka 4.4 on cores 6-9 · worker(s) on cores 0-5 · loadgen on 10-13 · 1 KB JSON, acks=all · raw data in <code>test/stress/results/</code></p>
+<div class="kpi"><div><b>0</b>events lost in any run</div><div><b>5k ev/s</b>a route with one JS step (pool of 4)</div><div><b>100k ev/s</b>best scale-out (2 × 3 cores)</div><div><b>~130 s</b>kill -9 worker → recovered at 45k</div></div>
+
+<h2>S5: rule complexity (12 partitions, default maxInFlight 1000)</h2>
+<div class="wrap"><table><tr><th>config</th><th>max sustained 5 min</th><th>p99 at max</th><th>first failing</th><th>CPU µs/event @40k</th></tr>
+<tr><td>baseline</td><td class="n">65 000</td><td class="n">291 ms</td><td>72.5k lag</td><td class="n">63</td></tr>
+<tr><td>filter 1 / 10</td><td class="n">65 000 (explore)</td><td class="n">860 / 770 ms</td><td>72.5k</td><td class="n">66</td></tr>
+<tr><td>filter 50</td><td class="n">65 000</td><td class="n">631 ms</td><td>72.5k lag</td><td class="n">66</td></tr>
+<tr><td>steps 1</td><td class="n">65 000 (explore)</td><td class="n">274 ms</td><td>72.5k lag</td><td class="n">64</td></tr>
+<tr><td>steps 5</td><td class="n">57 500</td><td class="n">860 ms</td><td>65k p99 1.29 s</td><td class="n">71</td></tr>
+<tr><td>steps 20</td><td class="n">50 000</td><td class="n">647 ms</td><td>57.5k lag</td><td class="n">98</td></tr>
+<tr><td>JS identity</td><td class="n">5 000</td><td class="n">188 ms</td><td>6.5k lag</td><td class="n">842</td></tr>
+<tr><td>f10 + s5 + JS</td><td class="n">4 000</td><td class="n">26 ms</td><td>5k p99</td><td class="n">937</td></tr>
+<tr><td>f50 + s20 + JS</td><td class="n">4 000</td><td class="n">434 ms</td><td>5k lag</td><td class="n">1 092</td></tr></table></div>
+<p>CPU-bound variant (maxInFlight 5000, 1-min explore): baseline 87.5k · filter 50 72.5k · steps 5 72.5k · steps 20 57.5k · f50+s20 50k. Filters are cheap. Each <code>set</code> step costs ~2 µs·core per event. JS costs about 13× the whole pipeline, and it is capped by the per-route sandbox pool (<code>DefaultSandboxParallelism</code> = 4): at the knee the worker uses only 4.2–4.5 of its 6 cores.</p>
+
+<h2>S6: scale-out (48 partitions, maxInFlight 5000, replicas = workers)</h2>
+<div class="wrap"><table><tr><th>case</th><th>workers × cores</th><th>max sustained 5 min</th><th>first failing</th><th>CPU per worker at max</th><th>partitions</th></tr>
+<tr><td>fair-w1</td><td>1 × 6</td><td class="n">90 000</td><td>100k</td><td class="n">5.10</td><td>48</td></tr>
+<tr><td>fair-w2</td><td>2 × 3</td><td class="n">100 000</td><td>115k</td><td class="n">2.57 / 2.75</td><td>24/24</td></tr>
+<tr><td>fair-w3 = c2-w3</td><td>3 × 2</td><td class="n">80 000</td><td>90k (host I/O)</td><td class="n">1.41 / 1.33 / 1.43</td><td>16/16/16</td></tr>
+<tr><td>c2-w1</td><td>1 × 2</td><td class="n">40 000</td><td>50k</td><td class="n">1.93</td><td>48</td></tr>
+<tr><td>c2-w2</td><td>2 × 2</td><td class="n">70 000</td><td>80k (host I/O)</td><td class="n">1.80 / 1.87</td><td>24/24</td></tr></table></div>
+<p>Partitions and CPU are spread evenly. With 2 cores per worker, throughput scales 40k → 70k → 80k (20 → 13 k ev/s per core). The upper knees came with iowait of 6–23 % and blocked tasks on the shared VM disk while the workers had spare CPU, so on this box the ceiling is the broker disk at ~90–100k ev/s.</p>
+
+<h2>S7: failure under load (45k ev/s ≈ 70 % of knee; measures output + DLQ)</h2>
+<div class="wrap"><table><tr><th>case</th><th>lost</th><th>duplicates</th><th>output back</th><th>recovered</th><th>catch-up</th></tr>
+<tr><td>kill -9 worker (+10 s restart)</td><td class="ok">0</td><td class="n">15 421</td><td class="n">50 s</td><td class="n">130 s</td><td class="n">~71k/s</td></tr>
+<tr><td>kill -9 worker at 30k</td><td class="ok">0</td><td class="n">9 966</td><td class="n">50 s</td><td class="n">~90 s</td><td class="n">~71k/s</td></tr>
+<tr><td>graceful Kafka restart</td><td class="ok">0</td><td class="n">15 318</td><td class="n">15 s</td><td class="n">~40 s</td><td class="n">~72k/s</td></tr>
+<tr><td>kill -9 Kafka (+10 s start)</td><td class="ok">0</td><td class="n">12 585</td><td class="n">30 s</td><td class="n">~85 s</td><td class="n">~72k/s</td></tr>
+<tr><td>50 % DLQ, recipe error, 45k</td><td class="ok">0</td><td class="n">0</td><td colspan="3">sustained, p99 166 ms; 8.10M out + 8.10M DLQ</td></tr>
+<tr><td>50 % DLQ, JS throw, 3.5k</td><td class="ok">0</td><td class="n">0</td><td colspan="3">sustained, p99 705 ms</td></tr>
+<tr><td>exactly_once + kill -9, 22k</td><td class="ok">0</td><td class="ok">0</td><td class="n">50 s</td><td class="n">~190 s</td><td class="n">~31k/s</td></tr></table></div>
+<p>After a worker crash, output resumes only once the dead member's group session times out (~45 s). exactly_once reaches about 31k ev/s (one transaction per poll). The first kill-worker run caught up slowly and erratically during a host I/O stall; the probe re-run caught up cleanly.</p>
+
+<h2>S8: 20-min mini-soak at 45k</h2>
+<p><span class="ok">No leak</span>: in every quiet window RSS was back at 85–90 MB and goroutines stayed at 71–78. After the run the worker was at 45 goroutines and a 16 MB live heap. 54.0M events with 0 lost and 0 duplicates. The <span class="bad">p99 verdict failed</span> because of two host I/O stalls (iowait 11–24 %, steal up to 15 %); between them lag was flat and p99 was 68 ms.</p>
+
+<h2>Fixes and state</h2>
+<p>No product bugs were found or changed. Tooling: <code>stressrun --dry-run</code> now honours <code>--cases</code>, and there are new <code>scripts/group-spread.sh</code> and <code>scripts/host-probe.sh</code> scripts, new scenario files, and README updates. At the end no extra workers were running, the dev worker was restored unpinned, there were no <code>stress-</code> topics, groups or routes left (only the <code>stress-local</code> connection is kept), and the local Kafka was stopped.</p>
+</main></body></html>

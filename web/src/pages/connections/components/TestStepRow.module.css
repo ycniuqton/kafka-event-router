@@ -1,0 +1,10 @@
+.row{display:flex;gap:12px}
+.icon{width:18px;flex:none;text-align:center;color:var(--tone);font-weight:600}
+.pulse{animation:stepPulse 1s infinite}
+.body{flex:1;min-width:0}
+.dim{color:var(--tx3)}
+.reason{margin-top:6px;padding:10px 12px;border-radius:var(--radius-lg);background:color-mix(in oklch, var(--err) 10%, transparent);font-size:12px;line-height:1.5}
+@keyframes stepPulse{0%,100%{opacity:1}50%{opacity:.35}}
+.head{display:flex;justify-content:space-between;gap:8px}
+.duration{font-family:var(--font-mono);font-size:11px;color:var(--tx3)}
+.hint{margin-top:4px;color:var(--tx2)}

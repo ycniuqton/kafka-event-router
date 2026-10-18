@@ -1,0 +1,5 @@
+.box{padding:12px 14px;border-radius:8px;background:var(--p1);border:1px solid var(--ln)}
+.text{font-size:13px;font-weight:500;margin-bottom:8px}
+.track{height:6px;border-radius:3px;background:var(--p3);overflow:hidden}
+.fill{height:100%;background:var(--ok);width:var(--w)}
+.box[data-pending]{opacity:.7}
