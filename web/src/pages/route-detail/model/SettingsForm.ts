@@ -1,5 +1,25 @@
 import { ApiError, FieldErrorMapper, ProblemKind } from '../../../api/http/core';
-import { RouteSettingsRules, type DeliveryMode, type ErrorAction, type RouteLimits, type RouteSettings, type RouteSettingsPatch } from '../../../domain';
+import { RetryPolicyRules, RouteSettingsRules, type DeliveryMode, type ErrorAction, type InFlightMode, type RetryPolicySettings, type RouteLimits, type RouteSettings, type RouteSettingsPatch } from '../../../domain';
+
+/** Text values of the auto-retry policy (numbers stay text while typing). */
+export type RetryFormValues = { enabled: boolean; maxAttempts: string; baseDelayMs: string; maxDelayMs: string };
+
+/** Converts the auto-retry policy between settings and form text. */
+export class RetryForm {
+  static values(p: RetryPolicySettings | null | undefined): RetryFormValues {
+    const v = p ?? RetryPolicyRules.defaults;
+    return { enabled: v.enabled, maxAttempts: String(v.maxAttempts), baseDelayMs: String(v.baseDelayMs), maxDelayMs: String(v.maxDelayMs) };
+  }
+
+  static policy(v: RetryFormValues): RetryPolicySettings {
+    return { enabled: v.enabled, maxAttempts: Number(v.maxAttempts), baseDelayMs: Number(v.baseDelayMs), maxDelayMs: Number(v.maxDelayMs) };
+  }
+
+  /** Disabled → null (the document drops `errorPolicy.retry`). */
+  static patch(v: RetryFormValues): RetryPolicySettings | null {
+    return v.enabled ? RetryForm.policy(v) : null;
+  }
+}
 
 /** Text values of the Settings form (inputs edit text; numbers are parsed on save). */
 export type SettingsFormValues = {
@@ -11,12 +31,23 @@ export type SettingsFormValues = {
   dlqConnectionId: string;
   dlqTopic: string;
   maxRetries: string;
+  retry: RetryFormValues;
   deliveryMode: DeliveryMode;
+  inFlightMode: InFlightMode;
   limits: Record<keyof RouteLimits, string>;
 };
 
 /** Form field names used for error messages (match the API's JSON Pointers via aliases). */
-export const SettingsField = { Name: 'name', Tags: 'tags', Replicas: 'replicas', Retries: 'maxRetries', Form: 'form' } as const;
+export const SettingsField = {
+  Name: 'name',
+  Tags: 'tags',
+  Replicas: 'replicas',
+  Retries: 'maxRetries',
+  RetryAttempts: 'retry.maxAttempts',
+  RetryBase: 'retry.baseDelayMs',
+  RetryMax: 'retry.maxDelayMs',
+  Form: 'form',
+} as const;
 
 /** Messages of the Settings tab. */
 export const SettingsText = {
@@ -41,7 +72,9 @@ export class SettingsForm {
       dlqConnectionId: s.errorPolicy.dlqConnectionId,
       dlqTopic: s.errorPolicy.dlqTopic,
       maxRetries: s.errorPolicy.maxRetries === null ? '' : String(s.errorPolicy.maxRetries),
+      retry: RetryForm.values(s.errorPolicy.retry),
       deliveryMode: s.deliveryMode,
+      inFlightMode: s.inFlightMode,
       limits,
     };
   }
@@ -53,8 +86,15 @@ export class SettingsForm {
       description: v.description,
       tags: RouteSettingsRules.parseTags(v.tags),
       replicas: Number(v.replicas),
-      errorPolicy: { onError: v.onError, dlqConnectionId: v.dlqConnectionId, dlqTopic: v.dlqTopic.trim(), maxRetries: RouteSettingsRules.parseLimit(v.maxRetries) },
+      errorPolicy: {
+        onError: v.onError,
+        dlqConnectionId: v.dlqConnectionId,
+        dlqTopic: v.dlqTopic.trim(),
+        maxRetries: RouteSettingsRules.parseLimit(v.maxRetries),
+        retry: RetryForm.patch(v.retry),
+      },
       deliveryMode: v.deliveryMode,
+      inFlightMode: v.inFlightMode,
       limits,
     };
   }
@@ -66,6 +106,11 @@ export class SettingsForm {
     if (!patch.name) out[SettingsField.Name] = SettingsText.nameRequired;
     if (!RouteSettingsRules.validReplicas(patch.replicas ?? 0)) out[SettingsField.Replicas] = SettingsText.invalidReplicas;
     if (!RouteSettingsRules.validLimit(patch.errorPolicy?.maxRetries ?? null)) out[SettingsField.Retries] = SettingsText.invalidNumber;
+    const retry = RetryPolicyRules.validate(RetryForm.policy(v.retry));
+    const retryFields = { maxAttempts: SettingsField.RetryAttempts, baseDelayMs: SettingsField.RetryBase, maxDelayMs: SettingsField.RetryMax } as const;
+    (Object.keys(retryFields) as (keyof typeof retryFields)[]).forEach((k) => {
+      if (retry[k]) out[retryFields[k]] = retry[k];
+    });
     Object.entries(patch.limits ?? {}).forEach(([k, n]) => {
       if (!RouteSettingsRules.validLimit(n)) out[k] = SettingsText.invalidNumber;
     });

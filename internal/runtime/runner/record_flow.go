@@ -12,6 +12,7 @@ import (
 	"github.com/eventrouter/router/internal/runtime/delivery"
 	"github.com/eventrouter/router/internal/runtime/domain"
 	"github.com/eventrouter/router/internal/runtime/failures"
+	"github.com/eventrouter/router/internal/runtime/membudget"
 	"github.com/eventrouter/router/internal/runtime/retry"
 	"github.com/eventrouter/router/pkg/config"
 	"github.com/eventrouter/router/pkg/engine"
@@ -23,6 +24,7 @@ type versionState struct {
 	processor *RecordProcessor
 	policies  *failures.ErrorPolicyManager
 	metrics   *RunnerMetrics
+	retries   *RetryRoute
 }
 
 // policy returns the route's error policy.
@@ -74,15 +76,18 @@ func (f *RecordFlow) closeBatch(b *batchScope) {
 func (f *RecordFlow) Handle(ctx context.Context, lane *PartitionLane, rec *kgo.Record) {
 	if f.halted.Load() {
 		f.barrier.Fail()
+		lane.Discard(rec)
 		return
 	}
 	if f.limiter.Acquire(ctx) != nil {
+		lane.Discard(rec)
 		return
 	}
 	f.swapLock.RLock()
 	defer f.swapLock.RUnlock()
 	st := f.state.Load()
-	t := &recordTicket{flow: f, lane: lane, state: st, ctx: f.deliverCtx(), raw: delivery.RecordMapper{}.FromKafka(rec), started: time.Now()}
+	t := &recordTicket{flow: f, lane: lane, state: st, ctx: f.deliverCtx(), raw: delivery.RecordMapper{}.FromKafka(rec), started: time.Now(),
+		cost: membudget.RecordCost(rec)}
 	f.tracker.Track(lane.TP(), rec.Offset)
 	lane.Begin()
 	st.metrics.Consumed()
@@ -102,6 +107,8 @@ type recordTicket struct {
 	ctx      context.Context
 	raw      engine.RawRecord
 	started  time.Time
+	cost     int64
+	sent     time.Time
 	outs     []delivery.Outgoing
 	failure  *failures.Failure
 	produced map[engine.BranchID]int
@@ -147,6 +154,9 @@ func (t *recordTicket) retryable(ctx context.Context, f failures.Failure, attemp
 		t.state.metrics.JSTimeout()
 		return attempt < maxRetries
 	case domain.DispositionBackoffRetry:
+		if t.state.retries.Diverts(f.Category) {
+			return false
+		}
 		return t.flow.retry.Wait(ctx, attempt) == nil
 	default:
 		return false
@@ -159,8 +169,17 @@ func (t *recordTicket) fail(ctx context.Context, f failures.Failure) {
 		t.haltWith(failures.NewHalt(t.flow.table.HaltReasonOf(f.Category), f))
 		return
 	}
+	if t.state.retries.Diverts(f.Category) {
+		t.schedule(ctx, f)
+		return
+	}
+	t.applyPolicy(ctx, f)
+}
+
+// applyPolicy runs the route's onError handler for a processing failure.
+func (t *recordTicket) applyPolicy(ctx context.Context, f failures.Failure) {
 	t.failure = &f
-	detail := OutcomeDetail{ErrorType: string(failures.ErrorTypes{}.Of(f.Category)), Branch: engine.BranchID(f.Branch())}
+	detail := OutcomeDetail{ErrorType: string(failures.DeadLetterTypes{}.Of(f)), Branch: engine.BranchID(f.Branch())}
 	t.state.policies.Resolve(t.state.policy()).Handle(ctx, f, func(outcome domain.RecordOutcome, err error) {
 		var h *failures.HaltError
 		if errors.As(err, &h) {
@@ -183,6 +202,7 @@ func (t *recordTicket) deliver(ctx context.Context, outs []delivery.Outgoing) {
 		t.produced[out.Branch]++
 	}
 	t.pending.Store(int64(len(outs)))
+	t.sent = time.Now()
 	for _, out := range outs {
 		t.produce(ctx, out, 0)
 	}
@@ -193,6 +213,7 @@ func (t *recordTicket) produce(ctx context.Context, out delivery.Outgoing, attem
 	t.flow.delivery.Produce(ctx, out, func(err error) {
 		if err == nil {
 			if t.pending.Add(-1) == 0 {
+				t.flow.limiter.ObserveAck(time.Since(t.sent))
 				t.finish(domain.OutcomeProduced, OutcomeDetail{Produced: t.produced})
 			}
 			return
@@ -251,6 +272,7 @@ func (t *recordTicket) abandon(error) {
 }
 
 func (t *recordTicket) release() {
+	t.lane.Settle(t.cost)
 	t.lane.End()
 	t.flow.limiter.Release()
 }

@@ -55,6 +55,7 @@ const (
 	CategorySourceTransient      ErrorCategory = "source_transient"
 	CategorySourceFatal          ErrorCategory = "source_fatal"
 	CategoryCompile              ErrorCategory = "compile"
+	CategoryDependencyTransient  ErrorCategory = "dependency_transient"
 )
 
 // Disposition is what the runner does with a classified failure.
@@ -80,11 +81,12 @@ const (
 type RecordOutcome string
 
 const (
-	OutcomeProduced     RecordOutcome = "produced"
-	OutcomeFiltered     RecordOutcome = "filtered"
-	OutcomeDropped      RecordOutcome = "dropped"
-	OutcomeDeadLettered RecordOutcome = "dead_lettered"
-	OutcomeSkipped      RecordOutcome = "skipped"
+	OutcomeProduced       RecordOutcome = "produced"
+	OutcomeFiltered       RecordOutcome = "filtered"
+	OutcomeDropped        RecordOutcome = "dropped"
+	OutcomeDeadLettered   RecordOutcome = "dead_lettered"
+	OutcomeSkipped        RecordOutcome = "skipped"
+	OutcomeRetryScheduled RecordOutcome = "retry_scheduled"
 )
 
 // HaltReason explains why a route was halted without restart loop.

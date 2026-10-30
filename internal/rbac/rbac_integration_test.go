@@ -82,7 +82,7 @@ func (w *itWorld) manager(t *testing.T, ctx context.Context) *rbac.DefaultManage
 		t.Fatal(err)
 	}
 	cache := rbac.NewTTLSubjectCache(itCacheTTL, time.Now)
-	go rbac.NewInvalidationListener(w.sb.DB.Pool(), cache, log).Run(ctx)
+	go rbac.NewInvalidationListener(w.sb.DB.Notifications(), cache, log).Run(ctx)
 	return rbac.NewManager(rbac.ManagerDeps{Engine: engine, Subjects: rbac.NewSubjectResolver(cache, rbac.NewPostgresSubjectLoader(w.sb.DB)),
 		Matrix: rbac.DefaultRoleMatrix(), Catalog: rbac.DefaultPermissionCatalog(), Log: log})
 }

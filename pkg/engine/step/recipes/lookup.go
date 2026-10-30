@@ -3,18 +3,23 @@ package recipes
 import (
 	"github.com/eventrouter/router/pkg/config"
 	"github.com/eventrouter/router/pkg/engine"
+	"github.com/eventrouter/router/pkg/engine/enrich"
 	"github.com/eventrouter/router/pkg/engine/formula"
 	"github.com/eventrouter/router/pkg/engine/step"
 )
 
 // Lookup maps the text of `field` through inline rows or a pinned library table into
 // `to` (default `field`); the table is also registered for formula lookup() and ctx.lookup.
+// With `lookup` set the step calls a managed lookup source instead (enrich.Compiler).
 type Lookup struct{}
 
 func (Lookup) Kind() config.StepKind { return config.StepKindLookup }
 func (Lookup) Group() step.Group     { return step.GroupValues }
 
 func (Lookup) Compile(c *step.StepCompileCtx, raw config.Step) (step.Step, bool) {
+	if raw.Lookup != nil {
+		return enrich.DefaultCompiler().Compile(c, raw)
+	}
 	rows, okR := LookupTables{}.Load(c, raw)
 	source, okF := c.Path(raw.Field, config.TokenField)
 	target, okT := source, true

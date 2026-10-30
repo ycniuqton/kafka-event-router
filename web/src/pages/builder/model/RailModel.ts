@@ -1,4 +1,5 @@
-import { BuilderStep, FilterGroups, FilterMode, TransformStepKind, type Connection, type RouteDraft } from '../../../domain';
+import { BuilderStep, FilterGroups, FilterMode, LookupMode, TransformStepKind, type Connection, type RouteDraft } from '../../../domain';
+import { LookupSourceCatalog } from '../studio/model/LookupSourceCatalog';
 import { ConnectionOption, SourceSubscription } from './SourceRules';
 import type { DirtyKey } from './DraftSession';
 import type { PipelinePreviewResult } from './PipelinePreview';
@@ -59,8 +60,18 @@ export class RailModel {
     const errors = preview.errorIndexes.length;
     return {
       kind: 'Transform',
-      summary: on ? `${RailModel.plural(on, 'step')}${js}` : 'No changes · pass through',
+      summary: on ? `${RailModel.plural(on, 'step')}${js}${RailModel.lookupNote(draft)}` : 'No changes · pass through',
       warning: errors ? `${RailModel.plural(errors, 'event')} fail` : '',
     };
   }
+
+  /** ` · lookup crm-api (HTTP)` for enabled lookup source steps (the builder shows which sources a route calls). */
+  static lookupNote(draft: RouteDraft): string {
+    const ids = draft.steps.filter((s) => s.enabled && s.kind === TransformStepKind.Lookup && s.lookupMode === LookupMode.Source && s.lookupSource?.sourceId).map((s) => s.lookupSource?.sourceId ?? '');
+    const labels = [...new Set(ids)].map((id) => LookupSourceCatalog.label(id));
+    return labels.length ? `${RailModel.lookupPrefix}${labels.join(RailModel.lookupSeparator)}` : '';
+  }
+
+  static readonly lookupPrefix = ' · lookup ';
+  static readonly lookupSeparator = ', ';
 }

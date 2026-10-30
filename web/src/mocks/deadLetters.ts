@@ -17,4 +17,7 @@ export const DEAD_LETTERS: DeadLetter[] = [
   DeadLetterSeed.make({ id: 'd3', failedAt: '2026-10-13T09:12:30Z', kind: DeadLetterKind.Timeout, message: 'JS step took 120 ms (limit 50 ms)', offset: 552310, partition: 2, routeId: 'r10', step: 'Step 2 · JavaScript', sampleId: 3, deliveryMode: DeliveryMode.ExactlyOnce }),
   DeadLetterSeed.make({ id: 'd4', failedAt: '2026-10-13T08:57:14Z', kind: DeadLetterKind.InvalidOutput, message: 'Field amount: expected number, got string', offset: 120044, partition: 1, routeId: 'r5', step: 'Output validation', sampleId: 9 }),
   DeadLetterSeed.make({ id: 'd5', failedAt: '2026-10-13T08:31:02Z', kind: DeadLetterKind.TransformError, message: reduceError, offset: 881230, partition: 0, routeId: 'r3', step: 'Step 1 · JavaScript', sampleId: 6 }),
+  DeadLetterSeed.make({ id: 'd6', failedAt: '2026-10-13T08:12:40Z', kind: DeadLetterKind.SandboxCrash, message: 'sandbox internal error: worker 3 exited (code 137)', offset: 880911, partition: 2, routeId: 'r3', step: 'Step 1 · JavaScript', sampleId: 4 }),
+  DeadLetterSeed.make({ id: 'd7', failedAt: '2026-10-13T07:55:03Z', kind: DeadLetterKind.LookupUnavailable, message: 'lookup "customers" unavailable: dial tcp 10.0.4.12:6379: i/o timeout', offset: 77120, partition: 1, routeId: 'r7', step: 'Step 2 · Lookup', sampleId: 2, attempts: 5 }),
+  DeadLetterSeed.make({ id: 'd8', failedAt: '2026-10-13T07:41:19Z', kind: DeadLetterKind.InvalidOutput, message: 'Field amount: expected number, got string', offset: 119980, partition: 0, routeId: 'r5', step: 'Output validation', sampleId: 9 }),
 ];

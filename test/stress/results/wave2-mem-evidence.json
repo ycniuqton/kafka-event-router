@@ -1,0 +1,3133 @@
+{
+  "scenario": "wave2-mem",
+  "description": "Wave-2 memory overload: worker started with GOMEMLIMIT=512MiB and ROUTER_WORKER_MEMORY_BUDGET_BYTES=268435456 (256 MiB). 25 routes fan out one 12-partition input at 5k ev/s (output 125k ev/s, more than one worker can produce: the destinations are the slow side; in wave 1 this case grew RSS to 4.8 GB). Pass = no crash/OOM, RSS under 512 MiB, lost = 0, router_worker_memory_paused_routes \u003e 0. Delivery tracked per output topic.\n",
+  "target": "local",
+  "runBase": "stress-wave2-101815250038",
+  "host": {
+    "hostname": "vps-c0215fee",
+    "cpus": 14
+  },
+  "criteria": {
+    "p99Limit": 600000000000,
+    "lagSlopeAbs": 1000000,
+    "lagSlopeRel": 1,
+    "warmup": 30000000000,
+    "minSamples": 6,
+    "minAchievedFrac": 0.95
+  },
+  "startedAt": "2026-10-18T13:25:00.750536926-02:00",
+  "finishedAt": "2026-10-18T13:33:12.969382549-02:00",
+  "cases": [
+    {
+      "name": "fanout25",
+      "spec": {
+        "Name": "fanout25",
+        "Partitions": 12,
+        "Routes": {
+          "Count": 25,
+          "Topology": "shared_input",
+          "Replicas": 1,
+          "MaxInFlight": 0,
+          "Delivery": "at_least_once",
+          "OnError": "dlq",
+          "StartFrom": "earliest",
+          "Filter": {
+            "Conditions": 0,
+            "Raw": null
+          },
+          "Steps": {
+            "Count": 0,
+            "Kind": "set",
+            "Raw": null
+          },
+          "JS": "none",
+          "DeployBatch": 8,
+          "Extra": null
+        },
+        "Load": {
+          "Steps": [
+            {
+              "rate": 5000,
+              "duration": 180000000000
+            }
+          ],
+          "Ramp": null,
+          "Size": 1024,
+          "Lanes": 4,
+          "Streams": 256,
+          "Keys": "roundrobin",
+          "Acks": "all",
+          "Linger": 5000000,
+          "BatchSize": 0,
+          "Codec": "none",
+          "BadRatio": 0,
+          "Producers": 1,
+          "Template": ""
+        },
+        "Measure": {
+          "Disabled": false,
+          "ReadCommitted": false,
+          "SeqSource": "header",
+          "IncludeDLQ": false,
+          "TrackBy": "topic-stream"
+        },
+        "Drain": {
+          "Timeout": 900000000000
+        },
+        "Actions": null,
+        "Hooks": {
+          "Before": null,
+          "After": null
+        },
+        "Notes": ""
+      },
+      "startedAt": "2026-10-18T13:25:00.770950063-02:00",
+      "finishedAt": "2026-10-18T13:33:05.048832789-02:00",
+      "setup": {
+        "routes": 25,
+        "seconds": 13.994119036,
+        "deployToRunning": {
+          "count": 25,
+          "minMs": 689.303,
+          "meanMs": 4029.6594,
+          "p50Ms": 4915.1990000000005,
+          "p95Ms": 6334.887,
+          "p99Ms": 6334.887,
+          "p999Ms": 6334.887,
+          "maxMs": 6334.887,
+          "negativeClockSkew": 0
+        }
+      },
+      "knee": {
+        "steps": [
+          {
+            "index": 0,
+            "targetRate": 5000,
+            "achievedRate": 4999.780222702692,
+            "lagSlopePerSec": 77323.60466786941,
+            "lagSlopeLimit": 1000000,
+            "lagEnd": 13664787,
+            "latency": {
+              "count": 8605077,
+              "minMs": 13.051,
+              "meanMs": 46054.82139863095,
+              "p50Ms": 44564.479,
+              "p95Ms": 108003.327,
+              "p99Ms": 122683.391,
+              "p999Ms": 134217.727,
+              "maxMs": 144543.539,
+              "negativeClockSkew": 0
+            },
+            "verdict": "sustained"
+          }
+        ],
+        "maxSustainableRate": 5000
+      },
+      "delivery": {
+        "expected": 22499975,
+        "unique": 22499975,
+        "lost": 0,
+        "duplicates": 0,
+        "gaps": 0,
+        "zeroLoss": true,
+        "measured": true
+      },
+      "produce": [
+        {
+          "steps": [
+            {
+              "index": 0,
+              "targetRate": 5000,
+              "startNs": 1792337114793715526,
+              "endNs": 1792337294794427528,
+              "durationSec": 180.000712014,
+              "sent": 899999,
+              "acked": 899964,
+              "errors": 0,
+              "achievedRate": 4999.780222702692
+            }
+          ],
+          "sent": 899999,
+          "acked": 899999,
+          "errors": 0,
+          "durationSec": 180.004410557,
+          "achievedRate": 4999.871932110282
+        }
+      ],
+      "measure": {
+        "latency": {
+          "count": 22499975,
+          "minMs": 13.051,
+          "meanMs": 138462.61497994376,
+          "p50Ms": 134217.727,
+          "p95Ms": 285212.67100000003,
+          "p99Ms": 306184.191,
+          "p999Ms": 322961.407,
+          "maxMs": 330773.322,
+          "negativeClockSkew": 0
+        },
+        "delivery": {
+          "streams": 6400,
+          "received": 22499975,
+          "unique": 22499975,
+          "duplicates": 0,
+          "gaps": 0,
+          "outOfOrder": 0
+        },
+        "byTopic": {
+          "stress-wave2-101815250038-fanout25-r0-out": 899999,
+          "stress-wave2-101815250038-fanout25-r1-out": 899999,
+          "stress-wave2-101815250038-fanout25-r10-out": 899999,
+          "stress-wave2-101815250038-fanout25-r11-out": 899999,
+          "stress-wave2-101815250038-fanout25-r12-out": 899999,
+          "stress-wave2-101815250038-fanout25-r13-out": 899999,
+          "stress-wave2-101815250038-fanout25-r14-out": 899999,
+          "stress-wave2-101815250038-fanout25-r15-out": 899999,
+          "stress-wave2-101815250038-fanout25-r16-out": 899999,
+          "stress-wave2-101815250038-fanout25-r17-out": 899999,
+          "stress-wave2-101815250038-fanout25-r18-out": 899999,
+          "stress-wave2-101815250038-fanout25-r19-out": 899999,
+          "stress-wave2-101815250038-fanout25-r2-out": 899999,
+          "stress-wave2-101815250038-fanout25-r20-out": 899999,
+          "stress-wave2-101815250038-fanout25-r21-out": 899999,
+          "stress-wave2-101815250038-fanout25-r22-out": 899999,
+          "stress-wave2-101815250038-fanout25-r23-out": 899999,
+          "stress-wave2-101815250038-fanout25-r24-out": 899999,
+          "stress-wave2-101815250038-fanout25-r3-out": 899999,
+          "stress-wave2-101815250038-fanout25-r4-out": 899999,
+          "stress-wave2-101815250038-fanout25-r5-out": 899999,
+          "stress-wave2-101815250038-fanout25-r6-out": 899999,
+          "stress-wave2-101815250038-fanout25-r7-out": 899999,
+          "stress-wave2-101815250038-fanout25-r8-out": 899999,
+          "stress-wave2-101815250038-fanout25-r9-out": 899999
+        },
+        "durationSec": 470.255279636,
+        "unparsed": 0
+      },
+      "timeline": [
+        {
+          "at": "2026-10-18T13:25:19.792786773-02:00",
+          "elapsedSec": 5.027690816,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 0,
+          "producedRate": 0,
+          "dlqRate": 0,
+          "deliveredRate": 0,
+          "groupLag": 302292,
+          "workerLag": 93937,
+          "p99Ms": 0,
+          "goroutines": 658,
+          "workerRssMb": 629.8046875,
+          "workerCpuCores": 0,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0,
+              "rssMb": 879.52734375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 0,
+              "rssMb": 629.8046875,
+              "threads": 16
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:24.788375655-02:00",
+          "elapsedSec": 10.023279697,
+          "step": 0,
+          "offeredRate": 4991,
+          "consumedRate": 66608.36348354424,
+          "producedRate": 68345.4960232145,
+          "dlqRate": 0,
+          "deliveredRate": 68345.4960232145,
+          "groupLag": 570294,
+          "workerLag": 279981,
+          "p99Ms": 3112.9590000000003,
+          "goroutines": 660,
+          "workerRssMb": 962.671875,
+          "workerCpuCores": 5.292669318838609,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 1.8436264911688198,
+              "rssMb": 1100.33984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.282660488810548,
+              "rssMb": 965.8203125,
+              "threads": 16
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:29.788395019-02:00",
+          "elapsedSec": 15.023299056,
+          "step": 0,
+          "offeredRate": 5001.8,
+          "consumedRate": 50475.004570877296,
+          "producedRate": 50488.404518995376,
+          "dlqRate": 0,
+          "deliveredRate": 50488.404518995376,
+          "groupLag": 942745,
+          "workerLag": 545155,
+          "p99Ms": 6291.455,
+          "goroutines": 659,
+          "workerRssMb": 1292.47265625,
+          "workerCpuCores": 5.129980137742903,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 1.1439955706779492,
+              "rssMb": 1230.21484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.139980099025053,
+              "rssMb": 1292.34765625,
+              "threads": 16
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:34.792063668-02:00",
+          "elapsedSec": 20.026967687,
+          "step": 0,
+          "offeredRate": 5001.6,
+          "consumedRate": 45594.34623359654,
+          "producedRate": 45570.16397675196,
+          "dlqRate": 0,
+          "deliveredRate": 45570.16397675196,
+          "groupLag": 1338302,
+          "workerLag": 935920,
+          "p99Ms": 9699.327,
+          "goroutines": 693,
+          "workerRssMb": 1944.3359375,
+          "workerCpuCores": 5.090265139102494,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.939310803053857,
+              "rssMb": 1572.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.030309130396929,
+              "rssMb": 1856.6640625,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:39.788823408-02:00",
+          "elapsedSec": 25.023727515,
+          "step": 0,
+          "offeredRate": 5000.8,
+          "consumedRate": 48059.74436760542,
+          "producedRate": 48199.635021561415,
+          "dlqRate": 0,
+          "deliveredRate": 48199.635021561415,
+          "groupLag": 1723085,
+          "workerLag": 1320095,
+          "p99Ms": 12976.127,
+          "goroutines": 668,
+          "workerRssMb": 2007.35546875,
+          "workerCpuCores": 5.14133175984219,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8725654524294257,
+              "rssMb": 1583.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.201370667119443,
+              "rssMb": 2007.35546875,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:44.788854983-02:00",
+          "elapsedSec": 30.023759003,
+          "step": 0,
+          "offeredRate": 5000,
+          "consumedRate": 51071.678370998285,
+          "producedRate": 50990.2788836197,
+          "dlqRate": 0,
+          "deliveredRate": 50990.2788836197,
+          "groupLag": 2096926,
+          "workerLag": 1717662,
+          "p99Ms": 19398.655,
+          "goroutines": 656,
+          "workerRssMb": 2387.26171875,
+          "workerCpuCores": 5.149967567564249,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7779951004980552,
+              "rssMb": 1595.46484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.149967567564249,
+              "rssMb": 2387.26171875,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:49.790043471-02:00",
+          "elapsedSec": 35.024947492,
+          "step": 0,
+          "offeredRate": 5000.2,
+          "consumedRate": 50664.55714622837,
+          "producedRate": 50604.37145223543,
+          "dlqRate": 0,
+          "deliveredRate": 50604.37145223543,
+          "groupLag": 2468751,
+          "workerLag": 2042912,
+          "p99Ms": 22544.383,
+          "goroutines": 657,
+          "workerRssMb": 2536.17578125,
+          "workerCpuCores": 5.2027633146061945,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.9157823205571244,
+              "rssMb": 1600.21484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.182768067432459,
+              "rssMb": 2543.32421875,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:54.788983803-02:00",
+          "elapsedSec": 40.023887842,
+          "step": 0,
+          "offeredRate": 4999.8,
+          "consumedRate": 49839.56249848031,
+          "producedRate": 49839.56249848031,
+          "dlqRate": 0,
+          "deliveredRate": 49839.56249848031,
+          "groupLag": 2838914,
+          "workerLag": 2465333,
+          "p99Ms": 26476.543,
+          "goroutines": 657,
+          "workerRssMb": 2743.359375,
+          "workerCpuCores": 5.159093366657194,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8561814505348121,
+              "rssMb": 1620.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.17909760615567,
+              "rssMb": 2743.359375,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:25:59.791811628-02:00",
+          "elapsedSec": 45.02671566,
+          "step": 0,
+          "offeredRate": 4999,
+          "consumedRate": 49612.341065782406,
+          "producedRate": 49718.081262975815,
+          "dlqRate": 0,
+          "deliveredRate": 49718.081262975815,
+          "groupLag": 3219403,
+          "workerLag": 2822937,
+          "p99Ms": 30932.991,
+          "goroutines": 655,
+          "workerRssMb": 2772.76953125,
+          "workerCpuCores": 5.205056209671859,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.9454652792529914,
+              "rssMb": 1626.71484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.205056209671859,
+              "rssMb": 2772.76953125,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:04.791942704-02:00",
+          "elapsedSec": 50.026846772,
+          "step": 0,
+          "offeredRate": 5001.8,
+          "consumedRate": 49242.108753727414,
+          "producedRate": 49241.30877470478,
+          "dlqRate": 0,
+          "deliveredRate": 49241.30877470478,
+          "groupLag": 3595138,
+          "workerLag": 3192822,
+          "p99Ms": 37748.735,
+          "goroutines": 659,
+          "workerRssMb": 3075.55078125,
+          "workerCpuCores": 5.2058634897652265,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8339781310918527,
+              "rssMb": 1724.21484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.193863804425774,
+              "rssMb": 3081.87890625,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:09.788380364-02:00",
+          "elapsedSec": 55.023284396,
+          "step": 0,
+          "offeredRate": 4997.8,
+          "consumedRate": 41831.403837815626,
+          "producedRate": 41726.328974581425,
+          "dlqRate": 0,
+          "deliveredRate": 41726.328974581425,
+          "groupLag": 4013599,
+          "workerLag": 3592541,
+          "p99Ms": 42467.327,
+          "goroutines": 658,
+          "workerRssMb": 2851.44921875,
+          "workerCpuCores": 5.045594861207854,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.9146516666291133,
+              "rssMb": 2317.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.057603417006048,
+              "rssMb": 2850.69921875,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:14.789274795-02:00",
+          "elapsedSec": 60.024178837,
+          "step": 0,
+          "offeredRate": 4999.8,
+          "consumedRate": 50498.36643812495,
+          "producedRate": 50498.36643812495,
+          "dlqRate": 0,
+          "deliveredRate": 50498.36643812495,
+          "groupLag": 4384639,
+          "workerLag": 4039802,
+          "p99Ms": 47710.207,
+          "goroutines": 656,
+          "workerRssMb": 2955.05078125,
+          "workerCpuCores": 5.233063866624418,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7998569150362117,
+              "rssMb": 2318.08984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.22906458204924,
+              "rssMb": 2954.92578125,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:19.792127883-02:00",
+          "elapsedSec": 65.027031916,
+          "step": 0,
+          "offeredRate": 5001.2,
+          "consumedRate": 48846.5273996906,
+          "producedRate": 48855.1224951933,
+          "dlqRate": 0,
+          "deliveredRate": 48855.1224951933,
+          "groupLag": 4767729,
+          "workerLag": 4345253,
+          "p99Ms": 50855.935,
+          "goroutines": 656,
+          "workerRssMb": 3172.30859375,
+          "workerCpuCores": 5.23301395955306,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8715027067857651,
+              "rssMb": 2328.96484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.233013959553048,
+              "rssMb": 3172.18359375,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:24.788257311-02:00",
+          "elapsedSec": 70.023161345,
+          "step": 0,
+          "offeredRate": 5000.2,
+          "consumedRate": 49753.514902385854,
+          "producedRate": 49848.58850020797,
+          "dlqRate": 0,
+          "deliveredRate": 49848.58850020797,
+          "groupLag": 5138747,
+          "workerLag": 4759186,
+          "p99Ms": 54001.663,
+          "goroutines": 660,
+          "workerRssMb": 3165.328125,
+          "workerCpuCores": 5.147985128389269,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8226368148398102,
+              "rssMb": 2331.08984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.149986677817113,
+              "rssMb": 3165.203125,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:29.789872401-02:00",
+          "elapsedSec": 75.024776437,
+          "step": 0,
+          "offeredRate": 5002.6,
+          "consumedRate": 48323.190720250655,
+          "producedRate": 48219.62417415067,
+          "dlqRate": 0,
+          "deliveredRate": 48219.62417415067,
+          "groupLag": 5526981,
+          "workerLag": 5116544,
+          "p99Ms": 59244.543,
+          "goroutines": 661,
+          "workerRssMb": 3360.78515625,
+          "workerCpuCores": 5.27229695107454,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7557558769458386,
+              "rssMb": 2331.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.27229695107454,
+              "rssMb": 3357.53515625,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:34.789422613-02:00",
+          "elapsedSec": 80.024326654,
+          "step": 0,
+          "offeredRate": 4997.4,
+          "consumedRate": 46368.571159008316,
+          "producedRate": 46368.571159008316,
+          "dlqRate": 0,
+          "deliveredRate": 46368.571159008316,
+          "groupLag": 5918004,
+          "workerLag": 5513960,
+          "p99Ms": 62390.271,
+          "goroutines": 657,
+          "workerRssMb": 3142.1484375,
+          "workerCpuCores": 5.014451082970289,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7180645946495157,
+              "rssMb": 2331.71484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.014451082970289,
+              "rssMb": 3142.0234375,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:39.789219128-02:00",
+          "elapsedSec": 85.024123169,
+          "step": 0,
+          "offeredRate": 4995.4,
+          "consumedRate": 46578.8956213151,
+          "producedRate": 46710.700985398005,
+          "dlqRate": 0,
+          "deliveredRate": 46710.700985398005,
+          "groupLag": 6304455,
+          "workerLag": 5889623,
+          "p99Ms": 70254.591,
+          "goroutines": 657,
+          "workerRssMb": 3239.0078125,
+          "workerCpuCores": 5.1122080515310735,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.71602914023792,
+              "rssMb": 2333.21484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.1122080515310735,
+              "rssMb": 3238.5078125,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:44.788574584-02:00",
+          "elapsedSec": 90.023478617,
+          "step": 0,
+          "offeredRate": 5004.4,
+          "consumedRate": 50007.4464799287,
+          "producedRate": 49908.033664582916,
+          "dlqRate": 0,
+          "deliveredRate": 49908.033664582916,
+          "groupLag": 6688276,
+          "workerLag": 6296776,
+          "p99Ms": 70254.591,
+          "goroutines": 661,
+          "workerRssMb": 2911.81640625,
+          "workerCpuCores": 5.1266608799046915,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7660987580973455,
+              "rssMb": 2342.33984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.12866113775873,
+              "rssMb": 2911.81640625,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:49.78897683-02:00",
+          "elapsedSec": 95.023880944,
+          "step": 0,
+          "offeredRate": 5001.2,
+          "consumedRate": 50314.95138731064,
+          "producedRate": 50257.55600565299,
+          "dlqRate": 0,
+          "deliveredRate": 50257.55600565299,
+          "groupLag": 7062762,
+          "workerLag": 6650726,
+          "p99Ms": 74448.895,
+          "goroutines": 659,
+          "workerRssMb": 3111.06640625,
+          "workerCpuCores": 5.211580648078521,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8239337018451056,
+              "rssMb": 2357.46484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.193582096339191,
+              "rssMb": 3114.03125,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:54.788780163-02:00",
+          "elapsedSec": 100.023684202,
+          "step": 0,
+          "offeredRate": 4995.2,
+          "consumedRate": 51388.0220364463,
+          "producedRate": 51413.02302019501,
+          "dlqRate": 0,
+          "deliveredRate": 51413.02302019501,
+          "groupLag": 7425355,
+          "workerLag": 7057446,
+          "p99Ms": 77594.623,
+          "goroutines": 658,
+          "workerRssMb": 3092.53515625,
+          "workerCpuCores": 5.21220509193084,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7580298272608591,
+              "rssMb": 2362.08984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.222205485430326,
+              "rssMb": 3094.04296875,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:26:59.788810568-02:00",
+          "elapsedSec": 105.023714609,
+          "step": 0,
+          "offeredRate": 5004.2,
+          "consumedRate": 52420.281211301844,
+          "producedRate": 52420.281211301844,
+          "dlqRate": 0,
+          "deliveredRate": 52420.281211301844,
+          "groupLag": 7788784,
+          "workerLag": 7404178,
+          "p99Ms": 80740.351,
+          "goroutines": 658,
+          "workerRssMb": 3329.19921875,
+          "workerCpuCores": 5.261967999867818,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8339949281432415,
+              "rssMb": 2372.08984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.265967975542339,
+              "rssMb": 3327.94921875,
+              "threads": 20
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:04.790228237-02:00",
+          "elapsedSec": 110.025132278,
+          "step": 0,
+          "offeredRate": 4998,
+          "consumedRate": 40710.857095986314,
+          "producedRate": 40932.19433939661,
+          "dlqRate": 0,
+          "deliveredRate": 40932.19433939661,
+          "groupLag": 8208288,
+          "workerLag": 7785746,
+          "p99Ms": 82837.503,
+          "goroutines": 655,
+          "workerRssMb": 3199.16015625,
+          "workerCpuCores": 5.266506767323518,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7797789063235313,
+              "rssMb": 2383.96484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.2685062004166765,
+              "rssMb": 3198.78515625,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:09.788787794-02:00",
+          "elapsedSec": 115.023691827,
+          "step": 0,
+          "offeredRate": 5002.6,
+          "consumedRate": 44404.992643211575,
+          "producedRate": 44292.96036781095,
+          "dlqRate": 0,
+          "deliveredRate": 44292.96036781095,
+          "groupLag": 8613672,
+          "workerLag": 8193162,
+          "p99Ms": 87031.807,
+          "goroutines": 661,
+          "workerRssMb": 3214.09375,
+          "workerCpuCores": 5.1714898555467865,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7562178589542299,
+              "rssMb": 2384.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.173490431893224,
+              "rssMb": 3213.84375,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:14.788787204-02:00",
+          "elapsedSec": 120.023691239,
+          "step": 0,
+          "offeredRate": 4994.4,
+          "consumedRate": 46745.80549730673,
+          "producedRate": 46636.40548444128,
+          "dlqRate": 0,
+          "deliveredRate": 46636.40548444128,
+          "groupLag": 8968517,
+          "workerLag": 8610625,
+          "p99Ms": 92274.687,
+          "goroutines": 663,
+          "workerRssMb": 3226.140625,
+          "workerCpuCores": 5.1660006075216796,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7820000919632101,
+              "rssMb": 2392.46484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.1660006075216796,
+              "rssMb": 3226.140625,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:19.788630473-02:00",
+          "elapsedSec": 125.023534508,
+          "step": 0,
+          "offeredRate": 4717.6,
+          "consumedRate": 48010.90495942903,
+          "producedRate": 48043.90599388606,
+          "dlqRate": 0,
+          "deliveredRate": 48043.90599388606,
+          "groupLag": 9390991,
+          "workerLag": 8982101,
+          "p99Ms": 95420.41500000001,
+          "goroutines": 661,
+          "workerRssMb": 3388.359375,
+          "workerCpuCores": 5.142161187212991,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7400231969151329,
+              "rssMb": 2399.96484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.142161187212991,
+              "rssMb": 3388.359375,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:24.788371776-02:00",
+          "elapsedSec": 130.023275811,
+          "step": 0,
+          "offeredRate": 5284.8,
+          "consumedRate": 48372.50276426952,
+          "producedRate": 48339.50105678097,
+          "dlqRate": 0,
+          "deliveredRate": 48339.50105678097,
+          "groupLag": 9774658,
+          "workerLag": 9393087,
+          "p99Ms": 101711.871,
+          "goroutines": 657,
+          "workerRssMb": 3557.03125,
+          "workerCpuCores": 5.186268334411873,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.730037771716287,
+              "rssMb": 2411.96484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.184268230927722,
+              "rssMb": 3557.03125,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:29.793405713-02:00",
+          "elapsedSec": 135.028309746,
+          "step": 0,
+          "offeredRate": 5001,
+          "consumedRate": 50013.24731277771,
+          "producedRate": 50211.24796829175,
+          "dlqRate": 0,
+          "deliveredRate": 50211.24796829175,
+          "groupLag": 10148907,
+          "workerLag": 9750819,
+          "p99Ms": 103809.023,
+          "goroutines": 657,
+          "workerRssMb": 3688.15625,
+          "workerCpuCores": 5.236727730598301,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7991953804804722,
+              "rssMb": 2424.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.2387257190495005,
+              "rssMb": 3688.15625,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:34.792241417-02:00",
+          "elapsedSec": 140.027145452,
+          "step": 0,
+          "offeredRate": 5000.8,
+          "consumedRate": 43713.178998405754,
+          "producedRate": 43792.99758486601,
+          "dlqRate": 0,
+          "deliveredRate": 43792.99758486601,
+          "groupLag": 10547338,
+          "workerLag": 10145496,
+          "p99Ms": 105906.175,
+          "goroutines": 655,
+          "workerRssMb": 3700.8828125,
+          "workerCpuCores": 5.171204160395326,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7301700265161716,
+              "rssMb": 2432.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.169203694569256,
+              "rssMb": 3700.8828125,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:39.788958353-02:00",
+          "elapsedSec": 145.023862391,
+          "step": 0,
+          "offeredRate": 5000.6,
+          "consumedRate": 43979.87772426826,
+          "producedRate": 43695.29086106193,
+          "dlqRate": 0,
+          "deliveredRate": 43695.29086106193,
+          "groupLag": 10957048,
+          "workerLag": 10536650,
+          "p99Ms": 119537.663,
+          "goroutines": 658,
+          "workerRssMb": 2782.0703125,
+          "workerCpuCores": 5.037307557597486,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7865164362875684,
+              "rssMb": 2441.08984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.03930887168473,
+              "rssMb": 2782.0703125,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:44.789814404-02:00",
+          "elapsedSec": 150.024718447,
+          "step": 0,
+          "offeredRate": 5001.2,
+          "consumedRate": 49413.53984854629,
+          "producedRate": 49421.1385475639,
+          "dlqRate": 0,
+          "deliveredRate": 49421.1385475639,
+          "groupLag": 11337328,
+          "workerLag": 10958330,
+          "p99Ms": 119537.663,
+          "goroutines": 658,
+          "workerRssMb": 3035.88671875,
+          "workerCpuCores": 5.231104376342395,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7898647663055208,
+              "rssMb": 2441.33984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.22910471870618,
+              "rssMb": 3039.8359375,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:49.789284917-02:00",
+          "elapsedSec": 155.024188949,
+          "step": 0,
+          "offeredRate": 4996.4,
+          "consumedRate": 48978.18677038771,
+          "producedRate": 48976.986643294724,
+          "dlqRate": 0,
+          "deliveredRate": 48976.986643294724,
+          "groupLag": 11729326,
+          "workerLag": 11287420,
+          "p99Ms": 122683.391,
+          "goroutines": 660,
+          "workerRssMb": 3402.62109375,
+          "workerCpuCores": 5.210551795350898,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7700815513282518,
+              "rssMb": 2449.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.206551371707637,
+              "rssMb": 3419.5390625,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:54.789187107-02:00",
+          "elapsedSec": 160.024091208,
+          "step": 0,
+          "offeredRate": 4973.8,
+          "consumedRate": 44970.479091919384,
+          "producedRate": 44970.479091919384,
+          "dlqRate": 0,
+          "deliveredRate": 44970.479091919384,
+          "groupLag": 12118313,
+          "workerLag": 11724170,
+          "p99Ms": 125829.119,
+          "goroutines": 656,
+          "workerRssMb": 3495.921875,
+          "workerCpuCores": 5.138100440615045,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7260141922706325,
+              "rssMb": 2464.46484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.142100518809369,
+              "rssMb": 3495.921875,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:27:59.79299198-02:00",
+          "elapsedSec": 165.027896019,
+          "step": 0,
+          "offeredRate": 5025.4,
+          "consumedRate": 48616.404753682546,
+          "producedRate": 48665.96703865713,
+          "dlqRate": 0,
+          "deliveredRate": 48665.96703865713,
+          "groupLag": 12500630,
+          "workerLag": 12093302,
+          "p99Ms": 125829.119,
+          "goroutines": 657,
+          "workerRssMb": 3446.2109375,
+          "workerCpuCores": 5.228021673125964,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.761420587714448,
+              "rssMb": 2468.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.212033839263208,
+              "rssMb": 3452.01953125,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:04.790279615-02:00",
+          "elapsedSec": 170.025183654,
+          "step": 0,
+          "offeredRate": 5001.6,
+          "consumedRate": 45710.796873112144,
+          "producedRate": 45661.16995184729,
+          "dlqRate": 0,
+          "deliveredRate": 45661.16995184729,
+          "groupLag": 12894333,
+          "workerLag": 12466927,
+          "p99Ms": 127926.27100000001,
+          "goroutines": 657,
+          "workerRssMb": 3350.56640625,
+          "workerCpuCores": 5.310881009553911,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8104396416237127,
+              "rssMb": 2480.33984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.314883180623632,
+              "rssMb": 3345.75390625,
+              "threads": 21
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:09.791418006-02:00",
+          "elapsedSec": 175.026322041,
+          "step": 0,
+          "offeredRate": 4999.2,
+          "consumedRate": 45766.38002958745,
+          "producedRate": 45916.545840226114,
+          "dlqRate": 0,
+          "deliveredRate": 45916.545840226114,
+          "groupLag": 13294230,
+          "workerLag": 12879145,
+          "p99Ms": 131071.999,
+          "goroutines": 658,
+          "workerRssMb": 3357.3984375,
+          "workerCpuCores": 5.166823631029412,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.8298110707729163,
+              "rssMb": 2492.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.178820899522527,
+              "rssMb": 3357.2734375,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:14.7883572-02:00",
+          "elapsedSec": 180.023261233,
+          "step": 0,
+          "offeredRate": 5003.6,
+          "consumedRate": 50258.16611938471,
+          "producedRate": 50137.29212496689,
+          "dlqRate": 0,
+          "deliveredRate": 50137.29212496689,
+          "groupLag": 13664787,
+          "workerLag": 13284251,
+          "p99Ms": 140509.183,
+          "goroutines": 657,
+          "workerRssMb": 3322.40234375,
+          "workerCpuCores": 5.2312023411951065,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7784765534525212,
+              "rssMb": 2493.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.233203566268248,
+              "rssMb": 3322.40234375,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:19.788759608-02:00",
+          "elapsedSec": 185.023663644,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51817.82958707561,
+          "producedRate": 51925.620911792656,
+          "dlqRate": 0,
+          "deliveredRate": 51925.620911792656,
+          "groupLag": 13409141,
+          "workerLag": 13473170,
+          "p99Ms": 140509.183,
+          "goroutines": 656,
+          "workerRssMb": 3307.62890625,
+          "workerCpuCores": 5.235578629113669,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6299493002944251,
+              "rssMb": 2493.71484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.235578629113669,
+              "rssMb": 3307.25390625,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:24.788470449-02:00",
+          "elapsedSec": 190.023374482,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 46340.47998117446,
+          "producedRate": 46203.27204611027,
+          "dlqRate": 0,
+          "deliveredRate": 46203.27204611027,
+          "groupLag": 13168574,
+          "workerLag": 13378183,
+          "p99Ms": 142606.335,
+          "goroutines": 656,
+          "workerRssMb": 3305.91796875,
+          "workerCpuCores": 5.048291954839651,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5880340074179301,
+              "rssMb": 2506.71484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.048291954839651,
+              "rssMb": 3305.91796875,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:29.788981892-02:00",
+          "elapsedSec": 195.023885925,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49550.9315045877,
+          "producedRate": 49622.12422238427,
+          "dlqRate": 0,
+          "deliveredRate": 49622.12422238427,
+          "groupLag": 12929879,
+          "workerLag": 13144008,
+          "p99Ms": 146800.639,
+          "goroutines": 655,
+          "workerRssMb": 3327.5234375,
+          "workerCpuCores": 5.173470812913408,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7699212458336523,
+              "rssMb": 2521.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.171471017469686,
+              "rssMb": 3327.5234375,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:34.789151834-02:00",
+          "elapsedSec": 200.024055877,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51949.63421115331,
+          "producedRate": 51867.43700506922,
+          "dlqRate": 0,
+          "deliveredRate": 51867.43700506922,
+          "groupLag": 12670010,
+          "workerLag": 12831191,
+          "p99Ms": 153092.095,
+          "goroutines": 660,
+          "workerRssMb": 3306.02734375,
+          "workerCpuCores": 5.205823051992105,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.695976343485698,
+              "rssMb": 2527.46484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.195823391884561,
+              "rssMb": 3318.96484375,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:39.788825578-02:00",
+          "elapsedSec": 205.023729621,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 45848.591675625146,
+          "producedRate": 45859.59239343518,
+          "dlqRate": 0,
+          "deliveredRate": 45859.59239343518,
+          "groupLag": 12439597,
+          "workerLag": 12649950,
+          "p99Ms": 157286.399,
+          "goroutines": 695,
+          "workerRssMb": 3247.328125,
+          "workerCpuCores": 5.230341286045342,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6520425465586122,
+              "rssMb": 2536.96484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.240341938599913,
+              "rssMb": 3247.328125,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:44.78889403-02:00",
+          "elapsedSec": 210.023798066,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 48817.13174228358,
+          "producedRate": 48817.13174228358,
+          "dlqRate": 0,
+          "deliveredRate": 48817.13174228358,
+          "groupLag": 12196873,
+          "workerLag": 12406014,
+          "p99Ms": 163577.855,
+          "goroutines": 656,
+          "workerRssMb": 3146.61328125,
+          "workerCpuCores": 5.153929447859785,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7799893227261623,
+              "rssMb": 2546.46484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.141929612125547,
+              "rssMb": 3151.796875,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:49.788639651-02:00",
+          "elapsedSec": 215.023543673,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 47377.61050649391,
+          "producedRate": 47377.61050649391,
+          "dlqRate": 0,
+          "deliveredRate": 47377.61050649391,
+          "groupLag": 11960227,
+          "workerLag": 12117946,
+          "p99Ms": 163577.855,
+          "goroutines": 664,
+          "workerRssMb": 3309.9453125,
+          "workerCpuCores": 5.128260918735999,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6020306304756339,
+              "rssMb": 2546.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.128260918735954,
+              "rssMb": 3323.69140625,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:54.788385311-02:00",
+          "elapsedSec": 220.023289354,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 47868.834790839035,
+          "producedRate": 47913.83707982646,
+          "dlqRate": 0,
+          "deliveredRate": 47913.83707982646,
+          "groupLag": 11721485,
+          "workerLag": 11931230,
+          "p99Ms": 165675.007,
+          "goroutines": 658,
+          "workerRssMb": 3398.15625,
+          "workerCpuCores": 5.110259927238878,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6260318423584224,
+              "rssMb": 2557.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.1162602324372415,
+              "rssMb": 3412.203125,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:28:59.788804046-02:00",
+          "elapsedSec": 225.023708084,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 48018.37865286134,
+          "producedRate": 47973.38242111576,
+          "dlqRate": 0,
+          "deliveredRate": 47973.38242111576,
+          "groupLag": 11478281,
+          "workerLag": 11695728,
+          "p99Ms": 171966.46300000002,
+          "goroutines": 656,
+          "workerRssMb": 3129.7109375,
+          "workerCpuCores": 5.185565729612421,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6299472444380685,
+              "rssMb": 2569.33984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.193565059700516,
+              "rssMb": 3129.7109375,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:04.789754785-02:00",
+          "elapsedSec": 230.024658826,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49950.50199196703,
+          "producedRate": 50005.29157381571,
+          "dlqRate": 0,
+          "deliveredRate": 50005.29157381571,
+          "groupLag": 11231104,
+          "workerLag": 11386063,
+          "p99Ms": 176160.767,
+          "goroutines": 657,
+          "workerRssMb": 3430.3828125,
+          "workerCpuCores": 5.207009895399598,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7018665412001754,
+              "rssMb": 2574.33984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.207009895399598,
+              "rssMb": 3430.1328125,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:09.78879813-02:00",
+          "elapsedSec": 235.023702169,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 47041.00042046785,
+          "producedRate": 47056.60340580888,
+          "dlqRate": 0,
+          "deliveredRate": 47056.60340580888,
+          "groupLag": 10992159,
+          "workerLag": 11203193,
+          "p99Ms": 178257.919,
+          "goroutines": 655,
+          "workerRssMb": 3403.98828125,
+          "workerCpuCores": 5.253005064813256,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6961331921382419,
+              "rssMb": 2585.46484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.253005064813256,
+              "rssMb": 3403.98828125,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:14.791650715-02:00",
+          "elapsedSec": 240.026554736,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 42443.385479842385,
+          "producedRate": 42534.333592725285,
+          "dlqRate": 0,
+          "deliveredRate": 42534.333592725285,
+          "groupLag": 10776811,
+          "workerLag": 10967263,
+          "p99Ms": 182452.223,
+          "goroutines": 657,
+          "workerRssMb": 3221.02734375,
+          "workerCpuCores": 5.097092040689754,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6296407814969707,
+              "rssMb": 2596.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.097092040689754,
+              "rssMb": 3220.77734375,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:19.788617414-02:00",
+          "elapsedSec": 245.023521447,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 47829.816331149865,
+          "producedRate": 47668.31835714425,
+          "dlqRate": 0,
+          "deliveredRate": 47668.31835714425,
+          "groupLag": 10541208,
+          "workerLag": 10703159,
+          "p99Ms": 186646.527,
+          "goroutines": 656,
+          "workerRssMb": 3297.296875,
+          "workerCpuCores": 5.083083692370002,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6463921388328796,
+              "rssMb": 2600.71484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.083083692370002,
+              "rssMb": 3297.296875,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:24.791787853-02:00",
+          "elapsedSec": 250.026691888,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51745.188986257046,
+          "producedRate": 51745.188986257046,
+          "dlqRate": 0,
+          "deliveredRate": 51745.188986257046,
+          "groupLag": 10285913,
+          "workerLag": 10503614,
+          "p99Ms": 190840.831,
+          "goroutines": 656,
+          "workerRssMb": 3342.1796875,
+          "workerCpuCores": 5.198703563415139,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6036172534222906,
+              "rssMb": 2600.96484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.198703563415139,
+              "rssMb": 3342.1796875,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:29.791815436-02:00",
+          "elapsedSec": 255.026719562,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51674.513991899956,
+          "producedRate": 51705.51382032211,
+          "dlqRate": 0,
+          "deliveredRate": 51705.51382032211,
+          "groupLag": 10029094,
+          "workerLag": 10262403,
+          "p99Ms": 195035.135,
+          "goroutines": 655,
+          "workerRssMb": 3349.578125,
+          "workerCpuCores": 5.273970809626387,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7279959706878987,
+              "rssMb": 2622.71484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.271970820695927,
+              "rssMb": 3349.453125,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:34.788398976-02:00",
+          "elapsedSec": 260.023303015,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49494.62013919054,
+          "producedRate": 49498.02246403109,
+          "dlqRate": 0,
+          "deliveredRate": 49498.02246403109,
+          "groupLag": 9777767,
+          "workerLag": 9933756,
+          "p99Ms": 197132.287,
+          "goroutines": 657,
+          "workerRssMb": 3510.625,
+          "workerCpuCores": 5.175536492735509,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6184225739579584,
+              "rssMb": 2622.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.171533757628989,
+              "rssMb": 3513.6640625,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:39.791907423-02:00",
+          "elapsedSec": 265.026811441,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 48721.61276540239,
+          "producedRate": 48687.236886447885,
+          "dlqRate": 0,
+          "deliveredRate": 48687.236886447885,
+          "groupLag": 9534430,
+          "workerLag": 9753434,
+          "p99Ms": 201326.59100000001,
+          "goroutines": 657,
+          "workerRssMb": 3439.5546875,
+          "workerCpuCores": 5.258310321470452,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6795231886354789,
+              "rssMb": 2635.58984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.258310321470452,
+              "rssMb": 3486.60546875,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:44.792441441-02:00",
+          "elapsedSec": 270.02734548,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 46344.050093966376,
+          "producedRate": 46382.64597162559,
+          "dlqRate": 0,
+          "deliveredRate": 46382.64597162559,
+          "groupLag": 9298816,
+          "workerLag": 9500885,
+          "p99Ms": 201326.59100000001,
+          "goroutines": 658,
+          "workerRssMb": 3639.48828125,
+          "workerCpuCores": 5.147450212167231,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6439312231227068,
+              "rssMb": 2645.21484375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.153449571388865,
+              "rssMb": 3639.48828125,
+              "threads": 23
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:49.792991641-02:00",
+          "elapsedSec": 275.027895677,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 42595.31283733257,
+          "producedRate": 42578.114729802,
+          "dlqRate": 0,
+          "deliveredRate": 42578.114729802,
+          "groupLag": 9085654,
+          "workerLag": 9226066,
+          "p99Ms": 203423.74300000002,
+          "goroutines": 657,
+          "workerRssMb": 3609.68359375,
+          "workerCpuCores": 5.041445242390356,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5839357440610882,
+              "rssMb": 2651.83984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.041445242390356,
+              "rssMb": 3609.68359375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:54.788406299-02:00",
+          "elapsedSec": 280.023310331,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 44314.83977466027,
+          "producedRate": 44382.90219260745,
+          "dlqRate": 0,
+          "deliveredRate": 44382.90219260745,
+          "groupLag": 8861595,
+          "workerLag": 9048445,
+          "p99Ms": 207618.047,
+          "goroutines": 682,
+          "workerRssMb": 3775.0234375,
+          "workerCpuCores": 5.224791495356841,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6445911346761987,
+              "rssMb": 2652.33984375,
+              "threads": 112
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.17674743562942,
+              "rssMb": 3747.6484375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:29:59.792103048-02:00",
+          "elapsedSec": 285.027007084,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 48920.43065024648,
+          "producedRate": 48831.096699356676,
+          "dlqRate": 0,
+          "deliveredRate": 48831.096699356676,
+          "groupLag": 8623908,
+          "workerLag": 8838265,
+          "p99Ms": 211812.351,
+          "goroutines": 655,
+          "workerRssMb": 3473.2578125,
+          "workerCpuCores": 5.186165605347996,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6635094339019376,
+              "rssMb": 2662.83984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.23213162034723,
+              "rssMb": 3473.2578125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:04.789767896-02:00",
+          "elapsedSec": 290.024671939,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49091.92735374009,
+          "producedRate": 49130.34529603326,
+          "dlqRate": 0,
+          "deliveredRate": 49130.34529603326,
+          "groupLag": 8378459,
+          "workerLag": 8536739,
+          "p99Ms": 222298.111,
+          "goroutines": 656,
+          "workerRssMb": 3445.87890625,
+          "workerCpuCores": 5.250452113400071,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7123326800192171,
+              "rssMb": 2670.33984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.252453047894505,
+              "rssMb": 3445.87890625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:09.788913502-02:00",
+          "elapsedSec": 295.023817546,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51042.52207471259,
+          "producedRate": 51200.14900978258,
+          "dlqRate": 0,
+          "deliveredRate": 51200.14900978258,
+          "groupLag": 8123909,
+          "workerLag": 8351178,
+          "p99Ms": 222298.111,
+          "goroutines": 664,
+          "workerRssMb": 3613.78125,
+          "workerCpuCores": 5.258898633235982,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.7121216863567947,
+              "rssMb": 2677.83984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.256898291420375,
+              "rssMb": 3613.78125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:14.788391446-02:00",
+          "elapsedSec": 300.023295465,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51350.56183053421,
+          "producedRate": 51154.541362821845,
+          "dlqRate": 0,
+          "deliveredRate": 51154.541362821845,
+          "groupLag": 7865806,
+          "workerLag": 8090559,
+          "p99Ms": 232783.871,
+          "goroutines": 807,
+          "workerRssMb": 3422.625,
+          "workerCpuCores": 5.300553463650571,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6860716369932639,
+              "rssMb": 2687.21484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.300553463650571,
+              "rssMb": 3422.625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:19.788533933-02:00",
+          "elapsedSec": 305.023437971,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49326.39413857537,
+          "producedRate": 49295.395022087396,
+          "dlqRate": 0,
+          "deliveredRate": 49295.395022087396,
+          "groupLag": 7620701,
+          "workerLag": 7786256,
+          "p99Ms": 239075.32700000002,
+          "goroutines": 660,
+          "workerRssMb": 3169.65234375,
+          "workerCpuCores": 5.189852082987821,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6839805057348131,
+              "rssMb": 2706.83984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.18585219698933,
+              "rssMb": 3172.30859375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:24.788835599-02:00",
+          "elapsedSec": 310.023739619,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 44374.52290278309,
+          "producedRate": 44396.92155148157,
+          "dlqRate": 0,
+          "deliveredRate": 44396.92155148157,
+          "groupLag": 7397726,
+          "workerLag": 7598427,
+          "p99Ms": 239075.32700000002,
+          "goroutines": 659,
+          "workerRssMb": 3229.1953125,
+          "workerCpuCores": 5.015697404981822,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5599662174620893,
+              "rssMb": 2707.08984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.0176972843299446,
+              "rssMb": 3228.59765625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:29.792882816-02:00",
+          "elapsedSec": 315.027786857,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 50101.84518166213,
+          "producedRate": 50163.5951982594,
+          "dlqRate": 0,
+          "deliveredRate": 50163.5951982594,
+          "groupLag": 7148812,
+          "workerLag": 7367908,
+          "p99Ms": 236978.17500000002,
+          "goroutines": 658,
+          "workerRssMb": 3361.21484375,
+          "workerCpuCores": 5.265737661287822,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6374839901141632,
+              "rssMb": 2707.21484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.269734426116121,
+              "rssMb": 3360.71484375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:34.791785701-02:00",
+          "elapsedSec": 320.026689733,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51272.650491079476,
+          "producedRate": 51219.43881511812,
+          "dlqRate": 0,
+          "deliveredRate": 51219.43881511812,
+          "groupLag": 6890949,
+          "workerLag": 7050580,
+          "p99Ms": 239075.32700000002,
+          "goroutines": 657,
+          "workerRssMb": 3333.62109375,
+          "workerCpuCores": 5.217144770947967,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6081334395583411,
+              "rssMb": 2723.08984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.217144770947967,
+              "rssMb": 3333.62109375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:39.791843145-02:00",
+          "elapsedSec": 325.026747164,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 50172.42370950679,
+          "producedRate": 50172.42370950679,
+          "dlqRate": 0,
+          "deliveredRate": 50172.42370950679,
+          "groupLag": 6640813,
+          "workerLag": 6866553,
+          "p99Ms": 243269.631,
+          "goroutines": 661,
+          "workerRssMb": 3467.109375,
+          "workerCpuCores": 5.2079401805574905,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6399926489164337,
+              "rssMb": 2726.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.2079401805574905,
+              "rssMb": 3466.859375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:44.788636979-02:00",
+          "elapsedSec": 330.023541012,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 53094.4457727006,
+          "producedRate": 53094.24564437223,
+          "dlqRate": 0,
+          "deliveredRate": 53094.24564437223,
+          "groupLag": 6378124,
+          "workerLag": 6609869,
+          "p99Ms": 253755.391,
+          "goroutines": 658,
+          "workerRssMb": 3470.19921875,
+          "workerCpuCores": 5.3214122513064535,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6604234836145698,
+              "rssMb": 2741.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.3214122513064535,
+              "rssMb": 3470.07421875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:49.792362889-02:00",
+          "elapsedSec": 335.027266908,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51216.43457825413,
+          "producedRate": 51408.49146145955,
+          "dlqRate": 0,
+          "deliveredRate": 51408.49146145955,
+          "groupLag": 6120794,
+          "workerLag": 6294149,
+          "p99Ms": 253755.391,
+          "goroutines": 666,
+          "workerRssMb": 3191.8359375,
+          "workerCpuCores": 5.3080445556044795,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6974802522236341,
+              "rssMb": 2756.33984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.288059448090927,
+              "rssMb": 3302.90234375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:54.79100669-02:00",
+          "elapsedSec": 340.025910726,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 50068.78047576864,
+          "producedRate": 49876.728384250724,
+          "dlqRate": 0,
+          "deliveredRate": 49876.728384250724,
+          "groupLag": 5868483,
+          "workerLag": 6089708,
+          "p99Ms": 257949.695,
+          "goroutines": 662,
+          "workerRssMb": 3310.296875,
+          "workerCpuCores": 5.225417323383316,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6001627859934869,
+              "rssMb": 2756.33984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.2454227495830805,
+              "rssMb": 3310.296875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:30:59.78880634-02:00",
+          "elapsedSec": 345.023710361,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51756.776760019115,
+          "producedRate": 51756.776760019115,
+          "dlqRate": 0,
+          "deliveredRate": 51756.776760019115,
+          "groupLag": 5611348,
+          "workerLag": 5842844,
+          "p99Ms": 257949.695,
+          "goroutines": 656,
+          "workerRssMb": 3218.1640625,
+          "workerCpuCores": 5.172276179094945,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6062668016502085,
+              "rssMb": 2756.58984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.172276179094945,
+              "rssMb": 3218.1640625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:04.791816274-02:00",
+          "elapsedSec": 350.026720318,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 47093.45014801457,
+          "producedRate": 47240.36170851858,
+          "dlqRate": 0,
+          "deliveredRate": 47240.36170851858,
+          "groupLag": 5374649,
+          "workerLag": 5521283,
+          "p99Ms": 260046.847,
+          "goroutines": 687,
+          "workerRssMb": 3358.3828125,
+          "workerCpuCores": 5.0929340974725585,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6576041279703501,
+              "rssMb": 2773.58984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.090935300731009,
+              "rssMb": 3357.7578125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:09.788620787-02:00",
+          "elapsedSec": 355.023524828,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49864.26815404871,
+          "producedRate": 49834.24896884749,
+          "dlqRate": 0,
+          "deliveredRate": 49834.24896884749,
+          "groupLag": 5125970,
+          "workerLag": 5344788,
+          "p99Ms": 264241.151,
+          "goroutines": 655,
+          "workerRssMb": 3349.05859375,
+          "workerCpuCores": 5.069239740979966,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6484144003464344,
+              "rssMb": 2782.96484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.069239740979966,
+              "rssMb": 3349.05859375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:14.79278631-02:00",
+          "elapsedSec": 360.027690346,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 53491.436092022566,
+          "producedRate": 53529.404460438156,
+          "dlqRate": 0,
+          "deliveredRate": 53529.404460438156,
+          "groupLag": 4858807,
+          "workerLag": 5087189,
+          "p99Ms": 266338.303,
+          "goroutines": 658,
+          "workerRssMb": 3472.2890625,
+          "workerCpuCores": 5.267611533867759,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6434639278852142,
+              "rssMb": 2792.46484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.267611533867759,
+              "rssMb": 3471.9140625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:19.789839406-02:00",
+          "elapsedSec": 365.024743439,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 52496.940720417515,
+          "producedRate": 52341.84931242635,
+          "dlqRate": 0,
+          "deliveredRate": 52341.84931242635,
+          "groupLag": 4594622,
+          "workerLag": 4773711,
+          "p99Ms": 276824.063,
+          "goroutines": 657,
+          "workerRssMb": 3620.05078125,
+          "workerCpuCores": 5.197063052297657,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6203656319646724,
+              "rssMb": 2802.46484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.197063052297657,
+              "rssMb": 3620.05078125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:24.790842443-02:00",
+          "elapsedSec": 370.025746475,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49063.557497108464,
+          "producedRate": 49181.533830206616,
+          "dlqRate": 0,
+          "deliveredRate": 49181.533830206616,
+          "groupLag": 4348685,
+          "workerLag": 4570306,
+          "p99Ms": 276824.063,
+          "goroutines": 656,
+          "workerRssMb": 3566.8359375,
+          "workerCpuCores": 5.132970289202569,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.557888083633633,
+              "rssMb": 2802.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.134969888068637,
+              "rssMb": 3566.5859375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:29.788396166-02:00",
+          "elapsedSec": 375.023300264,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51174.836889784594,
+          "producedRate": 51244.07076191651,
+          "dlqRate": 0,
+          "deliveredRate": 51244.07076191651,
+          "groupLag": 4095199,
+          "workerLag": 4319689,
+          "p99Ms": 281018.367,
+          "goroutines": 661,
+          "workerRssMb": 3407.3671875,
+          "workerCpuCores": 5.212550199527263,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.6082976048584483,
+              "rssMb": 2802.83984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.208548241600567,
+              "rssMb": 3407.3671875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:34.791422141-02:00",
+          "elapsedSec": 380.026326177,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 47905.4084803418,
+          "producedRate": 47714.52400030773,
+          "dlqRate": 0,
+          "deliveredRate": 47714.52400030773,
+          "groupLag": 3855415,
+          "workerLag": 4010240,
+          "p99Ms": 285212.67100000003,
+          "goroutines": 657,
+          "workerRssMb": 3533.78125,
+          "workerCpuCores": 5.036951724459281,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5716540449187982,
+              "rssMb": 2818.21484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.040949305192975,
+              "rssMb": 3533.40625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:39.792881304-02:00",
+          "elapsedSec": 385.027785346,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 48102.16216322769,
+          "producedRate": 48105.96105458279,
+          "dlqRate": 0,
+          "deliveredRate": 48105.96105458279,
+          "groupLag": 3616108,
+          "workerLag": 3833223,
+          "p99Ms": 285212.67100000003,
+          "goroutines": 661,
+          "workerRssMb": 3508.71875,
+          "workerCpuCores": 5.104510331352902,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5878284517891658,
+              "rssMb": 2825.33984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.104510331352902,
+              "rssMb": 3508.46875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:44.792520652-02:00",
+          "elapsedSec": 390.02742469,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 46457.15101005093,
+          "producedRate": 46570.95921917363,
+          "dlqRate": 0,
+          "deliveredRate": 46570.95921917363,
+          "groupLag": 3381525,
+          "workerLag": 3588740,
+          "p99Ms": 289406.97500000003,
+          "goroutines": 692,
+          "workerRssMb": 3628.3984375,
+          "workerCpuCores": 5.070365731564638,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5280380880209319,
+              "rssMb": 2836.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.068365587291834,
+              "rssMb": 3628.2734375,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:49.788430231-02:00",
+          "elapsedSec": 395.023334263,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 43365.876990824385,
+          "producedRate": 43283.009197892854,
+          "dlqRate": 0,
+          "deliveredRate": 43283.009197892854,
+          "groupLag": 3165762,
+          "workerLag": 3309450,
+          "p99Ms": 289406.97500000003,
+          "goroutines": 656,
+          "workerRssMb": 3834.515625,
+          "workerCpuCores": 5.146210039298491,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5204257527100806,
+              "rssMb": 2845.46484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.146210039298491,
+              "rssMb": 3834.515625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:54.792773501-02:00",
+          "elapsedSec": 400.027677535,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 48258.08040611967,
+          "producedRate": 48303.04135059742,
+          "dlqRate": 0,
+          "deliveredRate": 48303.04135059742,
+          "groupLag": 2921116,
+          "workerLag": 3127135,
+          "p99Ms": 297795.583,
+          "goroutines": 661,
+          "workerRssMb": 4081.5546875,
+          "workerCpuCores": 5.199483445827052,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5695052967181871,
+              "rssMb": 2856.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.199483445827006,
+              "rssMb": 4081.5546875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:31:59.792790711-02:00",
+          "elapsedSec": 405.027694746,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 46168.04108036899,
+          "producedRate": 46126.64122287558,
+          "dlqRate": 0,
+          "deliveredRate": 46126.64122287558,
+          "groupLag": 2689731,
+          "workerLag": 2898764,
+          "p99Ms": 301989.887,
+          "goroutines": 655,
+          "workerRssMb": 3864.7578125,
+          "workerCpuCores": 5.171982197002906,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.5619980654902594,
+              "rssMb": 2862.33984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.173982190118574,
+              "rssMb": 3864.7578125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:04.788575283-02:00",
+          "elapsedSec": 410.023479329,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 43251.46459182305,
+          "producedRate": 43277.08619296966,
+          "dlqRate": 0,
+          "deliveredRate": 43277.08619296966,
+          "groupLag": 2475033,
+          "workerLag": 2608922,
+          "p99Ms": 306184.191,
+          "goroutines": 656,
+          "workerRssMb": 3993.98828125,
+          "workerCpuCores": 5.100299978246684,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.524442148469636,
+              "rssMb": 2869.21484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.098298290657062,
+              "rssMb": 3993.73828125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:09.788411096-02:00",
+          "elapsedSec": 415.023315129,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 44979.07711289239,
+          "producedRate": 44918.87513585947,
+          "dlqRate": 0,
+          "deliveredRate": 44918.87513585947,
+          "groupLag": 2247247,
+          "workerLag": 2448999,
+          "p99Ms": 306184.191,
+          "goroutines": 666,
+          "workerRssMb": 4173.51953125,
+          "workerCpuCores": 5.106167686546776,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.522017143042969,
+              "rssMb": 2882.83984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.106167686546867,
+              "rssMb": 4173.51953125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:14.792708149-02:00",
+          "elapsedSec": 420.02761218,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 45697.926735644534,
+          "producedRate": 45697.926735644534,
+          "dlqRate": 0,
+          "deliveredRate": 45697.926735644534,
+          "groupLag": 2019746,
+          "workerLag": 2220814,
+          "p99Ms": 310378.495,
+          "goroutines": 671,
+          "workerRssMb": 4025.11328125,
+          "workerCpuCores": 5.063648249045587,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.4795878373208174,
+              "rssMb": 2888.96484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.063648249045496,
+              "rssMb": 4024.98828125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:19.788384834-02:00",
+          "elapsedSec": 425.023288879,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 45237.515078835575,
+          "producedRate": 45250.32615606417,
+          "dlqRate": 0,
+          "deliveredRate": 45250.32615606417,
+          "groupLag": 1794297,
+          "workerLag": 1949543,
+          "p99Ms": 310378.495,
+          "goroutines": 677,
+          "workerRssMb": 4007.94140625,
+          "workerCpuCores": 5.232524355555754,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.4704067419876016,
+              "rssMb": 2901.21484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.224517432287978,
+              "rssMb": 4015.421875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:24.788664721-02:00",
+          "elapsedSec": 430.023568753,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 50328.5828676397,
+          "producedRate": 50442.776475675324,
+          "dlqRate": 0,
+          "deliveredRate": 50442.776475675324,
+          "groupLag": 1549332,
+          "workerLag": 1757745,
+          "p99Ms": 318767.103,
+          "goroutines": 684,
+          "workerRssMb": 4049.19921875,
+          "workerCpuCores": 5.191709395104958,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.47997313359984817,
+              "rssMb": 2901.21484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.201708835388233,
+              "rssMb": 4049.19921875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:29.788348828-02:00",
+          "elapsedSec": 435.023252868,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 49004.29594440488,
+          "producedRate": 48973.894023702735,
+          "dlqRate": 0,
+          "deliveredRate": 48973.894023702735,
+          "groupLag": 1298015,
+          "workerLag": 1531060,
+          "p99Ms": 322961.407,
+          "goroutines": 704,
+          "workerRssMb": 4111.36328125,
+          "workerCpuCores": 5.128323992124825,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.4760300741519938,
+              "rssMb": 2922.08984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.126323865762889,
+              "rssMb": 4111.36328125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:34.791164494-02:00",
+          "elapsedSec": 440.026068533,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 51612.735165607985,
+          "producedRate": 51544.97332453683,
+          "dlqRate": 0,
+          "deliveredRate": 51544.97332453683,
+          "groupLag": 1041708,
+          "workerLag": 1200211,
+          "p99Ms": 327155.711,
+          "goroutines": 707,
+          "workerRssMb": 4159.8046875,
+          "workerCpuCores": 5.191076733385949,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.4557433558767696,
+              "rssMb": 2922.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.17108798970707,
+              "rssMb": 4163.078125,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:39.788438554-02:00",
+          "elapsedSec": 445.023342587,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 50126.728551037355,
+          "producedRate": 50093.9106590771,
+          "dlqRate": 0,
+          "deliveredRate": 50093.9106590771,
+          "groupLag": 794141,
+          "workerLag": 1034838,
+          "p99Ms": 327155.711,
+          "goroutines": 706,
+          "workerRssMb": 4208.50390625,
+          "workerCpuCores": 5.170819074714626,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.462252014806151,
+              "rssMb": 2937.08984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.190829984446568,
+              "rssMb": 4208.50390625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:44.788409247-02:00",
+          "elapsedSec": 450.023313267,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 74917.43931586415,
+          "producedRate": 74807.03866847475,
+          "dlqRate": 0,
+          "deliveredRate": 74807.03866847475,
+          "groupLag": 431027,
+          "workerLag": 706117,
+          "p99Ms": 327155.711,
+          "goroutines": 706,
+          "workerRssMb": 4203.07421875,
+          "workerCpuCores": 5.176030352242008,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.4900028733768472,
+              "rssMb": 2937.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.178030363970029,
+              "rssMb": 4202.94921875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:49.79228302-02:00",
+          "elapsedSec": 455.027187054,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 52722.75265723044,
+          "producedRate": 53036.90926207608,
+          "dlqRate": 0,
+          "deliveredRate": 53036.90926207608,
+          "groupLag": 138467,
+          "workerLag": 358711,
+          "p99Ms": 330582.226,
+          "goroutines": 705,
+          "workerRssMb": 4166.88671875,
+          "workerCpuCores": 5.032101342247602,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.317753817878227,
+              "rssMb": 2937.71484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 5.03010289056279,
+              "rssMb": 4168.13671875,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:54.788788822-02:00",
+          "elapsedSec": 460.023692854,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 23799.431995055427,
+          "producedRate": 23904.50542457091,
+          "dlqRate": 0,
+          "deliveredRate": 23904.50542457091,
+          "groupLag": 18058,
+          "workerLag": 118498,
+          "p99Ms": 322961.407,
+          "goroutines": 705,
+          "workerRssMb": 4188.71484375,
+          "workerCpuCores": 4.965470069103081,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.24817343352228455,
+              "rssMb": 2950.83984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 4.949458879843594,
+              "rssMb": 4189.765625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:32:59.78880818-02:00",
+          "elapsedSec": 465.023712212,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 1908.5926106928484,
+          "producedRate": 1923.592552619073,
+          "dlqRate": 0,
+          "deliveredRate": 1923.592552619073,
+          "groupLag": 0,
+          "workerLag": 68780,
+          "p99Ms": 313377.759,
+          "goroutines": 704,
+          "workerRssMb": 4171.50390625,
+          "workerCpuCores": 4.185983793545112,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.08999965155734675,
+              "rssMb": 2952.08984375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 4.203983723856611,
+              "rssMb": 4171.37890625,
+              "threads": 28
+            }
+          }
+        },
+        {
+          "at": "2026-10-18T13:33:04.788821378-02:00",
+          "elapsedSec": 470.023725416,
+          "step": 0,
+          "offeredRate": 0,
+          "consumedRate": 0,
+          "producedRate": 0,
+          "dlqRate": 0,
+          "deliveredRate": 0,
+          "groupLag": 0,
+          "workerLag": 0,
+          "p99Ms": 287801.096,
+          "goroutines": 706,
+          "workerRssMb": 4171.609375,
+          "workerCpuCores": 4.19998890866929,
+          "producerClients": 1,
+          "processes": {
+            "kafka": {
+              "pid": 2146499,
+              "cpuCores": 0.06999981514449272,
+              "rssMb": 2952.21484375,
+              "threads": 113
+            },
+            "worker": {
+              "pid": 2148378,
+              "cpuCores": 4.197988913950923,
+              "rssMb": 4171.609375,
+              "threads": 28
+            }
+          }
+        }
+      ],
+      "cleanup": {
+        "archivedRoutes": 25,
+        "deletedTopics": 51
+      }
+    }
+  ],
+  "cleanup": {
+    "archivedRoutes": 0,
+    "deletedTopics": 0
+  }
+}

@@ -61,6 +61,34 @@ devLogin:
       "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
       "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
       "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+passwordLogin:
+  servers: [{ url: / }]
+  post:
+    tags: [auth]
+    operationId: passwordLogin
+    summary: Email + password login (password mode); sets the same session cookies as OIDC/dev login.
+    description: |
+      Only mounted when `ROUTER_AUTH_MODES` contains `password`; there is no self-registration.
+      401 `invalid_credentials` never says whether the email exists. 429 `login_locked` (account locked
+      after repeated failures, or the per-IP limit) carries `Retry-After`. 403 `disabled` for a disabled
+      account (same reason the OIDC callback reports as `/login?error=disabled`).
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/PasswordLogin" }
+    responses:
+      "204":
+        description: Signed in; `er_session` and `er_csrf` cookies set.
+        headers:
+          Set-Cookie: { schema: { type: string }, description: "`er_session` (HttpOnly) and `er_csrf`." }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "429": { $ref: "../components/problem.yaml#/responses/RateLimited" }
 logout:
   servers: [{ url: / }]
   post:
@@ -85,6 +113,37 @@ me:
             schema: { $ref: "#/components/schemas/CurrentUser" }
       "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
       "503": { $ref: "../components/problem.yaml#/responses/Unavailable" }
+passwordChange:
+  post:
+    tags: [auth]
+    operationId: changeOwnPassword
+    summary: Change the caller's own password (password users); revokes all their sessions and starts a new one.
+    description: |
+      Requires the current password. On success every session of the user is revoked and new `er_session`
+      / `er_csrf` cookies are set on this response: re-read `GET /auth/me` for the new `csrf_token`.
+      While `must_change_password` is true this (with `GET /auth/me`, `POST /auth/logout`, `GET /auth/config`)
+      is the only call allowed; every other call answers 403 `password_change_required`.
+      422 codes: `invalid_current_password` (`/current_password`), `weak_password` (`/new_password`, shorter than
+      `password_policy.min_length` or longer than 256), `password_reused` (`/new_password`, equals the current one).
+    security: [{ sessionCookie: [] }]
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/PasswordChange" }
+    responses:
+      "204":
+        description: Changed; new session cookies set.
+        headers:
+          Set-Cookie: { schema: { type: string }, description: "New `er_session` (HttpOnly) and `er_csrf`." }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "429": { $ref: "../components/problem.yaml#/responses/RateLimited" }
 tokens:
   get:
     tags: [auth]
@@ -197,10 +256,32 @@ components:
       properties:
         modes:
           type: array
-          items: { type: string, enum: [oidc, dev, api_token] }
+          items: { type: string, enum: [oidc, dev, api_token, password] }
         oidc_login_url: { type: string }
         dev_login_url: { type: string }
+        password_login_url: { type: string, example: /auth/password/login, description: Present only when password mode is on. }
+        password_policy: { $ref: "#/components/schemas/PasswordPolicy" }
         workspace: { type: string }
+    PasswordPolicy:
+      type: object
+      description: Present in `/auth/config` only when password mode is on.
+      required: [min_length]
+      properties:
+        min_length: { type: integer, minimum: 1, example: 12 }
+    PasswordLogin:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 1, maxLength: 256 }
+    PasswordChange:
+      type: object
+      additionalProperties: false
+      required: [current_password, new_password]
+      properties:
+        current_password: { type: string, minLength: 1, maxLength: 256 }
+        new_password: { type: string, minLength: 1, maxLength: 256 }
     TeamRole:
       type: object
       required: [id, name, role]
@@ -221,5 +302,8 @@ components:
           items: { $ref: "#/components/schemas/TeamRole" }
         workspace: { type: string }
         csrf_token: { type: string }
+        must_change_password:
+          type: boolean
+          description: Present only when password mode is on (missing = false). While true, only the password change, me, logout and config calls are allowed.
       additionalProperties: true
       description: Features may add members (access-control adds `access`).

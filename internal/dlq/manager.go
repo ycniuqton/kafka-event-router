@@ -3,6 +3,7 @@ package dlq
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/eventrouter/router/internal/audit"
@@ -21,6 +22,8 @@ type ManagerDeps struct {
 	Payloads  PayloadDecoder
 	Studio    StudioLinker
 	Summaries SummaryCache
+	Groups    GroupCache
+	Gate      ReplayGate
 	Audit     AuditTrail
 	Metrics   *Metrics
 	Log       *slog.Logger
@@ -29,10 +32,11 @@ type ManagerDeps struct {
 
 // Manager is the façade the HTTP handlers use (design §2.2).
 type Manager struct {
-	d        ManagerDeps
-	gate     StateGate
-	selector Selector
-	actions  map[ActionKind]ActionHandler
+	d          ManagerDeps
+	gate       StateGate
+	selector   Selector
+	actions    map[ActionKind]ActionHandler
+	groupsOnce sync.Once
 }
 
 // NewManager builds the façade.

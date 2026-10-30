@@ -34,7 +34,7 @@ in `pages/<screen>/components/`. Promote something to `components/ui` only if tw
 | `/routes/:id?tab=overview\|tail\|dead\|history` | RouteDetailPage | `RouteDetailTab` |
 | `/routes/new?template=filter\|partner\|merge\|blank` | BuilderPage | fullscreen (no left nav) |
 | `/routes/:id/edit?step=source\|filter\|transform\|destination\|review&sample=<id>` | BuilderPage | `sample` preselects a studio event |
-| `/connections?test=<id>` | ConnectionsPage | `test`: open the test drawer for that id and start the test if none ran (`useConnectionTest`) |
+| `/connections?test=<id>&tab=lookups` | ConnectionsPage | `tab=lookups`: Lookup sources tab (default Kafka clusters); `test`: open the test drawer for that id and start the test if none ran (`useConnectionTest`) |
 | `/library`, `/dead-letters`, `/audit`, `/settings` | … | |
 
 Pages are lazy-loaded; route `handle` (`RouteHandle`) sets the active nav entry and `fullscreen`.
@@ -56,6 +56,7 @@ never change. **Screens import only `services` (or the store), never `mocks/` or
 | --- | --- |
 | `routes` | `list, get, pause, resume, duplicate, archive, openDraft(routeId \| null, templateId?), saveDraft, deploy(draft, note) → {route, version, activity}, listVersions, rollback(routeId, version)` |
 | `connections` | `list, create(ConnectionDraft), remove, test(id, onUpdate) → ConnectionTestRun, listTopics, createTopic` |
+| `lookupSources` | `list, get, create(LookupSourceDraft), update(id, draft)` (merge patch + If-Match), `remove` (→ `LookupSourceInUseError`), `test(id)`, `testDraft(draft)` → `LookupTestResult` (`/lookup-sources`, Connections → Lookup sources tab) |
 | `deadLetters` | `page(filter, cursor?)` (server scan, newest first), `summary(routeId?)`, `detail`, `retry(ids)`, `retryMatching(routeId, filter)`, `discard(ids)`, `exportJson(routeId, selection)`, `openInStudio` |
 | `samples` | `list(conn, topic)` (24 order events), `peek(conn, topic, n)`, `fields()` → `{path, numeric}[]` |
 | `activity` / `audit` / `library` | `list()` |

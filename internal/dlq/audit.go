@@ -94,15 +94,21 @@ const (
 
 // CatalogActions lists the feature-owned audit actions with their catalog metadata.
 var CatalogActions = map[audit.Action]audit.ActionMeta{
-	ActionDLQRestored:     {Category: audit.CategoryChange},
-	ActionDLQJobCreated:   {Category: audit.CategoryChange},
-	ActionDLQJobCancelled: {Category: audit.CategoryChange},
-	ActionDLQJobFinished:  {Category: audit.CategoryChange},
+	ActionDLQRestored:       {Category: audit.CategoryChange},
+	ActionDLQJobCreated:     {Category: audit.CategoryChange},
+	ActionDLQJobCancelled:   {Category: audit.CategoryChange},
+	ActionDLQJobFinished:    {Category: audit.CategoryChange},
+	ActionDLQEditedReplayed: {Category: audit.CategoryChange},
+	ActionDLQReplayRequest:  {Category: audit.CategoryChange},
+	ActionDLQReplayApproved: {Category: audit.CategoryChange},
+	ActionDLQReplayRejected: {Category: audit.CategoryChange},
+	ActionDLQReplayPreview:  {Category: audit.CategoryAccess},
 }
 
 // AuditActions lists every dead-letter audit action (platform catalog and feature-owned), for exports and presets.
 var AuditActions = []audit.Action{audit.ActionDLQViewed, audit.ActionDLQRetried, audit.ActionDLQDiscarded, audit.ActionDLQExported,
-	ActionDLQRestored, ActionDLQJobCreated, ActionDLQJobCancelled, ActionDLQJobFinished}
+	ActionDLQRestored, ActionDLQJobCreated, ActionDLQJobCancelled, ActionDLQJobFinished,
+	ActionDLQEditedReplayed, ActionDLQReplayRequest, ActionDLQReplayApproved, ActionDLQReplayRejected, ActionDLQReplayPreview}
 
 // ActionAudit maps action kinds to catalogued audit actions.
 var ActionAudit = map[ActionKind]audit.Action{
@@ -129,6 +135,8 @@ type MatchAudit struct {
 	Step       string   `json:"step,omitempty"`
 	VersionNo  int      `json:"versionNo,omitempty"`
 	Text       string   `json:"q,omitempty"`
+	Classes    []string `json:"errorClasses,omitempty"`
+	Cause      string   `json:"fingerprint,omitempty"`
 }
 
 // ExportAuditDetail is the diff stored for export.

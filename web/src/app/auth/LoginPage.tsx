@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { Fragment, useState, type FormEvent, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ApiError, AuthMode, FieldErrorMapper, type AuthConfig } from '../../api/http/core';
+import { ApiError, FieldErrorMapper, type AuthConfig } from '../../api/http/core';
 import { Button, ButtonSize, ButtonVariant, Field, TextInput } from '../../components/ui';
 import { useServiceQuery } from '../../store';
 import { AuthPaths, LoginErrorText, LoginQuery } from './AuthPaths';
+import { LoginMethod, LoginMethods, LoginProblem, type LoginFailure } from './LoginProblem';
 import { SessionServices } from './SessionServices';
 import styles from './Auth.module.css';
 
@@ -17,15 +18,21 @@ const LoginText = {
   DevHint: 'Leave empty to use the seeded admin.',
   DevPlaceholder: 'you@example.com',
   DevSubmit: 'Dev login',
+  Email: 'Email',
+  Password: 'Password',
+  PasswordSubmit: 'Sign in',
+  Signing: 'Signing in…',
   Loading: 'Loading sign-in options…',
   NoModes: 'No sign-in method is enabled on this server.',
 } as const;
 
-/** Form field names of the dev login form (problem paths map onto them). */
-const DevLoginField = { Email: 'email' } as const;
+/** Form field names of the login forms (problem paths `/email`, `/password` map onto them). */
+const LoginField = { Email: 'email', Password: 'password' } as const;
+
+type MethodProps = { config: AuthConfig; returnTo: string; primary: boolean };
 
 /** Dev login: optional email, posts `/auth/dev/login` then reloads into `return_to`. */
-function DevLoginForm({ returnTo }: { returnTo: string }) {
+function DevLoginForm({ returnTo }: MethodProps) {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -42,7 +49,7 @@ function DevLoginForm({ returnTo }: { returnTo: string }) {
   };
   return (
     <form className={styles.form} onSubmit={(e) => void submit(e)}>
-      <Field label={LoginText.DevLabel} hint={LoginText.DevHint} error={errors[DevLoginField.Email]}>
+      <Field label={LoginText.DevLabel} hint={LoginText.DevHint} error={errors[LoginField.Email]}>
         <TextInput type="email" block value={email} placeholder={LoginText.DevPlaceholder} onChange={(e) => setEmail(e.target.value)} />
       </Field>
       <Button type="submit" block disabled={busy}>
@@ -52,25 +59,75 @@ function DevLoginForm({ returnTo }: { returnTo: string }) {
   );
 }
 
-/** The sign-in options offered by `/auth/config`. */
+/** Email + password: posts to `password_login_url`, then reloads into `return_to`; shows lockout / disabled / field problems. */
+function PasswordLoginForm({ config, returnTo, primary }: MethodProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<LoginFailure>({ message: null, fields: {} });
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    try {
+      await SessionServices.current().passwordLogin({ email: email.trim(), password }, config.password_login_url);
+      window.location.assign(returnTo);
+    } catch (error) {
+      setFailure(LoginProblem.describe(error));
+      setBusy(false);
+    }
+  };
+  return (
+    <form className={styles.form} onSubmit={(e) => void submit(e)}>
+      {failure.message && <div className={styles.error} role="alert">{failure.message}</div>}
+      <Field label={LoginText.Email} error={failure.fields[LoginField.Email]}>
+        <TextInput type="email" name={LoginField.Email} autoComplete="username" required block autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
+      </Field>
+      <Field label={LoginText.Password} error={failure.fields[LoginField.Password]}>
+        <TextInput type="password" name={LoginField.Password} autoComplete="current-password" required block value={password} onChange={(e) => setPassword(e.target.value)} />
+      </Field>
+      <Button type="submit" variant={primary ? ButtonVariant.Primary : ButtonVariant.Secondary} size={ButtonSize.Lg} block disabled={busy}>
+        {busy ? LoginText.Signing : LoginText.PasswordSubmit}
+      </Button>
+    </form>
+  );
+}
+
+/** "Sign in with SSO": full-page redirect to the IdP. */
+function SsoButton({ returnTo, primary }: MethodProps) {
+  return (
+    <Button variant={primary ? ButtonVariant.Primary : ButtonVariant.Secondary} size={ButtonSize.Lg} block onClick={() => window.location.assign(SessionServices.current().oidcLoginUrl(returnTo))}>
+      {LoginText.Sso}
+    </Button>
+  );
+}
+
+/** Renderer per sign-in method. */
+const MethodViews: Readonly<Record<LoginMethod, (props: MethodProps) => ReactNode>> = {
+  [LoginMethod.Password]: PasswordLoginForm,
+  [LoginMethod.Oidc]: SsoButton,
+  [LoginMethod.Dev]: DevLoginForm,
+};
+
+/** The sign-in options offered by `/auth/config`, separated by "or"; the first one is the primary action. */
 function LoginOptions({ config, returnTo }: { config: AuthConfig; returnTo: string }) {
-  const sso = config.modes.includes(AuthMode.Oidc);
-  const dev = config.modes.includes(AuthMode.Dev);
+  const methods = LoginMethods.of(config);
+  if (methods.length === 0) return <p className={styles.muted}>{LoginText.NoModes}</p>;
   return (
     <>
-      {sso && (
-        <Button variant={ButtonVariant.Primary} size={ButtonSize.Lg} block onClick={() => window.location.assign(SessionServices.current().oidcLoginUrl(returnTo))}>
-          {LoginText.Sso}
-        </Button>
-      )}
-      {sso && dev && <div className={styles.divider}>{LoginText.Or}</div>}
-      {dev && <DevLoginForm returnTo={returnTo} />}
-      {!sso && !dev && <p className={styles.muted}>{LoginText.NoModes}</p>}
+      {methods.map((method, index) => {
+        const View = MethodViews[method];
+        return (
+          <Fragment key={method}>
+            {index > 0 && <div className={styles.divider}>{LoginText.Or}</div>}
+            <View config={config} returnTo={returnTo} primary={index === 0} />
+          </Fragment>
+        );
+      })}
     </>
   );
 }
 
-/** `/login`: SSO button and, on local servers, the dev login form. */
+/** `/login`: password form, SSO button and, on local servers, the dev login form (no sign-up: accounts come from admins). */
 export default function LoginPage() {
   const [params] = useSearchParams();
   const returnTo = AuthPaths.safeReturnTo(params.get(LoginQuery.ReturnTo));

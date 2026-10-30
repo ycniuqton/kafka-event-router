@@ -1,7 +1,9 @@
 package httpapi
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -10,6 +12,7 @@ import (
 	"github.com/eventrouter/router/internal/dlq"
 	"github.com/eventrouter/router/internal/dlq/record"
 	"github.com/eventrouter/router/internal/platform/api"
+	"github.com/eventrouter/router/internal/platform/problem"
 )
 
 // MatchBody is the filter of a match selection.
@@ -21,6 +24,8 @@ type MatchBody struct {
 	Version         int        `json:"version"`
 	Text            string     `json:"q"`
 	IncludeResolved bool       `json:"includeResolved"`
+	ErrorClass      []string   `json:"errorClass"`
+	Fingerprint     string     `json:"fingerprint"`
 }
 
 // SelectionBody is the body of retry and discard (exactly one of ids / match).
@@ -60,7 +65,23 @@ func (RequestValidator) Match(m MatchBody) (dlq.Query, error) {
 	}
 	q.VersionNo = m.Version
 	q.Since, q.Until = (TimeOf{}).Value(m.Since), (TimeOf{}).Value(m.Until)
+	q, err := CauseFilters{}.Apply(q, strings.Join(m.ErrorClass, string(listSep)), m.Fingerprint)
+	if err != nil {
+		return dlq.Query{}, (MatchPaths{}).Of(err)
+	}
 	return q, nil
+}
+
+// MatchPaths re-points query filter problems at the body match.
+type MatchPaths struct{}
+
+// Of returns err with /query/... replaced by /match/... in its pointer.
+func (MatchPaths) Of(err error) error {
+	var pe *problem.Error
+	if errors.As(err, &pe) {
+		return pe.At(strings.Replace(pe.Path, string(dlq.PathQuery), "/match", 1))
+	}
+	return err
 }
 
 // PathMatchErrType points at body match error types.

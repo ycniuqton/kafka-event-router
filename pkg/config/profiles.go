@@ -3,7 +3,7 @@ package config
 // DefaultValidationProfile is the doc-only profile used by the API (draft, deploy) and routerctl (offline).
 // Draft lists failing test cases as warnings; deploy blocks on them (rule owned by routes).
 func DefaultValidationProfile() ValidationProfile {
-	docOnly := []ValidatorName{ValidatorSchema, ValidatorDeliveryMode, ValidatorCompile}
+	docOnly := []ValidatorName{ValidatorSchema, ValidatorDeliveryMode, ValidatorLimits, ValidatorRetryPolicy, ValidatorCompile}
 	return ValidationProfile{
 		Stages: map[ValidationStage][]ValidatorName{
 			StageDraft:   docOnly,

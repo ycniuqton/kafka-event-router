@@ -1,0 +1,2 @@
+.bars{display:flex;align-items:flex-end;gap:1px;height:18px;width:72px}
+.bar{flex:1;min-height:1px;height:var(--h);background:var(--tone, var(--acc));opacity:.75;border-radius:1px}

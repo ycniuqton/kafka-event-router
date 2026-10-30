@@ -37,16 +37,17 @@ type TeamRole struct {
 
 // Principal is the authenticated caller of a request.
 type Principal struct {
-	Kind         PrincipalKind
-	UserID       uuid.UUID
-	Email        string
-	DisplayName  string
-	Teams        []TeamRole
-	SessionID    string
-	CSRFToken    string
-	TokenID      uuid.UUID
-	Scopes       []TokenScope
-	WorkloadName string
+	Kind               PrincipalKind
+	UserID             uuid.UUID
+	Email              string
+	DisplayName        string
+	Teams              []TeamRole
+	SessionID          string
+	CSRFToken          string
+	TokenID            uuid.UUID
+	Scopes             []TokenScope
+	WorkloadName       string
+	MustChangePassword bool
 }
 
 // IsAuthenticated reports whether the principal is anything but anonymous.

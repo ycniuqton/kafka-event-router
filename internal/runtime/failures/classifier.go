@@ -23,12 +23,14 @@ type ErrorClassifier interface {
 
 // engineCategories maps engine error types to runtime categories.
 var engineCategories = map[engine.ErrorType]domain.ErrorCategory{
-	engine.ErrDecode:          domain.CategoryDecode,
-	engine.ErrDecodeTransient: domain.CategorySourceTransient,
-	engine.ErrStep:            domain.CategoryStep,
-	engine.ErrStepTimeout:     domain.CategoryStepTimeout,
-	engine.ErrOutputInvalid:   domain.CategoryOutputInvalid,
-	engine.ErrLimit:           domain.CategoryStep,
+	engine.ErrDecode:            domain.CategoryDecode,
+	engine.ErrDecodeTransient:   domain.CategorySourceTransient,
+	engine.ErrStep:              domain.CategoryStep,
+	engine.ErrStepTimeout:       domain.CategoryStepTimeout,
+	engine.ErrOutputInvalid:     domain.CategoryOutputInvalid,
+	engine.ErrLimit:             domain.CategoryStep,
+	engine.ErrLookupUnavailable: domain.CategoryDependencyTransient,
+	engine.ErrLookupMiss:        domain.CategoryStep,
 }
 
 // transientClientErrors are franz-go client errors that never mean data is undeliverable.
@@ -51,6 +53,9 @@ func (DefaultClassifier) Classify(err error) domain.ErrorCategory {
 	if errors.As(err, &pe) {
 		return EngineErrors{}.Category(pe)
 	}
+	if _, ok := engine.AsDependencyError(err); ok {
+		return domain.CategoryDependencyTransient
+	}
 	return KafkaErrors{}.Destination(err)
 }
 
@@ -59,6 +64,7 @@ type EngineErrors struct{}
 
 // Category maps the engine type; an output_invalid caused by an unreachable dependency (schema registry
 // outage, timeout) is destination_transient: the record is fine, so it is retried, never dead-lettered.
+// Any other failure caused by an engine.DependencyError (lookup unavailable) is dependency_transient.
 func (EngineErrors) Category(pe *engine.ProcessError) domain.ErrorCategory {
 	c, ok := engineCategories[pe.Type]
 	if !ok {
@@ -66,6 +72,9 @@ func (EngineErrors) Category(pe *engine.ProcessError) domain.ErrorCategory {
 	}
 	if c == domain.CategoryOutputInvalid && (TransientCauses{}).Match(pe.Cause) {
 		return domain.CategoryDestinationTransient
+	}
+	if _, dep := engine.AsDependencyError(pe.Cause); dep {
+		return domain.CategoryDependencyTransient
 	}
 	return c
 }
@@ -85,6 +94,9 @@ func (TransientCauses) Match(err error) bool {
 		return false
 	}
 	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, codec.ErrTransient) {
+		return true
+	}
+	if _, ok := engine.AsDependencyError(err); ok {
 		return true
 	}
 	var ne net.Error

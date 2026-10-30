@@ -75,6 +75,6 @@ func (a *CookieAuthenticator) principal(r *http.Request, sess auth.Session) (aut
 	}
 	return auth.Principal{
 		Kind: auth.PrincipalUser, UserID: user.ID, Email: user.Email, DisplayName: user.DisplayName,
-		Teams: roles, SessionID: sess.ID, CSRFToken: sess.CSRFToken,
+		Teams: roles, SessionID: sess.ID, CSRFToken: sess.CSRFToken, MustChangePassword: user.MustChangePassword,
 	}, auth.OutcomeMatched, nil
 }

@@ -1,0 +1,24 @@
+File: filter-only-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 08:58:24 -02
+Duration: 26.11s, Total samples = 25900ms (99.21%)
+Showing nodes accounting for 9490ms, 36.64% of 25900ms total
+Dropped 269 nodes (cum <= 129.50ms)
+Showing top 15 nodes out of 179
+      flat  flat%   sum%        cum   cum%
+    1300ms  5.02%  5.02%     1700ms  6.56%  runtime.tryDeferToSpanScan
+     850ms  3.28%  8.30%     1870ms  7.22%  runtime.scanObject
+     780ms  3.01% 11.31%     1110ms  4.29%  runtime.gcmarknewobject
+     750ms  2.90% 14.21%      910ms  3.51%  encoding/json/internal/jsonwire.AppendQuote
+     710ms  2.74% 16.95%     7670ms 29.61%  encoding/json/jsontext.(*encoderState).WriteToken
+     710ms  2.74% 19.69%      710ms  2.74%  runtime.memclrNoHeapPointers
+     670ms  2.59% 22.28%      700ms  2.70%  encoding/json/internal/jsonwire.ConsumeSimpleString (inline)
+     600ms  2.32% 24.59%     2450ms  9.46%  encoding/json/jsontext.(*decoderState).ReadToken
+     580ms  2.24% 26.83%     9430ms 36.41%  runtime.mallocgc
+     540ms  2.08% 28.92%      540ms  2.08%  runtime.memmove
+     470ms  1.81% 30.73%     1520ms  5.87%  encoding/json/jsontext.(*objectNamespace).insert
+     430ms  1.66% 32.39%     1370ms  5.29%  runtime.mallocgcTinySC2
+     390ms  1.51% 33.90%    11210ms 43.28%  github.com/eventrouter/router/pkg/engine/codec.treeEmitter.object
+     360ms  1.39% 35.29%      860ms  3.32%  runtime.scanObjectsSmall
+     350ms  1.35% 36.64%      420ms  1.62%  runtime.typePointers.next

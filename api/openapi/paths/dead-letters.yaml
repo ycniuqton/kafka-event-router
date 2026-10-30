@@ -17,6 +17,8 @@ routeDLQ:
       - $ref: "#/components/parameters/Version"
       - $ref: "#/components/parameters/Text"
       - $ref: "#/components/parameters/IncludeResolved"
+      - $ref: "#/components/parameters/ErrorClass"
+      - $ref: "#/components/parameters/Fingerprint"
     responses:
       "200":
         description: One page.
@@ -61,7 +63,9 @@ routeDLQRetry:
     tags: [dead-letters]
     operationId: retryRouteDeadLetters
     summary: Re-run selected dead letters through the route's active version and produce to the destination (≤ 500 per call).
-    description: Requires `dlq.act`. Sent and filtered events become resolved; failed events stay and are only reported.
+    description: |
+      Requires `dlq.act`. Sent and filtered events become resolved; failed events stay and are only reported.
+      409 with `code: replay_approval_required` when the strict 4-eyes gate holds the replay back (request approval with a job).
     parameters:
       - $ref: "../components/params.yaml#/IdParam"
       - $ref: "../components/params.yaml#/CSRFToken"
@@ -75,7 +79,8 @@ routeDLQRetry:
       "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
       "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
       "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
-      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "409":
+        $ref: "../components/problem.yaml#/responses/Conflict"
       "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
 routeDLQDiscard:
   post:
@@ -113,6 +118,8 @@ routeDLQExport:
       - $ref: "#/components/parameters/Step"
       - $ref: "#/components/parameters/Version"
       - $ref: "#/components/parameters/Text"
+      - $ref: "#/components/parameters/ErrorClass"
+      - $ref: "#/components/parameters/Fingerprint"
       - name: format
         in: query
         schema: { type: string, enum: [json, ndjson], default: json }
@@ -171,13 +178,17 @@ routeDLQJobs:
         application/json:
           schema:
             type: object
-            required: [action, match]
+            required: [action]
+            description: "Exactly one of `match` (default: every unresolved event) or `ids` (at most 10,000)."
             properties:
               action: { type: string, enum: [retry, discard] }
               match: { $ref: "#/components/schemas/Match" }
+              ids: { type: array, items: { type: string }, maxItems: 10000 }
+              ratePerSecond: { type: integer, minimum: 1, maximum: 1000, default: 50, description: "Replay rate limit (retry jobs; discard jobs are not throttled)." }
+              note: { type: string, maxLength: 2000 }
     responses:
       "202":
-        description: The queued job.
+        description: "The job: queued, or pending_approval when the strict 4-eyes gate holds the replay back."
         content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterJob" } } }
       "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
       "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
@@ -210,6 +221,142 @@ dlqJobCancel:
         content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterJob" } } }
       "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
       "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+dlqJobApprove:
+  post:
+    tags: [dead-letters]
+    operationId: approveDeadLetterJob
+    summary: Approve a replay waiting for a second person (pending_approval → queued).
+    description: Requires `deployment.approve` on the route's team; the requester can never approve (403 `self_approval`, admins included). Audited as `dlq.replay_approved`.
+    parameters:
+      - $ref: "#/components/parameters/JobId"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      content: { application/json: { schema: { $ref: "#/components/schemas/DecisionBody" } } }
+    responses:
+      "200":
+        description: The job.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterJob" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+dlqJobReject:
+  post:
+    tags: [dead-letters]
+    operationId: rejectDeadLetterJob
+    summary: Reject a replay waiting for a second person (pending_approval → rejected; a stored edit is dropped).
+    parameters:
+      - $ref: "#/components/parameters/JobId"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      content: { application/json: { schema: { $ref: "#/components/schemas/DecisionBody" } } }
+    responses:
+      "200":
+        description: The job.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterJob" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+dlqJobs:
+  get:
+    tags: [dead-letters]
+    operationId: listPendingDeadLetterJobs
+    summary: Replays waiting for approval on routes the caller may read (oldest first).
+    parameters:
+      - name: status
+        in: query
+        schema: { type: string, enum: [pending_approval] }
+    responses:
+      "200":
+        description: The pending jobs.
+        content: { application/json: { schema: { type: object, required: [items], properties: { items: { type: array, items: { $ref: "#/components/schemas/DeadLetterJob" } } } } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+routeDLQGroups:
+  get:
+    tags: [dead-letters]
+    operationId: listRouteDeadLetterGroups
+    summary: Cause groups of a route's unresolved dead letters (fingerprint = route + step + error type + normalized message).
+    description: Requires `dlq.read`. Scans up to 10,000 newest records (cached 15 s); `approximate` when the scan did not cover the whole DLQ.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "#/components/parameters/ErrorType"
+      - $ref: "#/components/parameters/ErrorClass"
+      - $ref: "#/components/parameters/Since"
+      - $ref: "#/components/parameters/Until"
+    responses:
+      "200":
+        description: Groups by count.
+        content: { application/json: { schema: { $ref: "#/components/schemas/GroupPage" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+globalDLQGroups:
+  get:
+    tags: [dead-letters]
+    operationId: listDeadLetterGroups
+    summary: Cause groups across every route the caller may read (at most 2,000 newest records per route).
+    parameters:
+      - $ref: "#/components/parameters/ErrorType"
+      - $ref: "#/components/parameters/ErrorClass"
+      - $ref: "#/components/parameters/Since"
+      - $ref: "#/components/parameters/Until"
+      - name: routeId
+        in: query
+        schema: { type: string }
+        description: Comma-separated route ids to restrict to.
+    responses:
+      "200":
+        description: Groups by count; failing routes are listed in `warnings`.
+        content: { application/json: { schema: { $ref: "#/components/schemas/GroupPage" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+routeDLQReplay:
+  post:
+    tags: [dead-letters]
+    operationId: replayRouteDeadLetter
+    summary: Dry-run or replay one dead letter, optionally edited, through the route's active version.
+    description: |
+      Requires `dlq.act`. Masked editors edit the masked view; leaves left at their mask are restored server side.
+      A replay of an edited event is audited as `dlq.edited_replayed` with the changed paths (never values); dry runs as
+      `dlq.replay_previewed`. Avro/Protobuf payloads are not editable (422 `edit_unsupported_format`).
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "#/components/parameters/DLQId"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/ReplayRequest" } } }
+    responses:
+      "200":
+        description: The dry run (`dryRun=true`, `result`) or the done replay (`status=done`, `report`).
+        content: { application/json: { schema: { $ref: "#/components/schemas/ReplayResponse" } } }
+      "202":
+        description: Held back by the strict 4-eyes gate (`status=pending_approval`, `job`).
+        content: { application/json: { schema: { $ref: "#/components/schemas/ReplayResponse" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+routeDLQDryRun:
+  post:
+    tags: [dead-letters]
+    operationId: dryRunRouteDeadLetters
+    summary: Run up to 20 newest events of a selection or cause group through the active version without producing.
+    parameters:
+      - $ref: "../components/params.yaml#/IdParam"
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/DeadLetterSelection" } } }
+    responses:
+      "200":
+        description: The sample's outcomes.
+        content: { application/json: { schema: { $ref: "#/components/schemas/DryRunReport" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
 routeDLQStudio:
   post:
     tags: [dead-letters]
@@ -241,6 +388,8 @@ globalDLQ:
       - $ref: "#/components/parameters/Version"
       - $ref: "#/components/parameters/Text"
       - $ref: "#/components/parameters/IncludeResolved"
+      - $ref: "#/components/parameters/ErrorClass"
+      - $ref: "#/components/parameters/Fingerprint"
       - name: routeId
         in: query
         schema: { type: string }
@@ -317,6 +466,16 @@ components:
       in: query
       schema: { type: boolean, default: false }
       description: Also list retried/filtered/discarded events with their resolution.
+    ErrorClass:
+      name: class
+      in: query
+      schema: { type: string, example: "router,data" }
+      description: Comma-separated error classes (data, router, transient).
+    Fingerprint:
+      name: fingerprint
+      in: query
+      schema: { type: string, pattern: "^[0-9a-f]{16}$" }
+      description: Cause group fingerprint (from the groups endpoints).
     JobId:
       name: jobId
       in: path
@@ -333,7 +492,12 @@ components:
   schemas:
     ErrorType:
       type: string
-      enum: [decode_error, step_error, timeout, output_invalid, unknown]
+      enum: [decode_error, step_error, timeout, output_invalid, lookup_unavailable, dependency_unavailable, produce_retriable,
+        internal_error, sandbox_crash, encode_error, produce_error, config_error, unknown]
+    ErrorClass:
+      type: string
+      enum: [data, router, transient]
+      description: "Whose fault: bad input data, a router bug, or a transient condition (pure function of the error type)."
     SourcePosition:
       type: object
       required: [topic, partition, offset]
@@ -374,6 +538,9 @@ components:
         source: { $ref: "#/components/schemas/SourcePosition" }
         resolution: { $ref: "#/components/schemas/Resolution" }
         deliveryMode: { type: string, enum: [at_least_once, exactly_once], description: "Delivery mode of the route's active version (absent for undeployed routes); retries of exactly_once routes are delivered at-least-once (P3)." }
+        errorClass: { $ref: "#/components/schemas/ErrorClass" }
+        fingerprint: { type: string, description: Cause group fingerprint. }
+        attempts: { type: integer, description: "Delayed retry attempts of the route's auto-retry policy before the event was parked." }
     EncodedValue:
       type: object
       required: [encoding, data]
@@ -425,6 +592,7 @@ components:
         oldestAt: { type: [string, "null"], format: date-time }
         newestAt: { type: [string, "null"], format: date-time }
         approximate: { type: boolean }
+        byErrorClass: { type: object, additionalProperties: { type: integer } }
     DeadLetterSelection:
       type: object
       description: Exactly one of `ids` or `match`.
@@ -442,6 +610,8 @@ components:
         version: { type: integer }
         q: { type: string }
         includeResolved: { type: boolean }
+        errorClass: { type: array, items: { $ref: "#/components/schemas/ErrorClass" } }
+        fingerprint: { type: string }
     DeadLetterJob:
       type: object
       required: [jobId, routeId, action, status, total, processed, counts, createdAt]
@@ -451,7 +621,7 @@ components:
         routeName: { type: string }
         action: { type: string, enum: [retry, discard] }
         match: { type: object }
-        status: { type: string, enum: [queued, running, cancel_requested, cancelled, succeeded, failed] }
+        status: { type: string, enum: [queued, running, cancel_requested, cancelled, succeeded, failed, pending_approval, rejected] }
         total: { type: integer }
         processed: { type: integer }
         counts: { type: object, additionalProperties: { type: integer } }
@@ -460,6 +630,130 @@ components:
         createdAt: { type: string, format: date-time }
         startedAt: { type: [string, "null"], format: date-time }
         finishedAt: { type: [string, "null"], format: date-time }
+        ratePerSecond: { type: integer }
+        note: { type: string }
+        edited: { type: boolean, description: "A single edited replay (the edit stays server side until the job ends)." }
+        idsCount: { type: integer, description: "Number of explicit ids of an ids selection (ids are not echoed)." }
+        requestedByMe: { type: boolean, description: "The caller requested this job (Approve/Reject are hidden)." }
+        approval:
+          type: object
+          required: [required]
+          properties:
+            required: { type: boolean }
+            decidedBy: { type: string }
+            decidedAt: { type: string, format: date-time }
+            decisionNote: { type: string }
+    DecisionBody:
+      type: object
+      properties:
+        note: { type: string, maxLength: 2000 }
+    CauseGroup:
+      type: object
+      required: [fingerprint, routeId, routeName, step, stepLabel, errorType, errorClass, pattern, count, firstSeenAt, lastSeenAt, versions, sample, trend]
+      properties:
+        fingerprint: { type: string }
+        routeId: { type: string }
+        routeName: { type: string }
+        step: { type: string }
+        stepLabel: { type: string }
+        errorType: { $ref: "#/components/schemas/ErrorType" }
+        errorClass: { $ref: "#/components/schemas/ErrorClass" }
+        pattern: { type: string, description: "Normalized message: ids, numbers, offsets and positions replaced by <id>, <n>, <uuid>, <hex>, <ts>." }
+        count: { type: integer }
+        firstSeenAt: { type: string, format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+        versions: { type: array, items: { type: integer } }
+        sample:
+          type: object
+          required: [id, message, failedAt]
+          properties:
+            id: { type: string }
+            message: { type: string }
+            failedAt: { type: string, format: date-time }
+        trend:
+          type: object
+          required: [since, bucketSeconds, counts]
+          properties:
+            since: { type: string, format: date-time }
+            bucketSeconds: { type: integer }
+            counts: { type: array, items: { type: integer } }
+    GroupPage:
+      type: object
+      required: [items, scanned, truncated, approximate, byClass]
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/CauseGroup" } }
+        scanned: { type: integer }
+        truncated: { type: boolean }
+        approximate: { type: boolean }
+        byClass: { type: object, additionalProperties: { type: integer } }
+        warnings:
+          type: array
+          items:
+            type: object
+            required: [reason]
+            properties:
+              routeId: { type: string }
+              reason: { type: string, enum: [dlq_topic_missing, scan_failed] }
+    RecordEdit:
+      type: object
+      description: Replacement key, value and headers; an omitted member keeps the original.
+      properties:
+        key: { $ref: "#/components/schemas/EncodedValue" }
+        value: { $ref: "#/components/schemas/EncodedValue" }
+        headers: { type: array, items: { $ref: "#/components/schemas/EncodedHeader" } }
+    ReplayRequest:
+      type: object
+      properties:
+        edit: { $ref: "#/components/schemas/RecordEdit" }
+        dryRun: { type: boolean, default: false }
+        note: { type: string, maxLength: 2000 }
+    DiffEntry:
+      type: object
+      required: [path, op]
+      properties:
+        path: { type: string, example: "/value/items/0" }
+        op: { type: string, enum: [add, remove, replace] }
+    OutputView:
+      type: object
+      required: [branch, connectionId, topic, key, value, headers]
+      properties:
+        branch: { type: string }
+        connectionId: { type: string }
+        topic: { type: string }
+        key: { oneOf: [{ $ref: "#/components/schemas/EncodedValue" }, { type: "null" }] }
+        value: { $ref: "#/components/schemas/EncodedValue" }
+        headers: { type: array, items: { $ref: "#/components/schemas/EncodedHeader" } }
+    DryRunResult:
+      type: object
+      required: [id, outcome, outputs]
+      properties:
+        id: { type: string }
+        outcome: { type: string, enum: [would_send, filtered, failed] }
+        errorType: { type: string }
+        message: { type: string }
+        outputs: { type: array, items: { $ref: "#/components/schemas/OutputView" } }
+    DryRunReport:
+      type: object
+      required: [activeVersionNo, sampled, total, results, counts, masked]
+      properties:
+        activeVersionNo: { type: integer }
+        sampled: { type: integer }
+        total: { type: integer }
+        results: { type: array, items: { $ref: "#/components/schemas/DryRunResult" } }
+        counts: { type: object, additionalProperties: { type: integer } }
+        masked: { type: boolean }
+    ReplayResponse:
+      type: object
+      required: [dryRun, activeVersionNo, masked, diff]
+      properties:
+        dryRun: { type: boolean }
+        status: { type: string, enum: [done, pending_approval] }
+        activeVersionNo: { type: integer }
+        masked: { type: boolean }
+        diff: { type: array, items: { $ref: "#/components/schemas/DiffEntry" } }
+        result: { $ref: "#/components/schemas/DryRunResult" }
+        report: { $ref: "#/components/schemas/RetryReport" }
+        job: { $ref: "#/components/schemas/DeadLetterJob" }
     RestoreReport:
       type: object
       required: [restored, skipped, remaining]
@@ -476,7 +770,7 @@ components:
         id: { type: string }
         outcome: { type: string, enum: [sent, filtered, failed, skipped, discarded, restored] }
         destination: { $ref: "#/components/schemas/Destination" }
-        errorType: { type: string, enum: [step_error, timeout, output_invalid, decode_error, compile, destination] }
+        errorType: { type: string, enum: [step_error, timeout, output_invalid, decode_error, compile, destination, lookup_unavailable, dependency_unavailable] }
         message: { type: string }
         reason: { type: string, enum: [locked, already_resolved, expired, not_found, not_discarded] }
     RetryReport:

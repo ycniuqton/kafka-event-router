@@ -52,6 +52,10 @@ func (l *Loader) Load(service ServiceName) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	poolMax, err := l.integer(EnvDBPoolMaxConns, 0)
+	if err != nil {
+		return Config{}, err
+	}
 	cfg := Config{
 		Service:      service,
 		Environment:  env,
@@ -60,7 +64,7 @@ func (l *Loader) Load(service ServiceName) (Config, error) {
 		Internal:     l.internalConfig(env),
 		TLS:          l.tlsConfig(),
 		Log:          LogConfig{Level: level},
-		Database:     DatabaseConfig{URL: l.str(EnvDatabaseURL, string(DefaultDatabaseURL)), MigrateOnStart: migrate},
+		Database:     DatabaseConfig{URL: l.str(EnvDatabaseURL, string(DefaultDatabaseURL)), MigrateOnStart: migrate, PoolMaxConns: poolMax},
 		Redis:        RedisConfig{URL: l.str(EnvRedisURL, string(DefaultRedisURL))},
 		Kafka:        KafkaConfig{Bootstrap: l.str(EnvKafkaBootstrap, string(DefaultKafkaBootstrap))},
 		Secrets:      l.secretsConfig(env),
@@ -169,6 +173,7 @@ func (l *Loader) secretsConfig(env Environment) SecretsConfig {
 	return SecretsConfig{
 		Provider:     SecretsProviderKind(l.str(EnvSecretsProvider, l.byEnv(env, DefaultSecretsProvider, DefaultRemoteSecrets))),
 		LocalKeyFile: l.str(EnvSecretsLocalKeyFile, string(DefaultLocalKeyFile)),
+		Static:       l.staticKeyConfig(),
 		Vault: VaultConfig{
 			Addr:       l.str(EnvVaultAddr, ""),
 			TransitKey: l.str(EnvVaultTransitKey, string(DefaultVaultTransitKey)),

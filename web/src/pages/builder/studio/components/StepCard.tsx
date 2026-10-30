@@ -1,5 +1,5 @@
-import { Button, ButtonSize, ButtonVariant } from '../../../../components/ui';
-import { StepKindLabel, type TransformStep } from '../../../../domain';
+import { Button, ButtonSize, ButtonVariant, ToneBadge } from '../../../../components/ui';
+import { LookupTraceBadge, LookupTraceLine, StepKindLabel, type TransformStep } from '../../../../domain';
 import type { DragHandlers } from '../hooks/useDragReorder';
 import { useStudio } from '../hooks/StudioContext';
 import { StepCardStateOf } from '../model/StudioEnums';
@@ -21,6 +21,7 @@ export function StepCard({ step, index, drag, dropTarget }: StepCardProps) {
   const run = model.preview.run;
   const example = run && step.enabled ? presenter.example(step, run.snapshots(model.current?.id, index)) : null;
   const issue = run?.issues.get(index);
+  const lookup = LookupTraceLine.first(run?.run(model.current?.id)?.steps[index]?.logs);
   const selected = ui.selectedStepId === step.id;
   const failing = (model.result?.error !== undefined && model.result.stepIndex === index) || !!issue;
   const state = StepCardStateOf.resolve(failing, selected);
@@ -33,6 +34,7 @@ export function StepCard({ step, index, drag, dropTarget }: StepCardProps) {
           <div className={styles.title}>
             {StepKindLabel[step.kind]}
             {model.baseline.isDirty(step) && <span className={styles.dirty} title="Unsaved change" aria-label="Unsaved change" />}
+            {lookup && <span className={styles.badge}><ToneBadge tone={LookupTraceBadge[lookup.mode].tone} dot={false}>{LookupTraceBadge[lookup.mode].label}</ToneBadge></span>}
           </div>
           <div className={styles.summary}>{presenter.summary(step)}</div>
         </div>

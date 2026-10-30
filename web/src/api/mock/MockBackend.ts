@@ -1,5 +1,5 @@
-import { Clock, type Activity, type AuditEntry, type Connection, type DeadLetter, type Route, type RouteVersion } from '../../domain';
-import { ACTIVITY, AUDIT, CONNECTIONS, DEAD_LETTERS, MockTime, ROUTES, VERSIONS } from '../../mocks';
+import { Clock, type Activity, type AuditEntry, type Connection, type DeadLetter, type LookupSource, type Route, type RouteVersion } from '../../domain';
+import { ACTIVITY, AUDIT, CONNECTIONS, DEAD_LETTERS, LOOKUP_SOURCES, MockTime, ROUTES, VERSIONS } from '../../mocks';
 import { MockLatency } from '../config';
 
 /** Clock anchored at the mock reference instant, advancing in real time since page load. */
@@ -15,6 +15,7 @@ export class MockClock extends Clock {
 export class MockDatabase {
   routes: Route[] = structuredClone(ROUTES);
   connections: Connection[] = structuredClone(CONNECTIONS);
+  lookupSources: LookupSource[] = structuredClone(LOOKUP_SOURCES);
   deadLetters: DeadLetter[] = structuredClone(DEAD_LETTERS);
   activity: Activity[] = structuredClone(ACTIVITY);
   audit: AuditEntry[] = structuredClone(AUDIT);

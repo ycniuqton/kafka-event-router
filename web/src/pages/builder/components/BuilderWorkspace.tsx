@@ -4,6 +4,7 @@ import { Keys, useShortcut } from '../../../store';
 import { RailModel } from '../model/RailModel';
 import { ReviewModel } from '../model/ReviewModel';
 import { useBuilderWorkspace } from '../model/useBuilderWorkspace';
+import { useLookupSourceCatalog } from '../studio/hooks/useLookupSourceCatalog';
 import { TestRunDialog } from '../../../components/sample-panel';
 import { BuilderSamplePanel } from './BuilderSamplePanel';
 import { BuilderTopBar } from './BuilderTopBar';
@@ -18,6 +19,7 @@ export type BuilderWorkspaceProps = { initialDraft: RouteDraft; fields: SampleFi
 export function BuilderWorkspace({ initialDraft, fields }: BuilderWorkspaceProps) {
   const { ctx, commands, deployOpen, closeDeploy } = useBuilderWorkspace(initialDraft, fields);
   const { draft, step } = ctx;
+  useLookupSourceCatalog();
   useShortcut({ key: Keys.S, mod: true, handler: ctx.save });
   useShortcut({ key: Keys.Enter, mod: true, handler: ctx.runTest });
   return (

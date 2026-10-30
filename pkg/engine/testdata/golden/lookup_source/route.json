@@ -1,0 +1,28 @@
+{
+  "apiVersion": "router/v1",
+  "name": "orders-enrich",
+  "source": { "connectionId": "c1", "topics": ["orders"], "format": { "type": "json" } },
+  "branches": [{
+    "id": "main",
+    "transform": { "steps": [
+      { "id": "crm", "kind": "lookup", "lookup": {
+        "sourceId": "golden-crm",
+        "request": { "kind": "http", "method": "GET", "path": "/customers/${value.customerId}" },
+        "map": [ { "from": "$.tier", "to": "value.customer.tier" }, { "from": "$.region", "to": "value.customer.region" } ],
+        "timeoutMs": 200, "retries": 1,
+        "onMiss": { "action": "default", "value": "unknown" },
+        "cache": { "ttlMs": 60000, "negativeTtlMs": 10000, "maxEntries": 100 } } },
+      { "id": "flag", "kind": "lookup", "lookup": {
+        "sourceId": "golden-flags",
+        "request": { "kind": "redis", "op": "get", "key": "flag:${value.feature}" },
+        "map": [ { "from": "$", "to": "value.flag" } ],
+        "onMiss": { "action": "default", "value": "off" } } },
+      { "id": "drop-internal", "kind": "lookup", "lookup": {
+        "sourceId": "golden-crm",
+        "request": { "kind": "http", "path": "/customers/${value.customerId}/internal" },
+        "map": [ { "from": "$", "to": "value.internal" } ],
+        "onMiss": { "action": "skip" } } }
+    ] },
+    "destination": { "connectionId": "c1", "topic": "orders-enriched" }
+  }]
+}

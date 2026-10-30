@@ -26,7 +26,6 @@ import (
 	"github.com/eventrouter/router/internal/platform/logging"
 	"github.com/eventrouter/router/internal/rbac"
 	"github.com/eventrouter/router/internal/runtime/changes"
-	"github.com/eventrouter/router/internal/runtime/retry"
 )
 
 // pushWiring composes WS /events once per process: bus, hub, publishers and the runtime change source.
@@ -67,7 +66,7 @@ func (p *pushWiring) build(w *Wiring) {
 // startRuntimeSource LISTENs on router_runtime (own connection) and pushes route/deployment changes locally.
 func (p *pushWiring) startRuntimeSource(ctx context.Context, w *Wiring) {
 	broker := changes.NewBroker()
-	go changes.PgListener{Pool: w.Deps.DB.Pool(), Broker: broker, Retry: retry.DefaultPolicy(), Log: w.Deps.Log}.Run(ctx)
+	go changes.PgListener{Notifications: w.Deps.DB.Notifications(), Broker: broker}.Run(ctx)
 	src := &events.RuntimeChangeSource{Hints: broker, Reader: events.PgRouteStateReader{DB: w.Deps.DB}, Out: p.hub,
 		Factory: events.EventFactory{Now: time.Now}, Log: w.Deps.Log}
 	go src.Run(ctx)
@@ -136,7 +135,7 @@ func (a *alertsWiring) start(s *apiService, st alerts.Settings, rules *pgstore.R
 	job := &engine.AlertEvaluatorJob{Leader: s.runtimeLeaderGate(), Rules: rules, Routes: routes,
 		Evaluators: evaluator.NewDefaultEvaluatorManager(), Querier: monitoringFeature.querier,
 		Tracker:    &engine.StateTracker{Tx: w.Tx, Events: evs, Out: pushFeature.publisher, Factory: events.EventFactory{Now: time.Now}, Now: time.Now},
-		Dispatcher: d, Errors: m, Interval: st.Interval, Log: w.Deps.Log}
+		Dispatcher: d, Errors: m, Interval: st.Interval, Log: w.Deps.Log, Defaults: alertDefaults(w)}
 	ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	go job.Run(ctx)
 }

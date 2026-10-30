@@ -18,6 +18,8 @@ const (
 	ProviderLocal = config.SecretsLocal
 	ProviderVault = config.SecretsVault
 	ProviderKMS   = config.SecretsKMS
+	// ProviderStaticKey is the operator-supplied master key provider (any environment).
+	ProviderStaticKey = config.SecretsStaticKey
 )
 
 // RefPrefix marks secret references (`sec_<ulid>`).

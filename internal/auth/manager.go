@@ -43,13 +43,14 @@ type Registry struct {
 	factories map[AuthenticatorKind]AuthenticatorFactory
 }
 
-// NewRegistry returns a registry where oidc and dev logins share the session-cookie authenticator.
+// NewRegistry returns a registry where oidc, dev and password logins share the session-cookie authenticator.
 func NewRegistry() *Registry {
 	return &Registry{
 		modeKinds: map[AuthMode]AuthenticatorKind{
 			config.AuthModeOIDC:     AuthenticatorSession,
 			config.AuthModeDev:      AuthenticatorSession,
 			config.AuthModeAPIToken: AuthenticatorAPIToken,
+			config.AuthModePassword: AuthenticatorSession,
 		},
 		factories: map[AuthenticatorKind]AuthenticatorFactory{},
 	}

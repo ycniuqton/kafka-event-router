@@ -1,0 +1,24 @@
+File: js-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 09:13:03 -02
+Duration: 14.20s, Total samples = 14.08s (99.16%)
+Showing nodes accounting for 8.91s, 63.28% of 14.08s total
+Dropped 571 nodes (cum <= 0.07s)
+Showing top 15 nodes out of 204
+      flat  flat%   sum%        cum   cum%
+     5.58s 39.63% 39.63%      5.58s 39.63%  runtime._ExternalCode
+     1.25s  8.88% 48.51%      2.21s 15.70%  github.com/tetratelabs/wazero/internal/engine/wazevo.(*callEngine).callWithStack
+     0.43s  3.05% 51.56%      0.43s  3.05%  runtime.memmove
+     0.28s  1.99% 53.55%      0.28s  1.99%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.afterGoFunctionCallEntrypoint
+     0.22s  1.56% 55.11%      0.85s  6.04%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/regalloc.(*Allocator[go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.instruction,go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.labelPosition,go.shape.*uint8]).allocBlock
+     0.16s  1.14% 56.25%      0.16s  1.14%  github.com/tetratelabs/wazero/internal/engine/wazevo/ssa.(*dominatorSparseTree).buildSparseTable
+     0.14s  0.99% 57.24%      0.15s  1.07%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.(*instruction).Uses
+     0.13s  0.92% 58.17%      0.55s  3.91%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/regalloc.(*Allocator[go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.instruction,go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.labelPosition,go.shape.*uint8]).livenessAnalysis
+     0.12s  0.85% 59.02%      0.12s  0.85%  runtime.asyncPreempt
+     0.12s  0.85% 59.87%      0.12s  0.85%  runtime.memclrNoHeapPointers
+     0.11s  0.78% 60.65%      0.11s  0.78%  encoding/json/internal/jsonwire.ConsumeSimpleString
+     0.10s  0.71% 61.36%      0.19s  1.35%  runtime.scanObject
+     0.09s  0.64% 62.00%      0.11s  0.78%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.(*labelPosition).InstrIteratorNext
+     0.09s  0.64% 62.64%      0.10s  0.71%  github.com/tetratelabs/wazero/internal/engine/wazevo/backend/regalloc.(*regInUseSet[go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.instruction,go.shape.*github.com/tetratelabs/wazero/internal/engine/wazevo/backend/isa/amd64.labelPosition,go.shape.*uint8]).range_ (inline)
+     0.09s  0.64% 63.28%      0.09s  0.64%  github.com/tetratelabs/wazero/internal/wasm.(*ModuleInstance).FailIfClosed

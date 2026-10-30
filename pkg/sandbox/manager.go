@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/eventrouter/router/pkg/sandbox/boundary"
 	"github.com/eventrouter/router/pkg/sandbox/determinism"
@@ -45,13 +46,16 @@ type DefaultManager struct {
 	deps       ManagerDeps
 	classifier ErrorClassifier
 	info       RuntimeInfo
+	sizing     PoolSizing
+	ceiling    *MemoryCeiling
+	stopScale  context.CancelFunc
 	mu         sync.Mutex
 	open       map[*routeSandbox]struct{}
 }
 
-// NewManager builds the configured engine and the runtime-info catalogue.
+// NewManager builds the configured engine and the runtime-info catalogue and starts pool autoscaling.
 func NewManager(ctx context.Context, cfg Config, deps ManagerDeps) (*DefaultManager, error) {
-	deps = deps.withDefaults()
+	deps, cfg = deps.withDefaults(), cfg.withDefaults()
 	policy := NewLimitPolicy(cfg.Maxima)
 	rt, err := deps.Engines.Build(ctx, cfg.Engine, RuntimeOptions{
 		ResetPolicy: cfg.ResetPolicy,
@@ -68,9 +72,18 @@ func NewManager(ctx context.Context, cfg Config, deps ManagerDeps) (*DefaultMana
 		return nil, err
 	}
 	m := &DefaultManager{cfg: cfg, runtime: rt, programs: programs, policy: policy, deps: deps,
-		classifier: NewErrorClassifier(), open: map[*routeSandbox]struct{}{}}
+		classifier: NewErrorClassifier(), open: map[*routeSandbox]struct{}{},
+		sizing: NewPoolSizing(cfg.Autoscale), ceiling: NewMemoryCeiling(cfg.Autoscale.MemoryCeiling)}
 	m.info = InfoBuilder{}.Build(cfg.Engine, policy)
+	m.startAutoscaler()
 	return m, nil
+}
+
+// startAutoscaler runs the pool autoscaling loop until Close.
+func (m *DefaultManager) startAutoscaler() {
+	ctx, cancel := context.WithCancel(context.Background())
+	m.stopScale = cancel
+	go NewPoolAutoscaler(m.cfg.Autoscale, NewPoolScalers(), NewProcessCPU(time.Now()), m).Run(ctx)
 }
 
 func (d ManagerDeps) withDefaults() ManagerDeps {
@@ -103,8 +116,14 @@ func (m *DefaultManager) ResolveLimits(req RouteLimits) (Limits, []Diagnostic) {
 // Info returns the runtime-info catalogue.
 func (m *DefaultManager) Info() RuntimeInfo { return m.info }
 
-// Close releases the engine.
-func (m *DefaultManager) Close(ctx context.Context) error { return m.runtime.Close(ctx) }
+// Close stops autoscaling and releases the engine.
+func (m *DefaultManager) Close(ctx context.Context) error {
+	m.stopScale()
+	return m.runtime.Close(ctx)
+}
+
+// Ceiling returns the worker JS memory ceiling the pools reserve from.
+func (m *DefaultManager) Ceiling() *MemoryCeiling { return m.ceiling }
 
 // Open resolves limits, the team salt and the boundary of scope and returns an empty route
 // sandbox; sources are added with Attach (identical steps of different branches share a pool).
@@ -116,6 +135,7 @@ func (m *DefaultManager) Open(ctx context.Context, scope RouteScope, req RouteLi
 	}
 	builder := poolBuilder{m: m, limits: limits, registry: registry, marshaller: m.marshallerFor(scope)}
 	rs := newRouteSandbox(scope, builder, m.deps.Observer, m.forget)
+	rs.publish = m.publishScope
 	m.mu.Lock()
 	m.open[rs] = struct{}{}
 	m.mu.Unlock()
@@ -155,10 +175,17 @@ func (m *DefaultManager) Usage() []RouteUsage {
 // Programs reports the compiled-program cache (compiles saved by shared code and hot reloads).
 func (m *DefaultManager) Programs() ProgramCacheStats { return m.programs.Stats() }
 
-func (m *DefaultManager) forget(rs *routeSandbox) {
+// forget drops a closed sandbox; the gauges of its route version are republished, or cleared when it
+// was the version's last open sandbox.
+func (m *DefaultManager) forget(rs *routeSandbox, steps []string) {
 	m.mu.Lock()
 	delete(m.open, rs)
 	m.mu.Unlock()
+	if len(m.sandboxesOf(rs.scope)) > 0 {
+		m.publishScope(rs.scope)
+		return
+	}
+	m.deps.Observer.ScopeClosed(rs.scope, steps)
 }
 
 // marshallerFor returns the forced boundary or the one selected by the scope's formats.
@@ -204,10 +231,13 @@ func (b poolBuilder) build(ctx context.Context, scope RouteScope, src Source) (*
 	if err != nil {
 		return nil, err
 	}
+	start, bounds := m.sizing.For(scope)
 	pool, err := NewBoundedPool(ctx, program, b.registry, PoolOptions{
-		Max:     scope.Parallelism,
+		Max:     start,
 		Warm:    int(PoolWarmDefault),
 		MaxIdle: max(m.cfg.PoolMaxIdle, int(PoolWarmDefault)),
+		Scale:   bounds,
+		Ceiling: m.ceiling,
 	})
 	if err != nil {
 		m.programs.Release(key)

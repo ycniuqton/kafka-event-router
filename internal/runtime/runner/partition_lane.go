@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 
 	"github.com/twmb/franz-go/pkg/kgo"
+
+	"github.com/eventrouter/router/internal/runtime/membudget"
 )
 
 // RecordHandler processes one record of a lane; it returns once the record is dispatched (acks are async).
@@ -17,6 +19,7 @@ type RecordHandler interface {
 type PartitionLane struct {
 	tp       TopicPartition
 	gate     *BackpressureGate
+	account  MemoryAccount
 	mu       sync.Mutex
 	cond     *sync.Cond
 	queue    []*kgo.Record
@@ -30,24 +33,35 @@ type PartitionLane struct {
 
 // NewPartitionLane builds a lane; Run starts its goroutine.
 func NewPartitionLane(tp TopicPartition, gate *BackpressureGate) *PartitionLane {
-	l := &PartitionLane{tp: tp, gate: gate, done: make(chan struct{})}
+	l := &PartitionLane{tp: tp, gate: gate, account: NoMemoryAccount{}, done: make(chan struct{})}
 	l.cond = sync.NewCond(&l.mu)
+	return l
+}
+
+// WithAccount charges the lane's records to a (the route's share of the worker memory budget).
+func (l *PartitionLane) WithAccount(a MemoryAccount) *PartitionLane {
+	l.account = a
 	return l
 }
 
 // TP returns the lane's partition.
 func (l *PartitionLane) TP() TopicPartition { return l.tp }
 
-// Enqueue appends polled records; a long queue pauses fetching of the partition.
+// Enqueue appends polled records, detached from their fetch response once the budget is filling (so the
+// charge is what stays alive); a long queue pauses fetching of the partition.
 func (l *PartitionLane) Enqueue(recs []*kgo.Record) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.stopped {
 		return
 	}
+	if l.account.Detaching() {
+		membudget.RecordDetach{}.Detach(recs)
+	}
 	for _, r := range recs {
 		l.bytes.Add(int64(len(r.Key) + len(r.Value)))
 	}
+	l.account.Charge(membudget.RecordsCost(recs))
 	l.queue = append(l.queue, recs...)
 	if !l.paused && l.overHighWater() {
 		l.paused = true
@@ -73,7 +87,8 @@ func (l *PartitionLane) Run(ctx context.Context, h RecordHandler) {
 	}
 }
 
-// next blocks for the next record; it resumes fetching once the queue is short again.
+// next blocks for the next record (clearing its slot, so the queue's backing array does not keep handed-out
+// records alive); it resumes fetching once the queue is short again.
 func (l *PartitionLane) next() (*kgo.Record, bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -84,6 +99,7 @@ func (l *PartitionLane) next() (*kgo.Record, bool) {
 		return nil, false
 	}
 	rec := l.queue[0]
+	l.queue[0] = nil
 	l.queue = l.queue[1:]
 	l.bytes.Add(-int64(len(rec.Key) + len(rec.Value)))
 	if l.paused && l.underLowWater() {
@@ -107,6 +123,7 @@ func (l *PartitionLane) underLowWater() bool {
 func (l *PartitionLane) Stop() {
 	l.mu.Lock()
 	l.stopped = true
+	l.account.Release(membudget.RecordsCost(l.queue))
 	l.queue = nil
 	l.bytes.Store(0)
 	l.cond.Broadcast()
@@ -119,6 +136,12 @@ func (l *PartitionLane) Stop() {
 
 // Done is closed when Run has returned.
 func (l *PartitionLane) Done() <-chan struct{} { return l.done }
+
+// Discard returns the budget of a dequeued record that will not be processed (halt, stop).
+func (l *PartitionLane) Discard(rec *kgo.Record) { l.account.Release(membudget.RecordCost(rec)) }
+
+// Settle returns the budget of a finished or abandoned record of cost bytes.
+func (l *PartitionLane) Settle(cost int64) { l.account.Release(cost) }
 
 // Begin counts one dispatched record of the lane.
 func (l *PartitionLane) Begin() { l.inflight.Add(1) }

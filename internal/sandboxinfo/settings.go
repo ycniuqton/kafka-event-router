@@ -22,6 +22,8 @@ const (
 	EnvPoolMaxIdle  config.EnvKey = "ROUTER_SANDBOX_POOL_MAX_IDLE"
 	EnvCacheDir     config.EnvKey = "ROUTER_SANDBOX_CACHE_DIR"
 	EnvPrograms     config.EnvKey = "ROUTER_SANDBOX_PROGRAM_CACHE"
+	EnvPoolMaxInst  config.EnvKey = "ROUTER_SANDBOX_POOL_MAX_INSTANCES"
+	EnvMemCeilingMb config.EnvKey = "ROUTER_SANDBOX_MEMORY_CEILING_MB"
 )
 
 // SettingsLoader reads sandbox.Config from the environment on top of sandbox.DefaultConfig.
@@ -51,12 +53,27 @@ func (l SettingsLoader) Load() (sandbox.Config, error) {
 			return sandbox.Config{}, err
 		}
 	}
-	idle := int64(cfg.PoolMaxIdle)
-	if err := l.apply(SettingStep{Key: EnvPoolMaxIdle, Unit: 1, Target: &idle}); err != nil {
+	if err := l.pool(&cfg); err != nil {
 		return sandbox.Config{}, err
 	}
-	cfg.PoolMaxIdle = int(idle)
 	return cfg, nil
+}
+
+// pool reads the pool sizing keys: idle cap, autoscaling instance cap and the worker JS memory ceiling.
+func (l SettingsLoader) pool(cfg *sandbox.Config) error {
+	idle, maxInst := int64(cfg.PoolMaxIdle), int64(cfg.Autoscale.MaxInstances)
+	steps := []SettingStep{
+		{Key: EnvPoolMaxIdle, Unit: 1, Target: &idle},
+		{Key: EnvPoolMaxInst, Unit: 1, Target: &maxInst},
+		{Key: EnvMemCeilingMb, Unit: int64(sandbox.MiB), Target: &cfg.Autoscale.MemoryCeiling},
+	}
+	for _, s := range steps {
+		if err := l.apply(s); err != nil {
+			return err
+		}
+	}
+	cfg.PoolMaxIdle, cfg.Autoscale.MaxInstances = int(idle), int(maxInst)
+	return nil
 }
 
 // SettingStep scales one positive integer env value by Unit into Target (left unchanged when unset).

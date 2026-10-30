@@ -1,0 +1,95 @@
+[
+  {
+    "kind": "lookup",
+    "lookup": {
+      "sourceId": "ls-crm-api",
+      "request": {
+        "kind": "http",
+        "method": "GET",
+        "path": "/customers/${value.customerId}",
+        "query": {
+          "fields": "tier"
+        }
+      },
+      "map": [
+        {
+          "from": "$.tier",
+          "to": "value.customer.tier"
+        }
+      ],
+      "onMiss": {
+        "action": "default",
+        "value": "standard"
+      },
+      "cache": {
+        "ttlMs": 60000,
+        "maxEntries": 5000,
+        "negativeTtlMs": 10000
+      }
+    }
+  },
+  {
+    "kind": "lookup",
+    "lookup": {
+      "sourceId": "ls-flags",
+      "request": {
+        "kind": "redis",
+        "op": "hget",
+        "key": "flags:${value.merchantId}",
+        "hashField": "checkout"
+      },
+      "map": [
+        {
+          "from": "$",
+          "to": "value.flags.checkout"
+        }
+      ],
+      "timeoutMs": 200,
+      "retries": 0,
+      "onError": {
+        "action": "skip"
+      }
+    }
+  },
+  {
+    "kind": "lookup",
+    "lookup": {
+      "sourceId": "ls-stores",
+      "request": {
+        "kind": "sql",
+        "sql": "SELECT region FROM stores WHERE id = :id",
+        "params": {
+          "id": "${value.storeId}"
+        }
+      },
+      "map": [
+        {
+          "from": "$.region",
+          "to": "value.store.region"
+        }
+      ],
+      "onMiss": {
+        "action": "fail"
+      }
+    }
+  },
+  {
+    "kind": "lookup",
+    "lookup": {
+      "sourceId": "ls-price-list",
+      "request": {
+        "kind": "static",
+        "key": "${value.country}"
+      },
+      "map": [
+        {
+          "from": "$",
+          "to": "value.region"
+        }
+      ],
+      "onMiss": {
+        "action": "drop"
+      }
+    }
+  }
+]

@@ -10,7 +10,9 @@ import (
 
 // Pages is the dlq.Manager surface a job needs.
 type Pages interface {
-	ActPage(ctx context.Context, kind dlq.ActionKind, actor dlq.Actor, jobID, routeID string, q dlq.Query, cursor string) (dlq.JobPage, error)
+	ActPageSized(ctx context.Context, req dlq.PageRequest, q dlq.Query) (dlq.JobPage, error)
+	ActIDsPage(ctx context.Context, req dlq.PageRequest, ids []string) (dlq.JobPage, error)
+	ReplayApproved(ctx context.Context, actor dlq.Actor, jobID, routeID, id string, edit *dlq.RecordEdit) (dlq.ActionReport, error)
 	CountMatches(ctx context.Context, routeID string, q dlq.Query) (int, error)
 }
 
@@ -67,18 +69,18 @@ func (r *Runner) Reap(ctx context.Context) {
 	}
 }
 
-// Execute runs a claimed job from its stored cursor until done, cancelled or failed.
+// Execute runs a claimed job from its stored cursor until done, cancelled or failed, at most Rate events/s.
 func (r *Runner) Execute(ctx context.Context, j Job) {
 	stop := Heartbeat{Repo: r.Repo}.Start(ctx, j.ID)
 	defer stop()
-	q := MatchOf{}.Query(j.Match)
+	source := PageSources{Pages: r.Pages}.For(j)
 	if j.Total == 0 && j.Cursor == "" {
-		if total, err := r.Pages.CountMatches(ctx, j.RouteID, q); err == nil {
-			j.Total = total
-		}
+		j.Total = source.Total(ctx, j)
 	}
+	pacer := PacerOf{}.For(j, r.Now)
 	for {
-		page, err := r.Pages.ActPage(ctx, j.Action, dlq.Actor{UserID: j.RequestedBy}, j.ID, j.RouteID, q, j.Cursor)
+		started := r.Now()
+		page, err := source.Next(ctx, j, pacer.Size())
 		if err != nil {
 			r.finish(ctx, j, StatusFailed, err.Error())
 			return
@@ -94,6 +96,9 @@ func (r *Runner) Execute(ctx context.Context, j Job) {
 			return
 		case page.Done:
 			r.finish(ctx, j, StatusSucceeded, "")
+			return
+		}
+		if pacer.Wait(ctx, len(page.Report.Results), started) != nil {
 			return
 		}
 	}

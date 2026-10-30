@@ -18,6 +18,8 @@ type Query struct {
 	IncludeResolved bool
 	Limit           int
 	Cursor          string
+	Classes         []record.ErrorClass
+	Fingerprint     string
 }
 
 // PageSize returns Limit clamped to [1, MaxPage], DefaultPage when unset.
@@ -33,7 +35,7 @@ func (q Query) PageSize() int {
 
 // Matches reports whether r passes the error-type, step, version, text and time filters.
 func (q Query) Matches(r record.Record) bool {
-	if !q.matchesType(r.Failure.ErrorType) || !q.matchesFailure(r.Failure) {
+	if !q.matchesType(r.Failure.ErrorType) || !q.matchesFailure(r.Failure) || !q.matchesCause(r.Failure) {
 		return false
 	}
 	at := r.Failure.FailedAt
@@ -52,6 +54,27 @@ func (q Query) matchesFailure(f record.Failure) bool {
 		return false
 	}
 	return q.Text == "" || strings.Contains(strings.ToLower(f.Message), strings.ToLower(q.Text))
+}
+
+// matchesCause applies the workflow filters: error class and cause fingerprint (design 00001 §3.3).
+func (q Query) matchesCause(f record.Failure) bool {
+	if len(q.Classes) > 0 && !(ClassSet{}).Has(q.Classes, f.ErrorType.Class()) {
+		return false
+	}
+	return q.Fingerprint == "" || NewFingerprinter().Of(f.RouteID, f).ID == q.Fingerprint
+}
+
+// ClassSet tests class lists.
+type ClassSet struct{}
+
+// Has reports whether c is in list.
+func (ClassSet) Has(list []record.ErrorClass, c record.ErrorClass) bool {
+	for _, x := range list {
+		if x == c {
+			return true
+		}
+	}
+	return false
 }
 
 func (q Query) matchesType(t record.ErrorType) bool {

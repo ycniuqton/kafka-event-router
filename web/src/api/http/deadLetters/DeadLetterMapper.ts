@@ -15,6 +15,7 @@ import {
   type DeadLetterSummary,
   type DeliveryMode,
 } from '../../../domain';
+import { DeadLetterClasses, type DeadLetterErrorClass } from '../../../domain';
 import type { Query } from '../core/HttpRequest';
 import {
   DeadLetterErrorTypeDto,
@@ -47,6 +48,14 @@ export class DeadLetterMapper {
     [DeadLetterErrorTypeDto.Timeout]: DeadLetterKind.Timeout,
     [DeadLetterErrorTypeDto.OutputInvalid]: DeadLetterKind.InvalidOutput,
     [DeadLetterErrorTypeDto.Unknown]: DeadLetterKind.Unreadable,
+    [DeadLetterErrorTypeDto.LookupUnavailable]: DeadLetterKind.LookupUnavailable,
+    [DeadLetterErrorTypeDto.DependencyUnavailable]: DeadLetterKind.DependencyUnavailable,
+    [DeadLetterErrorTypeDto.ProduceRetriable]: DeadLetterKind.ProduceRetriable,
+    [DeadLetterErrorTypeDto.Internal]: DeadLetterKind.InternalError,
+    [DeadLetterErrorTypeDto.SandboxCrash]: DeadLetterKind.SandboxCrash,
+    [DeadLetterErrorTypeDto.Encode]: DeadLetterKind.EncodeError,
+    [DeadLetterErrorTypeDto.Produce]: DeadLetterKind.ProduceError,
+    [DeadLetterErrorTypeDto.Config]: DeadLetterKind.ConfigError,
   };
 
   static item(dto: DeadLetterItemDto): DeadLetter {
@@ -66,6 +75,9 @@ export class DeadLetterMapper {
       stepId: dto.step,
       resolution: DeadLetterMapper.resolution(dto.resolution),
       deliveryMode: (dto.deliveryMode || undefined) as DeliveryMode | undefined,
+      errorClass: dto.errorClass && DeadLetterClasses.valid(dto.errorClass) ? dto.errorClass : undefined,
+      fingerprint: dto.fingerprint || undefined,
+      attempts: dto.attempts || undefined,
     };
   }
 
@@ -93,6 +105,8 @@ export class DeadLetterMapper {
       [DeadLetterParam.Version]: filter.versionNo ? String(filter.versionNo) : undefined,
       [DeadLetterParam.Text]: filter.text || undefined,
       [DeadLetterParam.IncludeResolved]: filter.includeResolved ? String(true) : undefined,
+      [DeadLetterParam.Class]: filter.classes?.join(DeadLetterListSeparator) || undefined,
+      [DeadLetterParam.Fingerprint]: filter.fingerprint || undefined,
     };
   }
 
@@ -104,18 +118,26 @@ export class DeadLetterMapper {
       step: filter.stepId || undefined,
       version: filter.versionNo || undefined,
       q: filter.text || undefined,
+      fingerprint: filter.fingerprint || undefined,
+      errorClass: filter.classes?.length ? filter.classes : undefined,
     };
   }
 
   static summary(dto: GlobalSummaryDto): DeadLetterSummary {
     const routes = dto.routes.map((r) => ({ routeId: r.routeId, routeName: r.routeName, unresolved: r.unresolved, byKind: DeadLetterMapper.byKind(r.byErrorType) }));
-    return { unresolved: dto.unresolved, approximate: dto.approximate, byKind: DeadLetterMapper.byKind(dto.byErrorType), routes };
+    return { unresolved: dto.unresolved, approximate: dto.approximate, byKind: DeadLetterMapper.byKind(dto.byErrorType), routes, byClass: DeadLetterMapper.byClass(dto.byErrorClass) };
   }
 
   static routeSummary(routeId: string, dto: RouteSummaryDto): DeadLetterSummary {
     const byKind = DeadLetterMapper.byKind(dto.byErrorType);
     const routes = dto.unresolved ? [{ routeId, routeName: '', unresolved: dto.unresolved, byKind }] : [];
-    return { unresolved: dto.unresolved, approximate: dto.approximate, byKind, routes };
+    return { unresolved: dto.unresolved, approximate: dto.approximate, byKind, routes, byClass: DeadLetterMapper.byClass(dto.byErrorClass) };
+  }
+
+  /** Server class counts; absent (older server) → derived from the kinds by the screens. */
+  static byClass(dto: Record<string, number> | null | undefined): Partial<Record<DeadLetterErrorClass, number>> | undefined {
+    if (!dto) return undefined;
+    return Object.fromEntries(Object.entries(dto).filter(([c]) => DeadLetterClasses.valid(c))) as Partial<Record<DeadLetterErrorClass, number>>;
   }
 
   private static byKind(dto: ByErrorTypeDto | null | undefined): DeadLetterKindCount[] {
@@ -130,7 +152,8 @@ export class DeadLetterMapper {
     const rawBytes = dto.value.encoding === EncodingDto.Base64 || dto.key.encoding === EncodingDto.Base64;
     const schema = DeadLetterMapper.schemaEncodings.includes(dto.value.encoding) ? { format: dto.value.encoding, schemaId: dto.value.schemaId } : undefined;
     const headers = dto.headers.map((h) => ({ key: h.key, value: h.value }));
-    return { stack: dto.stack, original: { key: dto.key.data, value: dto.value.data, headers, rawBytes, masked: dto.masked, schema } };
+    const encodings = { keyEncoding: dto.key.encoding, valueEncoding: dto.value.encoding };
+    return { stack: dto.stack, original: { key: dto.key.data, value: dto.value.data, headers, rawBytes, masked: dto.masked, schema, ...encodings } };
   }
 
   static restore(dto: RestoreReportDto, ids: string[]): DeadLetterActionReport {
@@ -152,6 +175,13 @@ export class DeadLetterMapper {
       error: dto.error || null,
       createdAt: dto.createdAt,
       finishedAt: dto.finishedAt,
+      ratePerSecond: dto.ratePerSecond,
+      note: dto.note,
+      edited: dto.edited,
+      idsCount: dto.idsCount,
+      requestedBy: dto.requestedBy,
+      requestedByMe: dto.requestedByMe,
+      approval: dto.approval,
     };
   }
 
@@ -177,6 +207,7 @@ export class DeadLetterMapper {
         skipped: [...all.skipped, ...r.skipped],
         remaining: all.remaining + r.remaining,
         deliveredAtLeastOnce: all.deliveredAtLeastOnce || r.deliveredAtLeastOnce || undefined,
+        approvalRequired: r.approvalRequired ? [...(all.approvalRequired ?? []), ...r.approvalRequired] : all.approvalRequired,
       }),
       { resolved: [], sent: 0, filtered: 0, failed: [], skipped: [], remaining: 0 } as DeadLetterActionReport,
     );

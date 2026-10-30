@@ -26,6 +26,8 @@ func NewAuthAssembly(w *Wiring) *AuthAssembly {
 	a.flows = map[config.AuthMode]func() (auth.LoginFlow, error){
 		config.AuthModeOIDC: a.oidcFlow,
 		config.AuthModeDev:  a.devFlow,
+
+		config.AuthModePassword: PasswordAssembly{w: w}.Flow,
 	}
 	return a
 }

@@ -72,3 +72,10 @@ func TestLocalProviderUnwrapsWithPreviousKeys(t *testing.T) {
 		t.Fatal("old key id unwrapped without the previous key file")
 	}
 }
+
+func TestLocalKeyIDFormatUnchanged(t *testing.T) {
+	key := make([]byte, 32)
+	if got := Fingerprint(key); got != "local:66687aadf862bd77" {
+		t.Fatalf("local key id changed (existing envelopes would stop decrypting): %s", got)
+	}
+}

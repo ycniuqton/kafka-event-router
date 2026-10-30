@@ -16,6 +16,8 @@
       "offset": 1
     },
     "resolution": null,
+    "errorClass": "data",
+    "fingerprint": "5547b185e8045895",
     "stack": "TypeError: x\n    at transform (step-1.js:7:22)",
     "key": {
       "encoding": "utf8",
@@ -59,6 +61,8 @@
       "offset": 2
     },
     "resolution": null,
+    "errorClass": "data",
+    "fingerprint": "b05f046a6623cbfa",
     "stack": "",
     "key": {
       "encoding": "json",

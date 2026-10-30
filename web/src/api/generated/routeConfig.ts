@@ -106,6 +106,31 @@ export type StepKind =
 export type DateLayout = "rfc3339" | "rfc3339_ms" | "date" | "datetime";
 /**
  * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupErrorAction".
+ */
+export type LookupErrorAction = "fail" | "skip" | "default";
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupMissAction".
+ */
+export type LookupMissAction = "default" | "skip" | "drop" | "fail";
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupRequestKind".
+ */
+export type LookupRequestKind = "http" | "redis" | "sql" | "static";
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupHttpMethod".
+ */
+export type LookupHTTPMethod = "GET" | "POST";
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupRedisOp".
+ */
+export type LookupRedisOp = "get" | "hget" | "mget";
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
  * via the `definition` "convertFailure".
  */
 export type ConvertFailure = "error" | "null" | "keep";
@@ -159,6 +184,11 @@ export type DeliveryMode = "at_least_once" | "exactly_once";
  * via the `definition` "errorAction".
  */
 export type ErrorAction = "dlq" | "skip" | "pause";
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "inFlightMode".
+ */
+export type InFlightMode = "auto" | "fixed";
 /**
  * This interface was referenced by `RouteConfig`'s JSON-Schema
  * via the `definition` "formatType".
@@ -301,6 +331,7 @@ export interface Step {
   id?: string;
   kind: StepKind;
   layout?: DateLayout;
+  lookup?: LookupSpec;
   newHeader?: string;
   onFailure?: ConvertFailure;
   /**
@@ -341,6 +372,132 @@ export interface Step {
    * Pinned library version of ref; library steps expand it inline at compile time.
    */
   version?: number;
+}
+/**
+ * Source mode of the lookup step: call a managed lookup source per event and map the answer into fields.
+ *
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupSpec".
+ */
+export interface LookupSpec {
+  cache?: LookupCache;
+  /**
+   * @minItems 1
+   * @maxItems 32
+   */
+  map: [LookupMapping, ...LookupMapping[]];
+  onError?: LookupErrorPolicy;
+  onMiss?: LookupMissPolicy;
+  request: LookupRequest;
+  /**
+   * Extra attempts on transient errors; absent means 1.
+   */
+  retries?: number;
+  /**
+   * Id of the lookup source (connections feature).
+   */
+  sourceId: string;
+  /**
+   * Timeout of one attempt; absent means 500.
+   */
+  timeoutMs?: number;
+}
+/**
+ * Per-worker LRU cache of answers; absent means no cache.
+ *
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupCache".
+ */
+export interface LookupCache {
+  /**
+   * Absent means 10000.
+   */
+  maxEntries?: number;
+  /**
+   * Lifetime of misses; absent or 0 caches no misses.
+   */
+  negativeTtlMs?: number;
+  /**
+   * Lifetime of found answers; 0 disables.
+   */
+  ttlMs?: number;
+}
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupMapping".
+ */
+export interface LookupMapping {
+  /**
+   * Pick from the answer: $, $.a.b, $.items[0].name.
+   */
+  from: string;
+  /**
+   * Target field path.
+   */
+  to: string;
+}
+/**
+ * What a lookup does when the source fails after retries; value is written to every target for action default.
+ *
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupErrorPolicy".
+ */
+export interface LookupErrorPolicy {
+  action: LookupErrorAction;
+  value?: unknown;
+}
+/**
+ * What a lookup does when the source has no answer; value is written to every target for action default.
+ *
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupMissPolicy".
+ */
+export interface LookupMissPolicy {
+  action: LookupMissAction;
+  value?: unknown;
+}
+/**
+ * Request template; strings may hold ${field.path} placeholders bound from the event (HTTP body string leaves too).
+ *
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupRequest".
+ */
+export interface LookupRequest {
+  body?: unknown;
+  /**
+   * Redis hash field of hget.
+   */
+  hashField?: string;
+  headers?: LookupTemplates;
+  /**
+   * Redis key or static table key.
+   */
+  key?: string;
+  /**
+   * @minItems 1
+   * @maxItems 100
+   */
+  keys?: [string, ...string[]];
+  kind: LookupRequestKind;
+  method?: LookupHTTPMethod;
+  op?: LookupRedisOp;
+  params?: LookupTemplates;
+  /**
+   * HTTP path appended to the source base URL.
+   */
+  path?: string;
+  query?: LookupTemplates;
+  /**
+   * One SELECT statement with :name parameters.
+   */
+  sql?: string;
+}
+/**
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "lookupTemplates".
+ */
+export interface LookupTemplates {
+  [k: string]: string;
 }
 /**
  * This interface was referenced by `RouteConfig`'s JSON-Schema
@@ -393,17 +550,55 @@ export interface ErrorPolicy {
   dlqTopic?: string;
   maxRetries?: number;
   onError: ErrorAction;
+  retry?: RetryPolicy;
+}
+/**
+ * Delayed retry of transient failures through retry topics; exhausted records follow onError.
+ *
+ * This interface was referenced by `RouteConfig`'s JSON-Schema
+ * via the `definition` "retryPolicy".
+ */
+export interface RetryPolicy {
+  /**
+   * Delay of the first attempt; attempt n waits min(base * 2^(n-1), maxDelayMs) (default 1000).
+   */
+  baseDelayMs?: number;
+  enabled: boolean;
+  /**
+   * Delayed attempts before the record follows onError (default 5).
+   */
+  maxAttempts?: number;
+  /**
+   * Upper bound of one attempt's delay, at least baseDelayMs (default 300000).
+   */
+  maxDelayMs?: number;
 }
 /**
  * This interface was referenced by `RouteConfig`'s JSON-Schema
  * via the `definition` "limits".
  */
 export interface Limits {
+  inFlightMode?: InFlightMode;
+  /**
+   * Largest JS sandbox pool size per JS step; absent means the worker's cores.
+   */
+  jsMaxInstances?: number;
   jsMemoryMb?: number;
+  /**
+   * Smallest JS sandbox pool size per JS step.
+   */
+  jsMinInstances?: number;
   jsTimeoutMs?: number;
+  /**
+   * In auto in-flight mode the cap of the adaptive limit; in fixed mode the limit itself.
+   */
   maxInFlight?: number;
   maxOutputBytes?: number;
   maxOutputsPerEvent?: number;
+  /**
+   * Floor of the adaptive in-flight limit (auto mode).
+   */
+  minInFlight?: number;
 }
 /**
  * This interface was referenced by `RouteConfig`'s JSON-Schema

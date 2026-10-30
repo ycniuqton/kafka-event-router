@@ -18,6 +18,13 @@ import {
   type DeadLetterPage,
   type DeadLetterSelection,
   type DeadLetterStudioLink,
+  type DeadLetterEdit,
+  type DeadLetterGroupPage,
+  type DeadLetterJobOptions,
+  type DeadLetterReplayOptions,
+  type DeadLetterReplayResult,
+  type DryRunReport,
+  DeadLetterReplayStatus,
 } from '../domain';
 import type { AppStore } from './AppStore';
 import type { ToastController } from './ToastController';
@@ -25,13 +32,34 @@ import type { ToastController } from './ToastController';
 /** Toast texts of dead-letter actions (design wording). */
 export class DeadLetterToasts {
   static retried(r: DeadLetterActionReport): string {
+    const gated = (r.approvalRequired ?? []).reduce((n, a) => n + a.ids.length, 0);
+    if (gated && !r.resolved.length && !r.failed.length) return DeadLetterToasts.approvalNeeded(gated);
     const done = r.resolved.length;
     const head = done === 1 ? 'Retried 1 event · sent' : `Retried ${done} events`;
     const failed = r.failed.length ? ` · ${r.failed.length} failed again: ${r.failed[0].message}` : '';
     const locked = r.skipped.some((s) => s.reason === DeadLetterSkipReason.Locked) ? ' · some events are being retried by someone else' : '';
     const remaining = r.remaining > 0 ? ` · ${r.remaining} more remain, retry again` : '';
     const atLeastOnce = r.deliveredAtLeastOnce ? ' · delivered at-least-once' : '';
-    return head + failed + locked + remaining + atLeastOnce;
+    const approval = gated ? ` · ${gated} need approval` : '';
+    return head + failed + locked + remaining + atLeastOnce + approval;
+  }
+
+  static approvalNeeded(count: number): string {
+    return `${count === 1 ? 'This event goes' : `${count} events go`} to a production destination: replaying needs a second person's approval`;
+  }
+
+  static requested(job: DeadLetterJob): string {
+    return `Replay of ${job.total || 'the selected'} events is waiting for approval by another approver`;
+  }
+
+  static decided(job: DeadLetterJob): string {
+    return job.status === DeadLetterJobStatus.Rejected ? `Replay of ${job.routeName} rejected` : `Replay of ${job.routeName} approved · it starts now`;
+  }
+
+  static replayed(r: DeadLetterReplayResult): string {
+    if (r.status === DeadLetterReplayStatus.PendingApproval && r.job) return DeadLetterToasts.requested(r.job);
+    const edited = r.diff.length ? ` with ${r.diff.length} change${r.diff.length === 1 ? '' : 's'}` : '';
+    return r.report?.failed.length ? `Replay failed again: ${r.report.failed[0].message}` : `Replayed 1 event${edited}`;
   }
 
   static discarded(r: DeadLetterActionReport): string {
@@ -104,12 +132,64 @@ export class DeadLetterActions {
   }
 
   /** Starts a background job over every matching event of a route and follows it until it ends. */
-  async startJob(routeId: string, action: DeadLetterJobAction, filter: DeadLetterFilter): Promise<DeadLetterJob | null> {
+  async startJob(routeId: string, action: DeadLetterJobAction, filter: DeadLetterFilter, options?: DeadLetterJobOptions): Promise<DeadLetterJob | null> {
     try {
-      const job = await this.services.deadLetters.startJob(routeId, action, filter);
+      const job = await this.services.deadLetters.startJob(routeId, action, filter, options);
+      this.started(job);
+      return job;
+    } catch (error) {
+      this.toast.show(DeadLetterToasts.failure(error));
+      return null;
+    }
+  }
+
+  /** A job runs and is followed, or waits for approval (strict 4-eyes) and is only shown. */
+  private started(job: DeadLetterJob): void {
+    this.track(job);
+    if (DeadLetterJobs.awaitingApproval(job)) return this.toast.show(DeadLetterToasts.requested(job));
+    this.toast.show(DeadLetterToasts.jobStarted(job));
+    this.follow(job.id);
+  }
+
+  /** Replays one record (optionally edited); a dry run only previews it. */
+  async replay(deadLetter: DeadLetter, edit: DeadLetterEdit | null, options: DeadLetterReplayOptions): Promise<DeadLetterReplayResult | null> {
+    try {
+      const result = await this.services.deadLetters.replay(deadLetter, edit, options);
+      if (result.status === DeadLetterReplayStatus.Preview) return result;
+      if (result.job) this.track(result.job);
+      this.toast.show(DeadLetterToasts.replayed(result));
+      void this.refreshSummary();
+      return result;
+    } catch (error) {
+      this.toast.show(DeadLetterToasts.failure(error));
+      return null;
+    }
+  }
+
+  async dryRun(routeId: string, selection: DeadLetterSelection): Promise<DryRunReport | null> {
+    try {
+      return await this.services.deadLetters.dryRun(routeId, selection);
+    } catch (error) {
+      this.toast.show(DeadLetterToasts.failure(error));
+      return null;
+    }
+  }
+
+  groups(filter: DeadLetterFilter): Promise<DeadLetterGroupPage> {
+    return this.services.deadLetters.groups(filter);
+  }
+
+  pendingApprovals(): Promise<DeadLetterJob[]> {
+    return this.services.deadLetters.pendingApprovals();
+  }
+
+  /** Approves (the job starts and is followed) or rejects a replay waiting for a second person. */
+  async decideJob(jobId: string, approve: boolean, note: string): Promise<DeadLetterJob | null> {
+    try {
+      const job = approve ? await this.services.deadLetters.approveJob(jobId, note) : await this.services.deadLetters.rejectJob(jobId, note);
       this.track(job);
-      this.toast.show(DeadLetterToasts.jobStarted(job));
-      this.follow(job.id);
+      this.toast.show(DeadLetterToasts.decided(job));
+      if (!DeadLetterJobs.done(job)) this.follow(job.id);
       return job;
     } catch (error) {
       this.toast.show(DeadLetterToasts.failure(error));

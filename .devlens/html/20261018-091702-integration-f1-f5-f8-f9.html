@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Integration F1 F5 F8 F9</title>
+<style>
+:root{--bg:#fff;--fg:#1d2128;--muted:#5b6472;--line:#dde1e6;--ok:#1f7a3f;--warn:#9a5b00;--code:#f4f5f7}
+@media (prefers-color-scheme:dark){:root{--bg:#15181d;--fg:#e6e8eb;--muted:#9aa3ae;--line:#2c323a;--ok:#5fcf8a;--warn:#e8b45c;--code:#1f242b}}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,sans-serif;margin:0;padding:24px 16px;max-width:980px;margin-inline:auto}
+h1{font-size:22px}h2{font-size:17px;margin-top:28px;border-bottom:1px solid var(--line);padding-bottom:4px}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+code{background:var(--code);padding:1px 4px;border-radius:3px;font-size:13px}.ok{color:var(--ok);font-weight:600}.warn{color:var(--warn);font-weight:600}
+pre{background:var(--code);padding:10px;overflow-x:auto;font-size:13px}
+</style></head><body>
+<h1>Integration: F1 → F5 → F8 → F9 into main (uncommitted, staged)</h1>
+<p>HEAD unchanged at <code>560a5c1</code>. 415 paths changed. F4 (fast codec) not merged yet.</p>
+<h2>Merge result</h2>
+<table><tr><th>Feature</th><th>Apply</th><th>Conflicts resolved (kept both)</th></tr>
+<tr><td>F1 hardening</td><td class="ok">clean</td><td>none</td></tr>
+<tr><td>F5 autotune</td><td>2 files</td><td><code>runner.go</code> Deps.Budget + Deps.InFlight, account + tuner fields; <code>record_flow.go</code> ticket cost + sent</td></tr>
+<tr><td>F8 dead-letters</td><td>9 files</td><td>metrics catalog (inflight/js queries + alert_router_dlq), runner metrics (inflight gauge + retry metrics), runner launch (tuner + retries), validators (limits + retry_policy), web Settings imports (InFlightMode + RetryPolicy)</td></tr>
+<tr><td>F9 lookups</td><td>2 files</td><td>enums/disposition: kept <code>CategoryDependencyTransient</code>, dropped <code>CategoryLookupTransient</code> (contract unification)</td></tr></table>
+<p>Generated files were never hand-merged: <code>routeconfig_gen.go</code>, <code>routeConfig.ts</code>, <code>engineTypes.ts</code>, <code>engineCatalog.*</code>, <code>schema.ts</code> regenerated with the Makefile commands (verified to reproduce base first, stable on re-run).</p>
+<h2>Contract decisions</h2>
+<pre>[event] lookup onError=fail, transient cause (timeout/5xx/429/breaker/unavailable)
+└─ ProcessError{Type: lookup_unavailable, Cause: DependencyError{Kind: lookup, Name: sourceId}}
+   └─ DefaultClassifier → dependency_transient → apply_policy
+      ├─ errorPolicy.retry on → retry tier topic
+      └─ else DLQ: router.error_type=lookup_unavailable → class transient
+[event] lookup onMiss=fail → lookup_miss → category step → step_error (class data)</pre>
+<ul>
+<li><b>a)</b> One name <code>lookup_unavailable</code> end to end; <code>ErrLookupTransient</code> renamed to <code>ErrLookupUnavailable</code>; engine-types schema enum gains <code>lookup_unavailable</code>, <code>lookup_miss</code>.</li>
+<li><b>b)</b> <code>Budget.UnderPressure()</code> = used ≥ high watermark or any route paused; <code>Assembly.inFlightTuning(budget)</code> sets <code>Deps.InFlight.Pressure</code>.</li>
+<li><b>c)</b> DLQ <code>AssemblyDeps.Sources</code> → <code>PipelineCache.WithSources</code>; test cases <code>RunnerDeps.Sources</code>; both use <code>lookupsFeature.Gateway(w)</code>.</li>
+<li><b>d)</b> <code>2100_dlq_workflow</code> renamed to <code>3100_dlq_workflow</code> (P4 range, dead-letters block); 3020 kept.</li>
+<li><b>e)</b> README rows updated; all folders ≤ 4 versions.</li></ul>
+<h2>Verification</h2>
+<table><tr><th>Check</th><th>Result</th></tr>
+<tr><td>go build / vet / gofmt</td><td class="ok">clean</td></tr>
+<tr><td>go test ./... -count=1</td><td class="ok">0 FAIL</td></tr>
+<tr><td>web build, oxlint</td><td class="ok">clean</td></tr>
+<tr><td>vitest</td><td class="ok">85 files, 415 tests pass</td></tr></table>
+<h2>HttpServicesFactory.test.ts root cause</h2>
+<p>Vitest 5 <code>fsModuleCache</code> (on by default) keys transforms on file content only, so main reused an old expansion of <code>import.meta.glob('../*/module.ts')</code> that had 12 modules and no <code>push</code>. That made the test pass when it should have failed. In fresh paths <code>HttpPushEventsService</code> called <code>WsUrl.from()</code> → <code>window.location</code> in node. Fix: <code>WsClient</code> accepts a lazy URL resolved in <code>connect()</code>, and <code>fsModuleCache: false</code> in <code>vitest.config.ts</code>.</p>
+<h2>Open issues</h2>
+<ul><li class="warn">Any DB that already applied 2100 needs <code>migrate force</code>/manual fix-up before 3100 runs (enum ADD VALUE is idempotent, the ALTER TABLE/CREATE TABLE are not).</li>
+<li>runner chaos test is load-sensitive (failed once under parallel load, passes alone and in final run).</li>
+<li>Deferred to integration step: RR-AT-41, RR-MB-08 stress re-runs, acceptance cases.</li></ul>
+</body></html>

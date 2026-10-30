@@ -17,6 +17,7 @@ type Config struct {
 	PoolMaxIdle int
 	CacheDir    string
 	Programs    ProgramCacheKind
+	Autoscale   AutoscaleTuning
 }
 
 // DefaultConfig returns the documented defaults of design §4.
@@ -27,5 +28,14 @@ func DefaultConfig() Config {
 		ResetPolicy: ResetFreshContext,
 		PoolMaxIdle: int(PoolMaxIdleDefault),
 		Programs:    ProgramCacheRoute,
+		Autoscale:   AutoscaleDefault,
 	}
+}
+
+// withDefaults fills autoscaling settings a hand-built Config left empty.
+func (c Config) withDefaults() Config {
+	if c.Autoscale == (AutoscaleTuning{}) {
+		c.Autoscale = AutoscaleDefault
+	}
+	return c
 }

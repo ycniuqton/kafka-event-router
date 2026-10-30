@@ -71,4 +71,14 @@ describe('WsClient', () => {
     expect(WsUrl.from('/api/v1/events', { protocol: 'https:', host: 'er.example' })).toBe('wss://er.example/api/v1/events');
     expect(WsUrl.from('/e', { protocol: 'http:', host: 'localhost:5173' })).toBe('ws://localhost:5173/e');
   });
+
+  it('resolves a lazy URL only when connecting', () => {
+    const urls: string[] = [];
+    const resolve = vi.fn(() => 'ws://lazy/e');
+    const client = new WsClient({ url: resolve, socketFactory: (url) => { urls.push(url); return new FakeSocket(); } });
+    expect(resolve).not.toHaveBeenCalled();
+    client.connect();
+    expect(urls).toEqual(['ws://lazy/e']);
+    client.close();
+  });
 });

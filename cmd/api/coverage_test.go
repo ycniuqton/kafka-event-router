@@ -2,6 +2,7 @@ package main
 
 import (
 	alertshttp "github.com/eventrouter/router/internal/alerts/http"
+	passwordhttp "github.com/eventrouter/router/internal/auth/password/httpapi"
 	"io"
 	"log/slog"
 	"testing"
@@ -16,6 +17,7 @@ import (
 	dlqhttp "github.com/eventrouter/router/internal/dlq/httpapi"
 	"github.com/eventrouter/router/internal/library/testcaseshttp"
 	livetailhttp "github.com/eventrouter/router/internal/livetail/http"
+	lookupshttp "github.com/eventrouter/router/internal/lookups/http"
 	metricshttp "github.com/eventrouter/router/internal/metrics/http"
 	"github.com/eventrouter/router/internal/platform/api"
 	"github.com/eventrouter/router/internal/platform/config"
@@ -30,10 +32,12 @@ import (
 func featureModules() []api.Module {
 	return []api.Module{
 		authhandlers.NewModule(authhandlers.Deps{Logins: auth.NewLoginManager(auth.LoginDeps{}), Config: config.Config{}}),
-		rbachttp.NewModule(rbachttp.Deps{}),
+		rbachttp.NewModule(rbachttp.Deps{Passwords: &rbac.PasswordUserService{}}),
+		passwordhttp.NewModule(passwordhttp.Deps{}),
 		audithttp.NewModule(audithttp.Deps{Audit: audit.NewManager(nil, audit.NewCatalog())}),
 		audithttp.NewExportModule(audithttp.Deps{Audit: audit.NewManager(nil, audit.NewCatalog())}),
 		connhttp.NewModule(connhttp.Deps{}),
+		lookupshttp.NewModule(lookupshttp.Deps{}),
 		routeshttp.NewModule(routeshttp.Deps{}),
 		dlqhttp.NewModule(dlqhttp.Deps{}),
 		metricshttp.NewModule(metricshttp.Deps{}),

@@ -45,6 +45,10 @@ var categoryErrorTypes = map[domain.ErrorCategory]record.ErrorType{
 	domain.CategoryStep:          record.ErrorStep,
 	domain.CategoryStepTimeout:   record.ErrorTimeout,
 	domain.CategoryOutputInvalid: record.ErrorOutputInvalid,
+
+	domain.CategoryDependencyTransient:  record.ErrorDependencyUnavailable,
+	domain.CategoryDestinationTransient: record.ErrorDependencyUnavailable,
+	domain.CategorySourceTransient:      record.ErrorDependencyUnavailable,
 }
 
 // KafkaDLQWriter builds the record contract and produces it; failed DLQ produces are destination
@@ -89,13 +93,13 @@ func (w KafkaDLQWriter) recordOf(f Failure) record.Record {
 	return record.Record{
 		Key: f.Source.Key, Value: f.Source.Value, Headers: f.Source.Headers,
 		Failure: record.Failure{RouteID: w.Route.RouteID, VersionNo: w.Route.VersionNo, Branch: f.Branch(), Step: f.Step(),
-			ErrorType: w.errorType(f), Message: f.Message(), Stack: f.Stack(), FailedAt: w.Now()},
+			ErrorType: w.errorType(f), Message: f.Message(), Stack: f.Stack(), FailedAt: w.Now(), Attempts: f.RetryAttempts},
 		Source: record.SourcePosition{Topic: f.Source.Topic, Partition: f.Source.Partition, Offset: f.Source.Offset},
 	}
 }
 
 func (KafkaDLQWriter) errorType(f Failure) record.ErrorType {
-	return ErrorTypes{}.Of(f.Category)
+	return DeadLetterTypes{}.Of(f)
 }
 
 // ErrorTypes maps runtime categories to the dead-letters error type vocabulary.

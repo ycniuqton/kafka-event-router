@@ -13,6 +13,7 @@ import {
   type TransformStep,
 } from '../../../../domain';
 import { StudioText } from './StudioText';
+import { LookupSourceCatalog } from './LookupSourceCatalog';
 
 /** Tiny before → after example shown on a recipe card, from the current sample's preview trace. */
 export type StepExample = { before: string; after: string };
@@ -177,12 +178,24 @@ class MapPresenter extends StepPresenter {
 class LookupPresenter extends StepPresenter {
   readonly kind = TransformStepKind.Lookup;
   summary(step: TransformStep): string {
+    if (step.lookupMode === LookupMode.Source) return LookupPresenter.sourceSummary(step);
     const table = step.lookupMode === LookupMode.Table ? StudioText.lookupTable(step.lookupRef, step.lookupVersion) : StudioText.lookupRows(step.lookupRows?.length ?? 0);
     return `${this.field(step)} → ${step.argument || this.field(step)} · ${table}`;
   }
   protected targetPath(step: TransformStep): string {
+    if (step.lookupMode === LookupMode.Source) return step.lookupSource?.map.find((m) => m.to.trim())?.to ?? '';
     return step.argument || step.field;
   }
+
+  /** `crm-api (HTTP) → customer.tier, customer.segment`. */
+  static sourceSummary(step: TransformStep): string {
+    const s = step.lookupSource;
+    const targets = (s?.map ?? []).map((m) => m.to.trim()).filter(Boolean).join(LookupPresenter.separator);
+    return `${LookupSourceCatalog.label(s?.sourceId ?? '')} → ${targets || LookupPresenter.noTarget}`;
+  }
+
+  static readonly separator = ', ';
+  static readonly noTarget = '…';
 }
 
 class SplitArrayPresenter extends StepPresenter {

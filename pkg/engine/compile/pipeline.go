@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/eventrouter/router/pkg/config"
@@ -22,12 +23,15 @@ var ErrUnknownBranch = errors.New("unknown branch")
 
 // compiledPipeline is the engine.Pipeline of one route version.
 type compiledPipeline struct {
-	meta     engine.RouteMeta
-	helpers  ctxhelpers.Set
-	modules  *script.ModuleSet
-	limits   config.ResolvedLimits
-	source   SourceCodecs
-	branches []*branch
+	meta      engine.RouteMeta
+	helpers   ctxhelpers.Set
+	modules   *script.ModuleSet
+	limits    config.ResolvedLimits
+	source    SourceCodecs
+	branches  []*branch
+	plan      engine.CodecPlan
+	records   RecordStrategy
+	fallbacks atomic.Uint64
 }
 
 // Decode decodes key and value once with the source codecs.

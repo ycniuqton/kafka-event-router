@@ -25,6 +25,7 @@ const (
 	HeaderSourceOffset    HeaderKey = "router.source_offset"
 	HeaderFailedAt        HeaderKey = "router.failed_at"
 	HeaderDelivered       HeaderKey = "router.delivered_branches"
+	HeaderRetryAttempts   HeaderKey = "router.retry_attempts"
 )
 
 // ListSeparator joins multi-value header values (router.delivered_branches).
@@ -46,10 +47,21 @@ const (
 	ErrorTimeout       ErrorType = "timeout"
 	ErrorOutputInvalid ErrorType = "output_invalid"
 	ErrorUnknown       ErrorType = "unknown"
+
+	ErrorLookupUnavailable     ErrorType = "lookup_unavailable"
+	ErrorDependencyUnavailable ErrorType = "dependency_unavailable"
+	ErrorProduceRetriable      ErrorType = "produce_retriable"
+	ErrorInternal              ErrorType = "internal_error"
+	ErrorSandboxCrash          ErrorType = "sandbox_crash"
+	ErrorEncode                ErrorType = "encode_error"
+	ErrorProduce               ErrorType = "produce_error"
+	ErrorConfig                ErrorType = "config_error"
 )
 
 // ErrorTypes lists every error type a writer may emit (ErrorUnknown is reader-only).
-var ErrorTypes = []ErrorType{ErrorDecode, ErrorStep, ErrorTimeout, ErrorOutputInvalid}
+var ErrorTypes = []ErrorType{ErrorDecode, ErrorStep, ErrorTimeout, ErrorOutputInvalid,
+	ErrorLookupUnavailable, ErrorDependencyUnavailable, ErrorProduceRetriable,
+	ErrorInternal, ErrorSandboxCrash, ErrorEncode, ErrorProduce, ErrorConfig}
 
 // Valid reports whether t is a writer error type.
 func (t ErrorType) Valid() bool {
@@ -117,6 +129,7 @@ type Failure struct {
 	Stack     string
 	FailedAt  time.Time
 	Delivered BranchSet
+	Attempts  int
 }
 
 // BranchSet is a comma-separated list of branch ids (kept a string so Failure stays comparable).

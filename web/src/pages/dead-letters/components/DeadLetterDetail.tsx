@@ -3,7 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { AppPaths } from '../../../app/paths';
 import { Button, Card, Format, JsonTree, SegmentedControl, ToneBadge } from '../../../components/ui';
 import { Can, MaskedHint, useCan } from '../../../access';
-import { DeadLetterDelivery, DeadLetterFileFormatLabel, DeadLetterResolutionMeta, DeadLetterResolutionState, Permission, Tone, type DeadLetter, type DeadLetterOriginal } from '../../../domain';
+import {
+  DeadLetterClasses,
+  DeadLetterDelivery,
+  DeadLetterErrorClassMeta,
+  DeadLetterFileFormatLabel,
+  DeadLetterResolutionMeta,
+  DeadLetterResolutionState,
+  Permission,
+  Tone,
+  type DeadLetter,
+  type DeadLetterOriginal,
+} from '../../../domain';
+import { ErrorClassBadge } from './ErrorClassBadge';
+import { ReplayDialog } from './ReplayDialog';
 import { useDeadLetterCommands } from '../model/useDeadLetterCommands';
 import { useDeadLetterDetail } from '../model/useDeadLetterDetail';
 import type { DeadLetterBrowserModel } from '../model/useDeadLetterBrowser';
@@ -19,23 +32,27 @@ export function DeadLetterDetail({ deadLetter: d, routeName, model, showAllLink 
   const original = detail?.original ?? undefined;
   const stack = detail?.stack || d.stack;
   const version = d.versionNo ? ` · v${d.versionNo}` : '';
+  const errorClass = DeadLetterClasses.of(d);
   return (
     <Card padding="md" className={styles.detail}>
       <div>
         <div className={styles.title}>
+          <ErrorClassBadge errorClass={errorClass} />
           {d.kind} · {d.step}
         </div>
         <div className={styles.meta}>
           {routeName}
           {version} · partition {d.partition} · offset {d.offset} · {Format.monthDayTime(d.failedAt)}
+          {d.attempts ? ` · parked after ${d.attempts} auto-retries` : ''}
         </div>
+        <div className={styles.meta}>{DeadLetterErrorClassMeta[errorClass].hint}</div>
       </div>
       <ResolutionLine deadLetter={d} />
       <AtLeastOnceNotice show={!d.resolution && DeadLetterDelivery.exactlyOnce([d])} />
       <div className={styles.message}>{d.message}</div>
       {stack && <pre className={styles.stack}>{stack}</pre>}
       <OriginalEvent original={original} loading={loading} />
-      <DetailActions deadLetter={d} model={model} showAllLink={showAllLink} />
+      <DetailActions deadLetter={d} model={model} showAllLink={showAllLink} original={detail ? original ?? null : undefined} />
     </Card>
   );
 }
@@ -72,9 +89,12 @@ function OriginalEvent({ original, loading }: { original: DeadLetterOriginal | u
   );
 }
 
-function DetailActions({ deadLetter: d, model, showAllLink }: Omit<DeadLetterDetailProps, 'routeName'>) {
+type DetailActionsProps = Omit<DeadLetterDetailProps, 'routeName'> & { original: DeadLetterOriginal | null | undefined };
+
+function DetailActions({ deadLetter: d, model, showAllLink, original }: DetailActionsProps) {
   const navigate = useNavigate();
   const commands = useDeadLetterCommands();
+  const [editing, setEditing] = useState(false);
   const discarded = d.resolution?.state === DeadLetterResolutionState.Discarded;
   return (
     <div className={styles.actions}>
@@ -83,10 +103,16 @@ function DetailActions({ deadLetter: d, model, showAllLink }: Omit<DeadLetterDet
       </Button>
       <Can permission={Permission.DlqAct}>
         {!d.resolution && <Button onClick={() => void model.retry([d.id])}>Retry</Button>}
+        {!d.resolution && (
+          <Button disabled={original === undefined} onClick={() => setEditing(true)}>
+            Edit &amp; replay…
+          </Button>
+        )}
         {!d.resolution && <Button onClick={() => void model.discard([d.id])}>Discard</Button>}
         {discarded && <Button onClick={() => void model.restore([d.id])}>Restore</Button>}
         <Button onClick={() => void commands.exportJson(d.routeId, { ids: [d.id] }, model.format)}>Export {DeadLetterFileFormatLabel[model.format]}</Button>
       </Can>
+      {editing && original !== undefined && <ReplayDialog deadLetter={d} original={original} onClose={() => setEditing(false)} onReplayed={model.resolved} />}
       {showAllLink && (
         <Button variant="ghost" onClick={() => navigate(AppPaths.deadLetters())}>
           All dead letters →

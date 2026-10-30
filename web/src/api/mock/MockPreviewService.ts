@@ -5,6 +5,7 @@ import {
   FilterMode,
   FilterTrace,
   JsonPatchDiffer,
+  LookupMockPlan,
   PreviewFailureKind,
   RawEncoding,
   RouteStatus,
@@ -19,6 +20,7 @@ import {
   type InlineEvent,
   type JsonValue,
   type KafkaEvent,
+  type LookupMocks,
   type LoadSamplesRequest,
   type PreviewFailure,
   type RouteDraft,
@@ -108,10 +110,22 @@ class MockRecordFactory {
   }
 }
 
+/** Puts the run's `lookupMocks` back on the draft's lookup source steps (matched by the run document's step ids). */
+class MockLookupMocks {
+  static apply(draft: RouteDraft, config: RouteConfig, mocks: LookupMocks): RouteDraft {
+    const ids = config.branches?.[0]?.transform?.steps?.map((s) => s.id) ?? [];
+    const steps = draft.steps.map((step, i) => {
+      const mock = ids[i] ? mocks[ids[i] as string] : undefined;
+      return mock && step.lookupSource ? { ...step, lookupSource: LookupMockPlan.applyTo(step.lookupSource, mock) } : step;
+    });
+    return { ...draft, steps };
+  }
+}
+
 /** Runs a draft config on records with the browser pipeline, emitting the server's RunResult shape. */
 class MockPreviewRunner {
-  run(config: unknown, records: SampleRecord[]): RunResult {
-    const draft = MockPreviewRunner.draftOf(config);
+  run(config: unknown, records: SampleRecord[], mocks: LookupMocks = {}): RunResult {
+    const draft = MockLookupMocks.apply(MockPreviewRunner.draftOf(config), config as RouteConfig, mocks);
     const results = records.map((r) => this.runOne(draft, r));
     const count = (s: EventStatus) => results.filter((r) => r.status === s).length;
     return {
@@ -229,11 +243,11 @@ export class MockPreviewService extends PreviewService {
   }
 
   run(request: RunRequest): Promise<RunResult> {
-    return this.backend.reply(this.runner.run(request.config, this.records(request)));
+    return this.backend.reply(this.runner.run(request.config, this.records(request), request.lookupMocks));
   }
 
   testRun(request: RunRequest): Promise<RunResult> {
-    const result = this.runner.run(request.config, this.records(request));
+    const result = this.runner.run(request.config, this.records(request), request.lookupMocks);
     const testTopic = request.writeToTopic ? MockTestTopics.of(request.config, result.summary.passed, this.backend.clock.now()) : undefined;
     return this.backend.reply({ ...result, testTopic });
   }

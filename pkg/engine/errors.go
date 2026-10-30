@@ -16,6 +16,11 @@ const (
 	ErrStepTimeout     ErrorType = "step_timeout"
 	ErrOutputInvalid   ErrorType = "output_invalid"
 	ErrLimit           ErrorType = "limit"
+	// ErrLookupUnavailable: a lookup source timed out, was unavailable, rate limited or its circuit was open
+	// (after the step's retries); the cause carries an engine.DependencyError (transient, the record is fine).
+	ErrLookupUnavailable ErrorType = "lookup_unavailable"
+	// ErrLookupMiss: the source had no answer and the step's onMiss is `fail` (a data error).
+	ErrLookupMiss ErrorType = "lookup_miss"
 )
 
 // StepFilter is the StepID reported when a filter node fails.

@@ -19,6 +19,8 @@ tags:
     description: Users, invitations, role bindings, teams, connection grants, effective access, approvals and the audit log (access-control).
   - name: connections
     description: Saved Kafka clusters, live tests, topic browser and topic creation (connections).
+  - name: lookup-sources
+    description: Lookup sources for lookup steps (HTTP, Redis, Postgres read-only, static tables), tests (connections 00001-lookup-sources).
   - name: routes
     description: Routes, drafts, validation, deploys, versions, diff, rollback and bulk actions (routes).
   - name: sandbox
@@ -36,10 +38,14 @@ paths:
     $ref: "./paths/auth.yaml#/oidcCallback"
   /auth/dev/login:
     $ref: "./paths/auth.yaml#/devLogin"
+  /auth/password/login:
+    $ref: "./paths/auth.yaml#/passwordLogin"
   /auth/logout:
     $ref: "./paths/auth.yaml#/logout"
   /auth/me:
     $ref: "./paths/auth.yaml#/me"
+  /auth/password:
+    $ref: "./paths/auth.yaml#/passwordChange"
   /auth/tokens:
     $ref: "./paths/auth.yaml#/tokens"
   /auth/tokens/{id}:
@@ -48,6 +54,8 @@ paths:
     $ref: "./paths/access-control.yaml#/users"
   /users/{id}:
     $ref: "./paths/access-control.yaml#/user"
+  /users/{id}/password-reset:
+    $ref: "./paths/access-control.yaml#/userPasswordReset"
   /role-bindings:
     $ref: "./paths/access-control.yaml#/roleBindings"
   /role-bindings/{userId}/{teamId}:
@@ -94,6 +102,14 @@ paths:
     $ref: "./paths/connections.yaml#/connectionTest"
   /connections/{id}/topics:
     $ref: "./paths/connections.yaml#/connectionTopics"
+  /lookup-sources:
+    $ref: "./paths/lookup-sources.yaml#/lookupSources"
+  /lookup-sources/test:
+    $ref: "./paths/lookup-sources.yaml#/lookupSourceDraftTest"
+  /lookup-sources/{id}:
+    $ref: "./paths/lookup-sources.yaml#/lookupSource"
+  /lookup-sources/{id}/test:
+    $ref: "./paths/lookup-sources.yaml#/lookupSourceTest"
   /routes:
     $ref: "./paths/routes.yaml#/routes"
   /routes/bulk:
@@ -180,6 +196,20 @@ paths:
     $ref: "./paths/dead-letters.yaml#/dlqJob"
   /dlq/jobs/{jobId}/cancel:
     $ref: "./paths/dead-letters.yaml#/dlqJobCancel"
+  /dlq/jobs/{jobId}/approve:
+    $ref: "./paths/dead-letters.yaml#/dlqJobApprove"
+  /dlq/jobs/{jobId}/reject:
+    $ref: "./paths/dead-letters.yaml#/dlqJobReject"
+  /dlq/jobs:
+    $ref: "./paths/dead-letters.yaml#/dlqJobs"
+  /routes/{id}/dlq/groups:
+    $ref: "./paths/dead-letters.yaml#/routeDLQGroups"
+  /dlq/groups:
+    $ref: "./paths/dead-letters.yaml#/globalDLQGroups"
+  /routes/{id}/dlq/dry-run:
+    $ref: "./paths/dead-letters.yaml#/routeDLQDryRun"
+  /routes/{id}/dlq/{dlqId}/replay:
+    $ref: "./paths/dead-letters.yaml#/routeDLQReplay"
   /routes/{id}/dlq/export:
     $ref: "./paths/dead-letters.yaml#/routeDLQExport"
   /routes/{id}/dlq/{dlqId}:

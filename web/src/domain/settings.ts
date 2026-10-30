@@ -12,7 +12,13 @@ export type UserSettings = { theme: Theme; showPhases: boolean };
 export const DefaultSettings: UserSettings = { theme: Theme.Dark, showPhases: true };
 
 /** Workspace-wide settings (`/workspace-settings`); `version` is the If-Match token of changes. */
-export type WorkspaceSettings = { aiAssistEnabled: boolean; defaultRequireProdApproval: boolean; version: number };
+export type WorkspaceSettings = {
+  aiAssistEnabled: boolean;
+  defaultRequireProdApproval: boolean;
+  /** Every route gets the "router-caused dead letters > 0" alert rule (enabled) unless turned off. */
+  routerCausedAlertDefault?: boolean;
+  version: number;
+};
 
 /** A change to workspace settings: only the given members are written. */
 export type WorkspaceSettingsPatch = Partial<Omit<WorkspaceSettings, 'version'>>;

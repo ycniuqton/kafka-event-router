@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"strconv"
 	"time"
 
 	"github.com/eventrouter/router/pkg/sandbox/boundary"
@@ -14,14 +15,26 @@ import (
 // RouteScope identifies the route version a sandbox serves; pools never cross scopes.
 // Formats are the source and destination formats; they select the boundary Marshaller.
 // LookupPins are the library lookup tables (at their pinned versions) ctx.lookup can read.
+// VersionNo labels metrics like the route series; Pool asks worker pools to autoscale (nil = fixed at
+// Parallelism, which is otherwise the starting size).
 type RouteScope struct {
 	RouteID     string
 	VersionID   string
+	VersionNo   int
 	TeamID      string
 	Parallelism int
 	Mode        ScopeMode
 	Formats     []boundary.Format
 	LookupPins  []host.LookupPin
+	Pool        *PoolRequest
+}
+
+// VersionLabel is the version metric label: the version number, or the version id when unnumbered.
+func (s RouteScope) VersionLabel() string {
+	if s.VersionNo > 0 {
+		return strconv.Itoa(s.VersionNo)
+	}
+	return s.VersionID
 }
 
 // Invocation is one event handed to a Module; SeedOverride replays a stored seed and Pin (test

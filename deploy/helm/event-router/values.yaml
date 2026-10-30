@@ -71,6 +71,9 @@ secret:
     - ROUTER_K8S_REVIEWER_TOKEN
     - ROUTER_SMTP_PASSWORD
     - ROUTER_ALERTS_WEBHOOK_SIGNING_KEY
+    - ROUTER_SECRETS_MASTER_KEY
+    - ROUTER_SECRETS_PREVIOUS_MASTER_KEYS
+    - ROUTER_BOOTSTRAP_ADMIN_PASSWORD
 
 # TLS for every listener; the internal listener also requires client certificates signed by ca.crt (mTLS).
 # Workers/preview present the same tls.crt as client certificate, so issue it with serverAuth + clientAuth

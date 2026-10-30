@@ -42,7 +42,7 @@ const (
 	ParamConnID Param = "connectionId"
 )
 
-// Deps groups what the handlers need.
+// Deps groups what the handlers need; Passwords is set only in password mode (user creation, password reset).
 type Deps struct {
 	Users     *rbac.UserService
 	Bindings  *rbac.BindingService
@@ -52,10 +52,19 @@ type Deps struct {
 	Settings  *rbac.SettingsService
 	Responder *api.Responder
 	Pages     *api.PageParser
+	Passwords *rbac.PasswordUserService
 }
 
-// NewModule returns the users and role-bindings handlers.
+// NewModule returns the users and role-bindings handlers (plus password administration in password mode).
 func NewModule(d Deps) api.Module {
+	modules := baseHandlers(d)
+	if d.Passwords != nil {
+		modules = append(modules, &CreateUserHandler{d: d}, &ResetPasswordHandler{d: d})
+	}
+	return modules
+}
+
+func baseHandlers(d Deps) api.Modules {
 	return api.Modules{
 		&ListUsersHandler{d: d},
 		&GetUserHandler{d: d},

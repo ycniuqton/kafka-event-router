@@ -99,10 +99,22 @@ func (NoScripts) Runtime(sandbox.RouteScope) script.Runtime { return nil }
 // Prewarm implements ScriptProvider.
 func (NoScripts) Prewarm(context.Context, sandbox.RouteScope) error { return nil }
 
-// SandboxParallelism is the per-route sandbox pool parallelism on a worker.
+// SandboxParallelism is the starting per-step sandbox pool size on a worker; pools then autoscale inside
+// the route's limits.jsMinInstances / jsMaxInstances (js-sandbox 00001-pool-autoscale).
 type SandboxParallelism int
 
 const DefaultSandboxParallelism SandboxParallelism = 4
+
+// WorkerScope builds the sandbox scope of a route version on a worker.
+type WorkerScope struct{}
+
+// Of returns the scope of a with the route's JS pool request.
+func (WorkerScope) Of(a domain.Assignment, cfg *config.RouteConfig) sandbox.RouteScope {
+	pool := cfg.Limits.JSPool()
+	return sandbox.RouteScope{RouteID: a.RouteID, VersionID: a.VersionID, VersionNo: a.VersionNo, TeamID: a.TeamID,
+		Parallelism: int(DefaultSandboxParallelism), Mode: sandbox.ScopeWorker, Formats: enginebind.ScopeFormats{}.Of(cfg),
+		LookupPins: enginebind.ScopeLookups{}.Of(cfg), Pool: &sandbox.PoolRequest{Min: pool.Min, Max: pool.Max}}
+}
 
 // EngineVersionCompiler compiles with pkg/engine and resolves every connection the version uses.
 type EngineVersionCompiler struct {
@@ -112,6 +124,9 @@ type EngineVersionCompiler struct {
 	Salts   ctxhelpers.SaltProvider
 	DLQ     failures.DLQTargetResolver
 	Library config.LibraryResolver
+	// Sources serves lookup steps in source mode (nil = lookups fail as permanent step errors).
+	Sources ctxhelpers.SourceGateway
+	Codec   engine.CodecMode
 }
 
 // Compile implements VersionCompiler.
@@ -128,11 +143,10 @@ func (c EngineVersionCompiler) Compile(ctx context.Context, a domain.Assignment,
 	if err != nil {
 		return runner.CompiledVersion{}, err
 	}
-	scope := sandbox.RouteScope{RouteID: a.RouteID, VersionID: a.VersionID, TeamID: a.TeamID, Parallelism: int(DefaultSandboxParallelism), Mode: sandbox.ScopeWorker, Formats: enginebind.ScopeFormats{}.Of(cfg),
-		LookupPins: enginebind.ScopeLookups{}.Of(cfg)}
+	scope := WorkerScope{}.Of(a, cfg)
 	library := NewLibraryProbe(c.Library)
-	opts := engine.CompileOptions{Scripts: c.Scripts.Runtime(scope), Helpers: ctxhelpers.Set{Hash: ctxhelpers.NewSaltedHasher(c.Salts, a.TeamID)}.WithDefaults(),
-		Meta: engine.RouteMeta{RouteID: a.RouteID, Name: a.RouteName, Version: a.VersionNo, TeamID: a.TeamID}, Library: library.Resolver()}
+	opts := engine.CompileOptions{Scripts: c.Scripts.Runtime(scope), Helpers: ctxhelpers.Set{Hash: ctxhelpers.NewSaltedHasher(c.Salts, a.TeamID), Sources: c.Sources}.WithDefaults(),
+		Meta: engine.RouteMeta{RouteID: a.RouteID, Name: a.RouteName, Version: a.VersionNo, TeamID: a.TeamID}, Library: library.Resolver(), Codec: c.Codec}
 	p, err := c.Engine.Compile(ctx, parsed, opts)
 	if err != nil {
 		return runner.CompiledVersion{}, library.Classify(err)

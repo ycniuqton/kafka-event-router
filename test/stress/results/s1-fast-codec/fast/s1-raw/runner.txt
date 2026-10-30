@@ -1,0 +1,42 @@
+goos: linux
+goarch: amd64
+pkg: github.com/eventrouter/router/internal/runtime/runner
+cpu: Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz
+BenchmarkS1RecordProcessor/shape=filter-only/payload=1KB         	  261331	     13613 ns/op	  77.28 MB/s	     13607 cpu-ns/op	     73493 events/cpu-s	     73460 events/s	    2856 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=1KB         	  289431	     13714 ns/op	  76.71 MB/s	     13707 cpu-ns/op	     72955 events/cpu-s	     72916 events/s	    2856 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=1KB         	  259723	     14110 ns/op	  74.56 MB/s	     14106 cpu-ns/op	     70893 events/cpu-s	     70870 events/s	    2856 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=10KB        	   36792	    102966 ns/op	  99.89 MB/s	    102900 cpu-ns/op	      9718 events/cpu-s	      9712 events/s	   12586 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=10KB        	   36286	     93324 ns/op	 110.21 MB/s	     93298 cpu-ns/op	     10718 events/cpu-s	     10715 events/s	   12586 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=10KB        	   37893	     92762 ns/op	 110.87 MB/s	     92734 cpu-ns/op	     10784 events/cpu-s	     10780 events/s	   12586 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=100KB       	    3583	    877573 ns/op	 116.75 MB/s	    877378 cpu-ns/op	      1140 events/cpu-s	      1140 events/s	  108369 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=100KB       	    4035	    878774 ns/op	 116.59 MB/s	    878552 cpu-ns/op	      1138 events/cpu-s	      1138 events/s	  108351 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=filter-only/payload=100KB       	    4784	    884860 ns/op	 115.79 MB/s	    884603 cpu-ns/op	      1130 events/cpu-s	      1130 events/s	  108328 B/op	      20 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=1KB            	  131535	     25552 ns/op	  41.17 MB/s	     25546 cpu-ns/op	     39145 events/cpu-s	     39136 events/s	    4320 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=1KB            	  142855	     24981 ns/op	  42.11 MB/s	     24975 cpu-ns/op	     40039 events/cpu-s	     40030 events/s	    4320 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=1KB            	  154308	     24643 ns/op	  42.69 MB/s	     24638 cpu-ns/op	     40588 events/cpu-s	     40579 events/s	    4320 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=10KB           	   34362	    104869 ns/op	  98.07 MB/s	    104846 cpu-ns/op	      9538 events/cpu-s	      9536 events/s	   14051 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=10KB           	   34540	    106546 ns/op	  96.53 MB/s	    106520 cpu-ns/op	      9388 events/cpu-s	      9386 events/s	   14051 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=10KB           	   34872	    106188 ns/op	  96.86 MB/s	    106163 cpu-ns/op	      9419 events/cpu-s	      9417 events/s	   14051 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=100KB          	    4122	    861885 ns/op	 118.87 MB/s	    861692 cpu-ns/op	      1161 events/cpu-s	      1160 events/s	  109812 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=100KB          	    3969	    888160 ns/op	 115.36 MB/s	    887956 cpu-ns/op	      1126 events/cpu-s	      1126 events/s	  109817 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=recipe-5/payload=100KB          	    4033	    906729 ns/op	 112.99 MB/s	    906523 cpu-ns/op	      1103 events/cpu-s	      1103 events/s	  109815 B/op	      45 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=1KB              	   41290	     80923 ns/op	  13.00 MB/s	     80901 cpu-ns/op	     12361 events/cpu-s	     12357 events/s	   23536 B/op	     324 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=1KB              	   47446	     82408 ns/op	  12.77 MB/s	     82390 cpu-ns/op	     12137 events/cpu-s	     12135 events/s	   23536 B/op	     324 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=1KB              	   49335	     81020 ns/op	  12.98 MB/s	     81001 cpu-ns/op	     12346 events/cpu-s	     12343 events/s	   23536 B/op	     324 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=10KB             	    5992	    566826 ns/op	  18.14 MB/s	    566673 cpu-ns/op	      1765 events/cpu-s	      1764 events/s	  170176 B/op	    2338 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=10KB             	    5676	    584247 ns/op	  17.60 MB/s	    584127 cpu-ns/op	      1712 events/cpu-s	      1712 events/s	  170176 B/op	    2338 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=10KB             	    5666	    583804 ns/op	  17.62 MB/s	    583603 cpu-ns/op	      1713 events/cpu-s	      1713 events/s	  170176 B/op	    2338 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=100KB            	     588	   5908255 ns/op	  17.34 MB/s	   5906917 cpu-ns/op	       169.3 events/cpu-s	       169.3 events/s	 1516357 B/op	   22116 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=100KB            	     678	   8446783 ns/op	  12.13 MB/s	   6778743 cpu-ns/op	       147.5 events/cpu-s	       118.4 events/s	 1516357 B/op	   22116 allocs/op
+BenchmarkS1RecordProcessor/shape=mapper/payload=100KB            	     535	   6379250 ns/op	  16.06 MB/s	   6375092 cpu-ns/op	       156.9 events/cpu-s	       156.8 events/s	 1516357 B/op	   22116 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=1KB                  	    2401	   2269049 ns/op	   0.46 MB/s	   1509117 cpu-ns/op	       662.6 events/cpu-s	       440.7 events/s	   52255 B/op	     840 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=1KB                  	    1369	   2243112 ns/op	   0.47 MB/s	   1728863 cpu-ns/op	       578.4 events/cpu-s	       445.8 events/s	   52286 B/op	     840 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=1KB                  	    2048	   1657025 ns/op	   0.63 MB/s	   1507293 cpu-ns/op	       663.4 events/cpu-s	       603.5 events/s	   52280 B/op	     840 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=10KB                 	     463	   7799007 ns/op	   1.32 MB/s	   7793924 cpu-ns/op	       128.3 events/cpu-s	       128.2 events/s	  344198 B/op	    4987 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=10KB                 	     460	   7532925 ns/op	   1.37 MB/s	   7510215 cpu-ns/op	       133.2 events/cpu-s	       132.8 events/s	  344190 B/op	    4987 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=10KB                 	     508	   7650004 ns/op	   1.34 MB/s	   7644065 cpu-ns/op	       130.8 events/cpu-s	       130.7 events/s	  344161 B/op	    4987 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=100KB                	      49	  70341834 ns/op	   1.46 MB/s	  70310347 cpu-ns/op	        14.22 events/cpu-s	        14.22 events/s	 3098324 B/op	   45719 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=100KB                	      54	  68399213 ns/op	   1.50 MB/s	  68304426 cpu-ns/op	        14.64 events/cpu-s	        14.62 events/s	 3097117 B/op	   45718 allocs/op
+BenchmarkS1RecordProcessor/shape=js/payload=100KB                	      46	  66950385 ns/op	   1.53 MB/s	  66932522 cpu-ns/op	        14.94 events/cpu-s	        14.94 events/s	 3099105 B/op	   45719 allocs/op
+PASS
+ok  	github.com/eventrouter/router/internal/runtime/runner	188.712s

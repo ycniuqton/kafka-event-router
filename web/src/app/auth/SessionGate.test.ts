@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, ApiErrorBus, ApiErrorText, HttpMethod, ProblemCatalog, ProblemKind, SessionService } from '../../api/http/core';
+import { ApiError, ApiErrorBus, ApiErrorText, AuthProblemCode, HttpMethod, ProblemCatalog, ProblemKind, SessionService } from '../../api/http/core';
 import { AuthPaths } from './AuthPaths';
 import { GlobalApiErrorHandlers } from './GlobalApiErrorHandlers';
 import { MockSessionService } from './MockSessionService';
@@ -29,6 +29,13 @@ describe('SessionGateController', () => {
     expect(outcome).toEqual({ status: GateStatus.Redirect, to: '/login?return_to=%2Froutes%3Fq%3Da' });
   });
 
+  it('shows only the forced change screen while must_change_password is set (missing = false)', async () => {
+    const user = { ...MockSessionService.user, must_change_password: true };
+    expect(SessionGateController.fromUser(user)).toEqual({ status: GateStatus.PasswordChange, user });
+    const { must_change_password: _omitted, ...legacy } = MockSessionService.user;
+    expect(SessionGateController.fromUser(legacy).status).toBe(GateStatus.Authenticated);
+  });
+
   it('reports other failures as retryable errors', async () => {
     const outcome = await new SessionGateController(new FailingSession(ApiError.network(new TypeError()))).resolve('/');
     expect(outcome).toEqual({ status: GateStatus.Failed, message: ApiErrorText.Network });
@@ -50,7 +57,7 @@ describe('GlobalApiErrorHandlers', () => {
     const bus = new ApiErrorBus();
     const toLogin = vi.fn();
     const toast = vi.fn();
-    const uninstall = GlobalApiErrorHandlers.install(bus, { toLogin, toast });
+    const uninstall = GlobalApiErrorHandlers.install(bus, { toLogin, toast, toPasswordChange: vi.fn() });
     const request = { method: HttpMethod.Get, path: '/routes' };
     bus.publish(problem(ProblemKind.Unauthenticated, 401), request);
     bus.publish(problem(ProblemKind.PreconditionFailed, 412), request);
@@ -61,5 +68,16 @@ describe('GlobalApiErrorHandlers', () => {
     uninstall();
     bus.publish(problem(ProblemKind.Unauthenticated, 401), request);
     expect(toLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes 403 password_change_required to the change screen without a toast', () => {
+    const bus = new ApiErrorBus();
+    const toPasswordChange = vi.fn();
+    const toast = vi.fn();
+    GlobalApiErrorHandlers.install(bus, { toLogin: vi.fn(), toast, toPasswordChange });
+    const required = ApiError.fromProblem({ type: ProblemCatalog.typeOf(ProblemKind.Forbidden), title: 'Forbidden', status: 403, code: AuthProblemCode.PasswordChangeRequired });
+    bus.publish(required, { method: HttpMethod.Get, path: '/routes' });
+    expect(toPasswordChange).toHaveBeenCalledTimes(1);
+    expect(toast).not.toHaveBeenCalled();
   });
 });

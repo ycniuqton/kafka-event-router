@@ -1,6 +1,8 @@
 package reconcile
 
 import (
+	"log/slog"
+
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/eventrouter/router/internal/runtime/domain"
@@ -26,6 +28,7 @@ type Metrics struct {
 	up       prometheus.Gauge
 	capacity prometheus.Gauge
 	reloads  *prometheus.CounterVec
+	codec    *CodecReport
 }
 
 // NewMetrics registers the worker gauges (nil registerer = unregistered).
@@ -38,6 +41,7 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 	if reg != nil {
 		reg.MustRegister(m.up, m.capacity, m.reloads)
 	}
+	m.codec = NewCodecReport(reg)
 	return m
 }
 
@@ -52,6 +56,13 @@ func (m *Metrics) ControlPlaneUp(up bool) {
 
 // Capacity sets router_worker_capacity_used.
 func (m *Metrics) Capacity(used float64) { m.capacity.Set(used) }
+
+// Codec reports the codec plan of a compiled version (nil-safe).
+func (m *Metrics) Codec(log *slog.Logger, a domain.Assignment, v runner.CompiledVersion) {
+	if m != nil {
+		m.codec.Report(log, a, v)
+	}
+}
 
 // Reload counts a version change by kind.
 func (m *Metrics) Reload(kind domain.ReloadKind) { m.reloads.WithLabelValues(string(kind)).Inc() }

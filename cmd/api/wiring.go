@@ -38,6 +38,7 @@ type Wiring struct {
 	AuthModule     api.Module
 	SecretsModule  api.Module
 	Access         *AccessWiring
+	Password       *PasswordWiring
 	Platform       *PlatformWiring
 	PlatformP3     *PlatformP3Wiring
 	SecretParts    SecretsParts
@@ -47,7 +48,7 @@ type Wiring struct {
 // NewWiring composes everything in dependency order.
 func NewWiring(ctx context.Context, deps *app.Deps, reg *metrics.Registry) (*Wiring, error) {
 	w := &Wiring{Deps: deps, Tx: store.NewTxManager(deps.DB), Notifier: store.NewNotifier(deps.DB), Identity: identity.New(deps.DB)}
-	steps := []func(context.Context) error{w.migrate, w.buildAudit, w.buildSecrets, w.buildPlatform, w.buildAuth, w.buildAccess, w.buildPlatformP3(reg), w.buildMounters(reg), w.buildModules}
+	steps := []func(context.Context) error{w.migrate, w.buildAudit, w.buildSecrets, w.buildPlatform, w.buildAuth, w.buildAccess, w.buildPassword, w.buildPlatformP3(reg), w.buildMounters(reg), w.buildModules}
 	for _, step := range steps {
 		if err := step(ctx); err != nil {
 			return nil, err
@@ -99,6 +100,7 @@ func (w *Wiring) buildMounters(reg *metrics.Registry) func(context.Context) erro
 		}
 		w.Public = api.NewMounter(w.Responder, w.globalMiddlewares(metrics.NewHTTPCollector(reg.Registerer())), []api.RouteMiddleware{
 			api.AuthenticateStage{Authenticator: w.Deps.Auth, Responder: w.Responder},
+			w.passwordGate(),
 			api.RateLimitStage{Guard: w.Platform.RateGuard, Responder: w.Responder},
 			api.CSRFStage{CSRF: auth.NewCSRFMiddleware(w.Cookies), Responder: w.Responder},
 			api.AuthorizeStage{Authorize: auth.NewAuthorizeMiddleware(authz), Responder: w.Responder},
@@ -139,7 +141,9 @@ func (w *Wiring) globalMiddlewares(collector *metrics.HTTPCollector) []api.Globa
 }
 
 func (w *Wiring) buildModules(context.Context) error {
-	w.AuthModule = authhandlers.NewModule(authhandlers.Deps{Logins: w.Logins, Responder: w.Responder, Config: w.Deps.Config, Contributors: w.MeContributors})
+	base := authhandlers.NewModule(authhandlers.Deps{Logins: w.Logins, Responder: w.Responder, Config: w.Deps.Config,
+		Contributors: w.MeContributors, ConfigContributors: w.passwordConfig()})
+	w.AuthModule = append(api.Modules(base.Handlers()), w.passwordModule()...)
 	w.SecretsModule = secrethandlers.NewModule(secrets.NewAuditedReader(w.Deps.Secrets, w.Deps.Audit), w.Responder)
 	return nil
 }

@@ -27,7 +27,7 @@ func (in RunInputs) Plan(ctx context.Context, caller Caller, req RunRequest, mod
 	if len(req.Config) == 0 {
 		return RunPlan{}, ErrRunInput.At(string(FieldConfig))
 	}
-	plan := RunPlan{Config: req.Config, Scope: RunScope{TeamID: caller.TeamID, Mode: mode}}
+	plan := RunPlan{Config: req.Config, Scope: RunScope{TeamID: caller.TeamID, Mode: mode, LookupMocks: req.LookupMocks}}
 	if req.SessionID == "" {
 		return in.inline(ctx, plan, caller, req)
 	}

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Button, Chip, Select } from '../../../components/ui';
 import { Can } from '../../../access';
 import {
@@ -7,13 +8,18 @@ import {
   DeadLetterReports,
   DeadLetterTimeRange,
   DeadLetterTimeRanges,
+  DeadLetterClasses,
+  DeadLetterErrorClassMeta,
   Permission,
+  type DeadLetterErrorClass,
   type DeadLetterKindCount,
 } from '../../../domain';
 import { DeadLetterCheckedRows, type DeadLetterRouteNames } from '../model/DeadLetterBrowserModel';
 import { AllRoutesFilter, DeadLetterQuery, DeadLetterViewParams, type DeadLetterView } from '../model/DeadLetterQuery';
 import type { DeadLetterBrowserModel } from '../model/useDeadLetterBrowser';
 import { DeadLetterRefineBar } from './DeadLetterRefineBar';
+import { ReplayTargets, type ReplayJobTarget } from '../model/ReplayTargets';
+import { ReplayJobDialog } from './CauseGroupDialogs';
 import styles from './DeadLetterToolbar.module.css';
 
 export type DeadLetterToolbarProps = {
@@ -26,14 +32,31 @@ export type DeadLetterToolbarProps = {
   names: DeadLetterRouteNames;
   onParam: (key: string, value: string | null) => void;
   onExport: (() => void) | null;
-  onBulk: (action: DeadLetterJobAction) => void;
+  onBulk: ((action: DeadLetterJobAction) => void) | null;
+  /** Causes view: filters and chips only (no row selection or bulk actions). */
+  filtersOnly?: boolean;
+  /** Unresolved per class for the class chips. */
+  classCounts: Record<DeadLetterErrorClass, number>;
 };
 
 /** Count, route / error-type / time filters, the P2 refine bar and the bulk actions of the dead-letter list. */
 export function DeadLetterToolbar(props: DeadLetterToolbarProps) {
-  const { model, unresolved, approximate, view, onParam } = props;
+  const { model, unresolved, approximate, view, onParam, filtersOnly } = props;
   const { state } = model;
   const shown = `${state.items.length}${state.hasMore ? '+' : ''} shown`;
+  if (filtersOnly) {
+    return (
+      <div className={styles.wrap}>
+        <div className={styles.bar}>
+          <span className={styles.count}>
+            {approximate ? '~' : ''}
+            {unresolved} unresolved
+          </span>
+          <DeadLetterFilters {...props} />
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={styles.wrap}>
       <div className={styles.bar}>
@@ -61,7 +84,7 @@ export function DeadLetterToolbar(props: DeadLetterToolbarProps) {
 }
 
 /** Route select (global screen only), time window and error-type chips. */
-function DeadLetterFilters({ view, fixedRouteId, kinds, names, onParam }: DeadLetterToolbarProps) {
+function DeadLetterFilters({ view, fixedRouteId, kinds, names, onParam, classCounts }: DeadLetterToolbarProps) {
   return (
     <>
       {!fixedRouteId && (
@@ -81,6 +104,11 @@ function DeadLetterFilters({ view, fixedRouteId, kinds, names, onParam }: DeadLe
           </option>
         ))}
       </Select>
+      {DeadLetterClasses.order.map((c) => (
+        <Chip key={c} active={view.classes.includes(c)} count={classCounts[c]} onClick={() => onParam(DeadLetterQuery.Class, DeadLetterViewParams.toggleClass(view, c))}>
+          {DeadLetterErrorClassMeta[c].label}
+        </Chip>
+      ))}
       {kinds.map(({ kind, count }) => (
         <Chip key={kind} active={view.kinds.includes(kind)} count={count} onClick={() => onParam(DeadLetterQuery.Kind, DeadLetterViewParams.toggleKind(view, kind))}>
           {kind}
@@ -92,9 +120,12 @@ function DeadLetterFilters({ view, fixedRouteId, kinds, names, onParam }: DeadLe
 
 /** Retry / Discard / Restore the checked rows, or act on the whole view (large views run as background jobs); Export. */
 function DeadLetterBulkActions(props: DeadLetterToolbarProps) {
-  const { model, onExport } = props;
+  const { model, onExport, names } = props;
+  const [replay, setReplay] = useState<ReplayJobTarget | null>(null);
   const rows = model.state.checkedRows;
   const open = DeadLetterCheckedRows.unresolved(rows);
+  const routeIds = [...new Set(rows.map((d) => d.routeId))];
+  const replayAtRate = () => setReplay(ReplayTargets.selection(routeIds[0], names.of(routeIds[0]), open, model.filter.current));
   const discarded = DeadLetterCheckedRows.discarded(rows);
   const formatLabel = DeadLetterFileFormatLabel[model.format];
   return (
@@ -102,6 +133,11 @@ function DeadLetterBulkActions(props: DeadLetterToolbarProps) {
       {rows.length > 0 ? (
         <>
           {open.length > 0 && <Button size="sm" onClick={() => void model.retry(open)}>Retry {open.length}</Button>}
+          {open.length > 0 && routeIds.length === 1 && (
+            <Button size="sm" title="Replays the selected events in the background at a rate you choose" onClick={replayAtRate}>
+              Replay at rate…
+            </Button>
+          )}
           {open.length > 0 && <Button size="sm" onClick={() => void model.discard(open)}>Discard {open.length}</Button>}
           {discarded.length > 0 && <Button size="sm" onClick={() => void model.restore(discarded)}>Restore {discarded.length}</Button>}
         </>
@@ -118,6 +154,7 @@ function DeadLetterBulkActions(props: DeadLetterToolbarProps) {
       <Button size="sm" disabled={!onExport} title={onExport ? undefined : 'Pick one route (or check rows of one route) to export'} onClick={() => onExport?.()}>
         Export {formatLabel}
       </Button>
+      <ReplayJobDialog target={replay} onClose={() => setReplay(null)} />
     </Can>
   );
 }
@@ -129,7 +166,7 @@ function ViewActions({ model, view, unresolved, onBulk }: DeadLetterToolbarProps
   const large = unresolved > DeadLetterReports.syncCap;
   const retryAll = () => {
     if (!routeId) return void model.retry(DeadLetterCheckedRows.unresolved(state.items));
-    if (large) return onBulk(DeadLetterJobAction.Retry);
+    if (large) return onBulk?.(DeadLetterJobAction.Retry);
     return void model.retryAll(routeId);
   };
   return (
@@ -138,7 +175,7 @@ function ViewActions({ model, view, unresolved, onBulk }: DeadLetterToolbarProps
         Retry all
       </Button>
       {routeId && (
-        <Button size="sm" disabled={!state.items.length} title="Discards every matching event in the background" onClick={() => onBulk(DeadLetterJobAction.Discard)}>
+        <Button size="sm" disabled={!state.items.length} title="Discards every matching event in the background" onClick={() => onBulk?.(DeadLetterJobAction.Discard)}>
           Discard all…
         </Button>
       )}

@@ -14,6 +14,7 @@ import (
 	"github.com/eventrouter/router/pkg/engine/filter"
 	"github.com/eventrouter/router/pkg/engine/filter/operators"
 	"github.com/eventrouter/router/pkg/engine/formula"
+	"github.com/eventrouter/router/pkg/engine/projection"
 	"github.com/eventrouter/router/pkg/engine/script"
 	"github.com/eventrouter/router/pkg/engine/step"
 	"github.com/eventrouter/router/pkg/engine/step/recipes"
@@ -31,6 +32,7 @@ type Registries struct {
 	Values    *step.ValueSourceManager
 	Upgraders *config.UpgraderManager
 	Formulas  *formula.Compiler
+	Codec     projection.Analyzer
 }
 
 // DefaultRegistries returns the built-in registries.
@@ -43,6 +45,7 @@ func DefaultRegistries() Registries {
 		Values:    step.DefaultValueSourceManager(),
 		Upgraders: config.DefaultUpgraderManager(),
 		Formulas:  formula.NewDefaultCompiler(),
+		Codec:     projection.DefaultAnalyzer(),
 	}
 }
 
@@ -78,7 +81,16 @@ func (c *PipelineCompiler) Compile(ctx context.Context, doc *config.Document, op
 		_ = scope.Modules.Close(ctx)
 		return nil, &engine.CompileError{Issues: scope.Issues.Sort()}
 	}
+	RecordStrategies{}.Assign(p, c.analyzer().Plan(CodecInputs{}.Of(p, cfg, opts, scope)))
 	return p, nil
+}
+
+// analyzer returns the configured codec analyser, the default one when none is set.
+func (c *PipelineCompiler) analyzer() projection.Analyzer {
+	if len(c.reg.Codec.Checks) == 0 {
+		return projection.DefaultAnalyzer()
+	}
+	return c.reg.Codec
 }
 
 // upgrade selects the upgrader by apiVersion and decodes the typed config.
@@ -119,6 +131,7 @@ func (c *PipelineCompiler) newScope(ctx context.Context, cfg *config.RouteConfig
 		Tables:  tables,
 
 		Registries: opts.SchemaRegistries,
+		Access:     projection.NewRecorder(),
 	}
 }
 

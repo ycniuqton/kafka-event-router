@@ -2,6 +2,7 @@ import type { FilterGroup } from './filter';
 import { MapStart, type MapEntry } from './mapper';
 import { ConvertFailure, ConvertTarget, ValueSourceKind } from './transformOptions';
 import type { LookupRow } from './library';
+import type { LookupSourceStep } from './lookupStep';
 
 /** Kinds of transform step available in the Transform Studio (engine recipe kinds, see engineCatalog). */
 export const TransformStepKind = {
@@ -34,8 +35,8 @@ export type TransformStepKind = (typeof TransformStepKind)[keyof typeof Transfor
 
 export const MaskMode = { Email: 'email', Last4: 'last4', Full: 'full' } as const;
 
-/** Where a lookup step reads its table: rows kept in the step, or a named library table pinned to a version. */
-export const LookupMode = { Inline: 'inline', Table: 'table' } as const;
+/** Where a lookup step reads: rows kept in the step, a named library table pinned to a version, or a managed lookup source. */
+export const LookupMode = { Inline: 'inline', Table: 'table', Source: 'source' } as const;
 export type LookupMode = (typeof LookupMode)[keyof typeof LookupMode];
 export type MaskMode = (typeof MaskMode)[keyof typeof MaskMode];
 
@@ -70,6 +71,8 @@ export type TransformStep = {
   lookupVersion?: number;
   /** Lookup default for keys missing from the table (typed constant text; empty = keep the value). */
   fallback?: string;
+  /** Lookup source mode (`lookupMode` source): request templates, answer mapping, policies, cache and Studio mock. */
+  lookupSource?: LookupSourceStep;
   /** Header steps: the record header name (rename puts the new name in `argument`). */
   header?: string;
   explained?: boolean;

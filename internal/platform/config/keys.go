@@ -16,6 +16,7 @@ const (
 	EnvCursorSecret    EnvKey = "ROUTER_CURSOR_SECRET"
 	EnvLogLevel        EnvKey = "ROUTER_LOG_LEVEL"
 	EnvDatabaseURL     EnvKey = "ROUTER_DATABASE_URL"
+	EnvDBPoolMaxConns  EnvKey = "ROUTER_DB_POOL_MAX_CONNS"
 	EnvMigrateOnStart  EnvKey = "ROUTER_MIGRATE_ON_START"
 	EnvRedisURL        EnvKey = "ROUTER_REDIS_URL"
 	EnvKafkaBootstrap  EnvKey = "ROUTER_KAFKA_BOOTSTRAP"

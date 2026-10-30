@@ -11,6 +11,7 @@ import (
 	"github.com/eventrouter/router/internal/secrets"
 	"github.com/eventrouter/router/internal/secrets/kms"
 	"github.com/eventrouter/router/internal/secrets/local"
+	"github.com/eventrouter/router/internal/secrets/statickey"
 	"github.com/eventrouter/router/internal/secrets/vault"
 	"github.com/eventrouter/router/internal/store"
 )
@@ -36,6 +37,7 @@ func (SecretsAssembly) Build(ctx context.Context, cfg config.SecretsConfig, db *
 	local.Register(reg)
 	vault.Register(reg)
 	kms.Register(reg)
+	statickey.Register(reg)
 	provider, err := reg.Build(ctx, cfg)
 	if err != nil {
 		return SecretsParts{}, fmt.Errorf("secrets: %w", err)

@@ -105,6 +105,7 @@ func NewCatalog() *Catalog {
 		ActionDLQViewed)
 	c.registerAll(CategoryAccess, true, ActionSampleViewedRaw, ActionLiveTailOpened, ActionDLQExported,
 		ActionSecretRead, ActionAuditExported)
+	c.registerPasswordActions()
 	return c
 }
 

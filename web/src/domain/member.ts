@@ -45,6 +45,10 @@ export type TeamMember = Member & {
   status: UserStatus;
   workspaceAdmin: boolean;
   userVersion: number;
+  /** The user has a password credential (password mode). */
+  passwordLogin: boolean;
+  /** The user must change their password at the next sign-in. */
+  mustChangePassword: boolean;
 };
 
 /** Fields an admin may change on a user (`PATCH /users/{id}`). */

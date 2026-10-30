@@ -16,12 +16,12 @@ feature/system requirements in `docs/**/01-requirements.md` and the existing E2E
   These pass on local. TC-SEC-11 (dev login refused) is staging-only and is the local skip.
 
 <!-- run-summary:start -->
-**Last run:** 2026-10-16 15:22:07 UTC · **target:** `staging`
+**Last run:** 2026-10-18 11:43:44 UTC · **target:** `local`
 
 | Target | Last run | Cases | Automated | Manual | Pass | Fail | Skip | Not run |
 |---|---|---|---|---|---|---|---|---|
-| local | 2026-10-16 15:14:40 UTC | 216 | 181 | 35 | 179 | 1 | 1 | 0 |
-| staging | 2026-10-16 15:22:07 UTC | 216 | 181 | 35 | 161 | 1 | 19 | 0 |
+| local | 2026-10-18 11:43:44 UTC | 239 | 204 | 35 | 202 | 1 | 1 | 0 |
+| staging | 2026-10-16 15:22:07 UTC | 239 | 204 | 35 | 161 | 1 | 19 | 23 |
 <!-- run-summary:end -->
 
 ## Connections (UI spec §5)
@@ -260,6 +260,39 @@ feature/system requirements in `docs/**/01-requirements.md` and the existing E2E
 | TC-DLQ-11 | P1 | MVP | UI: list, original event, Retry report | One failure | Dead letters → row → Retry | Original event shown; Retry report dialog | ui/studio-monitoring.ui.spec.ts › TC-DLQ-11 | pass | pass |
 | TC-DLQ-12 | P2 | MVP | Filter by text | Two failures | GET dlq?q= | Only matching messages | api/dead-letters.spec.ts › TC-DLQ-12 | pass | pass |
 
+## Dead-letter workflow (dead-letters 00001-workflow)
+
+| ID | Pri | Phase | Title | Preconditions | Steps | Expected | Automated by | Local | Staging |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-DLW-01 | P0 | P4 | Error class on every dead letter | JS step throws | List + detail | errorType step_error, errorClass data on row and detail | api/dead-letters-workflow.spec.ts › TC-DLW-01 | pass | not run |
+| TC-DLW-02 | P0 | P4 | Cause groups with normalized pattern | 3 failures, same cause, different ids | GET dlq/groups; list ?fingerprint= | 1 group, count 3, pattern with <n>, byClass data 3; drill-down lists 3 | api/dead-letters-workflow.spec.ts › TC-DLW-02 | pass | not run |
+| TC-DLW-03 | P1 | P4 | Global cause view | Failures on a route | GET /dlq/groups?routeId= | Group of the route listed | api/dead-letters-workflow.spec.ts › TC-DLW-03 | pass | not run |
+| TC-DLW-04 | P0 | P4 | Dry run produces nothing | One failure | replay dryRun with edit | would_send, output on destination topic, diff /value/bad; nothing produced; still unresolved | api/dead-letters-workflow.spec.ts › TC-DLW-04 | pass | not run |
+| TC-DLW-05 | P1 | P4 | Unedited dry run fails again | One failure | replay dryRun | failed with the same message | api/dead-letters-workflow.spec.ts › TC-DLW-05 | pass | not run |
+| TC-DLW-06 | P0 | P4 | Edit then replay; audited diff without values | One failure | replay with edit + note | Edited event delivered, resolved; audit dlq.edited_replayed has paths, no values | api/dead-letters-workflow.spec.ts › TC-DLW-06 | pass | not run |
+| TC-DLW-07 | P1 | P4 | Invalid edit for a JSON source | One failure | replay with non-JSON value | 400 malformed body pointing at /edit/value (422 is reserved for Avro/Protobuf) | api/dead-letters-workflow.spec.ts › TC-DLW-07 | pass | not run |
+| TC-DLW-08 | P1 | P4 | Group dry run samples the group | 3 failures, one group | POST dlq/dry-run {match.fingerprint} | sampled 3, total 3, counts.failed 3 | api/dead-letters-workflow.spec.ts › TC-DLW-08 | pass | not run |
+| TC-DLW-09 | P0 | P4 | Bulk replay of a group as a rate-limited job | 4 failures, fixed version | POST dlq/jobs {match.fingerprint, ratePerSecond 2} | Job succeeded 4/4; 4 events delivered | api/dead-letters-workflow.spec.ts › TC-DLW-09 | pass | not run |
+| TC-DLW-10 | P1 | P4 | Viewers cannot dry-run or replay | Viewer user | replay / dry-run as viewer | 403 | api/dead-letters-workflow.spec.ts › TC-DLW-10 | pass | not run |
+| TC-DLW-11 | P0 | P4 | Strict 4-eyes replay into production | prod connection, editor + approver | sync retry; replay as editor; approve as editor, then approver | 409; 202 pending_approval; self-approve refused; approver approves → edited event delivered | api/dead-letters-workflow.spec.ts › TC-DLW-11 | pass | not run |
+| TC-DLW-12 | P1 | P4 | Router-caused DLQ alert rule provisioned by default | New route | GET alert-rules?routeId= | One enabled router_caused_dead_letters rule | api/dead-letters-workflow.spec.ts › TC-DLW-12 | pass | not run |
+| TC-DLW-13 | P0 | P4 | Auto-retry heals transient lookup failures; exhausted retries park | HTTP lookup source, retry maxAttempts 2 | CRM fails once; then full outage | First event delivered after a retry; second dead-lettered lookup_unavailable, class transient, attempts 2 | api/dead-letters-workflow.spec.ts › TC-DLW-13 | pass | not run |
+| TC-DLW-14 | P1 | P4 | UI: Causes view with class badge | 3 failures | Dead letters → Causes | Bad data badge, pattern "bad event <n>" | ui/workflow-lookups.ui.spec.ts › TC-DLW-14 | pass | not run |
+
+## Lookup sources and lookup steps (connections 00001-lookup-sources, pipeline-engine 00002-lookups)
+
+| ID | Pri | Phase | Title | Preconditions | Steps | Expected | Automated by | Local | Staging |
+|---|---|---|---|---|---|---|---|---|---|
+| TC-LKS-01 | P0 | P4 | Create HTTP source; token write-only; audited | Fake CRM on the runner | POST lookup-sources; GET; audit | 201; secretFields has token, never returned; lookup_source.created audited without it | api/lookup-sources.spec.ts › TC-LKS-01 | pass | not run |
+| TC-LKS-02 | P1 | P4 | Invalid settings name the field | — | POST with ftp:// base URL | 422 with /http/baseUrl pointer | api/lookup-sources.spec.ts › TC-LKS-02 | pass | not run |
+| TC-LKS-03 | P0 | P4 | Test checklist; auth failure explained | Saved sources (right / wrong token) | POST {id}/test | reachable → authenticated → sample passed, health stored; wrong token fails at authenticated with a reason | api/lookup-sources.spec.ts › TC-LKS-03 | pass | not run |
+| TC-LKS-04 | P1 | P4 | Test an unsaved draft | — | POST lookup-sources/test | ok; nothing stored | api/lookup-sources.spec.ts › TC-LKS-04 | pass | not run |
+| TC-LKS-05 | P1 | P4 | PATCH needs If-Match and keeps secrets | Saved source | PATCH without / with If-Match | 428; 200, token kept and still authenticates | api/lookup-sources.spec.ts › TC-LKS-05 | pass | not run |
+| TC-LKS-06 | P0 | P4 | Delete blocked while used; unknown sourceId invalid | Route uses the source | DELETE; validate route with unknown sourceId | 409 + usedBy lists the route; validation reports sourceId | api/lookup-sources.spec.ts › TC-LKS-06 | pass | not run |
+| TC-LKS-07 | P0 | P4 | Preview calls the live source | Sample session | POST preview/run | Enriched output (tier gold); CRM called | api/lookup-sources.spec.ts › TC-LKS-07 | pass | not run |
+| TC-LKS-08 | P0 | P4 | Running route enriches; outage → lookup_unavailable | Running route with lookup step | Produce 2; outage; produce 1 | Outputs enriched; dead letter lookup_unavailable, class transient, step crm | api/lookup-sources.spec.ts › TC-LKS-08 | pass | not run |
+| TC-LKS-09 | P1 | P4 | UI: Lookup sources tab | Saved source | Connections → Lookup sources, search | Row with name, HTTP kind and target | ui/workflow-lookups.ui.spec.ts › TC-LKS-09 | pass | not run |
+
 ## Audit log (UI spec §11.3)
 
 | ID | Pri | Phase | Title | Preconditions | Steps | Expected | Automated by | Local | Staging |
@@ -312,6 +345,6 @@ Filled in from the last run (see `report/html` for traces).
 <!-- known-failures:start -->
 | Target | ID | Reason | Error of the last run |
 |---|---|---|---|
-| local | TC-TS-35 | Product limitation, not fixed: the embedded QuickJS build records source positions only at calls/throws, so a TypeError from a property access (`event.value.order.items` on undefined) is reported at the function start (1:1) instead of line 2. Thrown errors are positioned correctly (TC-TS-14). Fixing needs a QuickJS/WASM rebuild with per-opcode line info (pkg/sandbox/quickjs). | Error: QuickJS reports the function start for property-access TypeErrors |
 | staging | TC-TS-35 | Product limitation, not fixed: the embedded QuickJS build records source positions only at calls/throws, so a TypeError from a property access (`event.value.order.items` on undefined) is reported at the function start (1:1) instead of line 2. Thrown errors are positioned correctly (TC-TS-14). Fixing needs a QuickJS/WASM rebuild with per-opcode line info (pkg/sandbox/quickjs). | Error: QuickJS reports the function start for property-access TypeErrors |
+| local | TC-TS-35 | Product limitation, not fixed: the embedded QuickJS build records source positions only at calls/throws, so a TypeError from a property access (`event.value.order.items` on undefined) is reported at the function start (1:1) instead of line 2. Thrown errors are positioned correctly (TC-TS-14). Fixing needs a QuickJS/WASM rebuild with per-opcode line info (pkg/sandbox/quickjs). | Error: QuickJS reports the function start for property-access TypeErrors |
 <!-- known-failures:end -->

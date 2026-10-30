@@ -9,11 +9,13 @@ import (
 
 // CompileOptions are the ports and route identity a compile needs; nil Scripts makes
 // js steps and expr nodes compile errors, nil Library makes library steps compile errors,
-// nil SchemaRegistries makes avro/protobuf records fail at runtime (no registry).
+// nil SchemaRegistries makes avro/protobuf records fail at runtime (no registry); an empty
+// Codec selects DefaultCodecMode for RecordRunner.Run.
 type CompileOptions struct {
 	Scripts          script.Runtime
 	Library          config.LibraryResolver
 	Helpers          ctxhelpers.Set
 	Meta             RouteMeta
 	SchemaRegistries codec.RegistryProvider
+	Codec            CodecMode
 }

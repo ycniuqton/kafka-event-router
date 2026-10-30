@@ -342,6 +342,41 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 100
+        },
+        "retry": {
+          "$ref": "#/$defs/retryPolicy"
+        }
+      }
+    },
+    "retryPolicy": {
+      "title": "RetryPolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "description": "Delayed retry of transient failures through retry topics; exhausted records follow onError.",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "maxAttempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Delayed attempts before the record follows onError (default 5)."
+        },
+        "baseDelayMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 3600000,
+          "description": "Delay of the first attempt; attempt n waits min(base * 2^(n-1), maxDelayMs) (default 1000)."
+        },
+        "maxDelayMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 86400000,
+          "description": "Upper bound of one attempt's delay, at least baseDelayMs (default 300000)."
         }
       }
     },
@@ -376,7 +411,29 @@
         "maxInFlight": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 100000
+          "maximum": 100000,
+          "description": "In auto in-flight mode the cap of the adaptive limit; in fixed mode the limit itself."
+        },
+        "inFlightMode": {
+          "$ref": "#/$defs/inFlightMode"
+        },
+        "minInFlight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "description": "Floor of the adaptive in-flight limit (auto mode)."
+        },
+        "jsMinInstances": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Smallest JS sandbox pool size per JS step."
+        },
+        "jsMaxInstances": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256,
+          "description": "Largest JS sandbox pool size per JS step; absent means the worker's cores."
         },
         "maxOutputsPerEvent": {
           "type": "integer",
@@ -389,6 +446,14 @@
           "maximum": 10485760
         }
       }
+    },
+    "inFlightMode": {
+      "title": "InFlightMode",
+      "type": "string",
+      "enum": [
+        "auto",
+        "fixed"
+      ]
     },
     "filterNode": {
       "title": "FilterNode",
@@ -734,6 +799,9 @@
         },
         "target": {
           "$ref": "#/$defs/mapField"
+        },
+        "lookup": {
+          "$ref": "#/$defs/lookupSpec"
         }
       },
       "allOf": [
@@ -1049,19 +1117,23 @@
             ]
           },
           "then": {
-            "required": [
-              "field"
-            ],
             "anyOf": [
               {
                 "required": [
+                  "field",
                   "rows"
                 ]
               },
               {
                 "required": [
+                  "field",
                   "ref",
                   "version"
+                ]
+              },
+              {
+                "required": [
+                  "lookup"
                 ]
               }
             ]
@@ -1632,6 +1704,324 @@
           "additionalProperties": {
             "$ref": "#/$defs/mapField"
           }
+        }
+      }
+    },
+    "lookupSpec": {
+      "title": "LookupSpec",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Source mode of the lookup step: call a managed lookup source per event and map the answer into fields.",
+      "required": [
+        "sourceId",
+        "request",
+        "map"
+      ],
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Id of the lookup source (connections feature)."
+        },
+        "request": {
+          "$ref": "#/$defs/lookupRequest"
+        },
+        "map": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/lookupMapping"
+          }
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Timeout of one attempt; absent means 500."
+        },
+        "retries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Extra attempts on transient errors; absent means 1."
+        },
+        "onMiss": {
+          "$ref": "#/$defs/lookupMissPolicy"
+        },
+        "onError": {
+          "$ref": "#/$defs/lookupErrorPolicy"
+        },
+        "cache": {
+          "$ref": "#/$defs/lookupCache"
+        }
+      }
+    },
+    "lookupRequestKind": {
+      "title": "LookupRequestKind",
+      "type": "string",
+      "enum": [
+        "http",
+        "redis",
+        "sql",
+        "static"
+      ]
+    },
+    "lookupHttpMethod": {
+      "title": "LookupHTTPMethod",
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST"
+      ]
+    },
+    "lookupRedisOp": {
+      "title": "LookupRedisOp",
+      "type": "string",
+      "enum": [
+        "get",
+        "hget",
+        "mget"
+      ]
+    },
+    "lookupTemplates": {
+      "title": "LookupTemplates",
+      "type": "object",
+      "maxProperties": 32,
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 2048
+      }
+    },
+    "lookupRequest": {
+      "title": "LookupRequest",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Request template; strings may hold ${field.path} placeholders bound from the event (HTTP body string leaves too).",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/lookupRequestKind"
+        },
+        "method": {
+          "$ref": "#/$defs/lookupHttpMethod"
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "HTTP path appended to the source base URL."
+        },
+        "query": {
+          "$ref": "#/$defs/lookupTemplates"
+        },
+        "headers": {
+          "$ref": "#/$defs/lookupTemplates"
+        },
+        "body": {},
+        "op": {
+          "$ref": "#/$defs/lookupRedisOp"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Redis key or static table key."
+        },
+        "keys": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 100,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          }
+        },
+        "hashField": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "description": "Redis hash field of hget."
+        },
+        "sql": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8192,
+          "description": "One SELECT statement with :name parameters."
+        },
+        "params": {
+          "$ref": "#/$defs/lookupTemplates"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "http"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "path"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "redis"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "op"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "sql"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "sql"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "static"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "key"
+            ]
+          }
+        }
+      ]
+    },
+    "lookupMapping": {
+      "title": "LookupMapping",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^\\$",
+          "description": "Pick from the answer: $, $.a.b, $.items[0].name."
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Target field path."
+        }
+      }
+    },
+    "lookupMissAction": {
+      "title": "LookupMissAction",
+      "type": "string",
+      "enum": [
+        "default",
+        "skip",
+        "drop",
+        "fail"
+      ]
+    },
+    "lookupErrorAction": {
+      "title": "LookupErrorAction",
+      "type": "string",
+      "enum": [
+        "fail",
+        "skip",
+        "default"
+      ]
+    },
+    "lookupMissPolicy": {
+      "title": "LookupMissPolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/lookupMissAction"
+        },
+        "value": {}
+      },
+      "description": "What a lookup does when the source has no answer; value is written to every target for action default."
+    },
+    "lookupErrorPolicy": {
+      "title": "LookupErrorPolicy",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action"
+      ],
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/lookupErrorAction"
+        },
+        "value": {}
+      },
+      "description": "What a lookup does when the source fails after retries; value is written to every target for action default."
+    },
+    "lookupCache": {
+      "title": "LookupCache",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-worker LRU cache of answers; absent means no cache.",
+      "properties": {
+        "ttlMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000,
+          "description": "Lifetime of found answers; 0 disables."
+        },
+        "negativeTtlMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000,
+          "description": "Lifetime of misses; absent or 0 caches no misses."
+        },
+        "maxEntries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000,
+          "description": "Absent means 10000."
         }
       }
     }

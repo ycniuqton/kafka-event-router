@@ -22,7 +22,6 @@ import (
 	"github.com/eventrouter/router/internal/runtime/clients"
 	"github.com/eventrouter/router/internal/runtime/controlapi"
 	"github.com/eventrouter/router/internal/runtime/domain"
-	"github.com/eventrouter/router/internal/runtime/retry"
 	"github.com/eventrouter/router/internal/runtime/state"
 	"github.com/eventrouter/router/internal/scheduler"
 	"github.com/eventrouter/router/internal/store/routestore"
@@ -100,7 +99,7 @@ func (rw *runtimeWiring) build(s *apiService) {
 func (rw *runtimeWiring) start(s *apiService, stores state.Stores, agg *controlapi.RuntimeStatusAggregator, lc state.DeploymentLifecycle, broker *changes.Broker) {
 	w := s.wiring
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	go changes.PgListener{Pool: w.Deps.DB.Pool(), Broker: broker, Retry: retry.DefaultPolicy(), Log: w.Deps.Log}.Run(ctx)
+	go changes.PgListener{Notifications: w.Deps.DB.Notifications(), Broker: broker}.Run(ctx)
 	loop, err := rw.scheduler(s, stores, agg, lc, broker)
 	if err != nil || loop == nil {
 		if err != nil {

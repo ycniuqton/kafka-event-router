@@ -3,6 +3,7 @@ package overview
 
 import (
 	"context"
+	"math"
 	"sort"
 	"time"
 
@@ -31,12 +32,21 @@ type ChartSeries struct {
 	ErrorsPerMin   []query.Point            `json:"errorsPerMin"`
 }
 
+// Tuning are the current auto-tuned values of a route summed over its runners (null without series):
+// the in-flight limit, the live JS instances and the p95 time a JS call waited for an instance (seconds).
+type Tuning struct {
+	InFlightLimit  *float64 `json:"inFlightLimit"`
+	JSInstances    *float64 `json:"jsInstances"`
+	JSQueueWaitP95 *float64 `json:"jsQueueWaitP95"`
+}
+
 // RouteMetrics is GET /routes/{id}/metrics.
 type RouteMetrics struct {
 	Range    metrics.TimeRange `json:"range"`
 	Step     string            `json:"step"`
 	Pipeline []PipelineRow     `json:"pipeline"`
 	Series   ChartSeries       `json:"series"`
+	Tuning   Tuning            `json:"tuning"`
 }
 
 // RouteLookup confirms the route exists (routes' RouteRepository).
@@ -54,6 +64,7 @@ type RouteOverviewService struct {
 // overviewResults holds the raw answers of one load.
 type overviewResults struct {
 	consumed, filtered, produced, dlq query.Vector
+	inflight, jsInstances, jsWait     query.Vector
 	in, out, lag, p50, p95, errors    []query.Series
 }
 
@@ -70,10 +81,24 @@ func (s *RouteOverviewService) Load(ctx context.Context, id routes.RouteID, r me
 		Pipeline: PipelineAssembler{}.Rows(res.consumed, res.filtered, res.produced, res.dlq),
 		Series: ChartSeries{EventsIn: SeriesPoints{}.First(res.in), EventsOut: SeriesPoints{}.First(res.out),
 			LagByPartition: PartitionCap{Max: int(MaxPartitions)}.Apply(res.lag), LatencyP50: SeriesPoints{}.First(res.p50),
-			LatencyP95: SeriesPoints{}.First(res.p95), ErrorsPerMin: SeriesPoints{}.First(res.errors)}}, nil
+			LatencyP95: SeriesPoints{}.First(res.p95), ErrorsPerMin: SeriesPoints{}.First(res.errors)},
+		Tuning: Tuning{InFlightLimit: VectorValue{}.Of(res.inflight), JSInstances: VectorValue{}.Of(res.jsInstances),
+			JSQueueWaitP95: VectorValue{}.Of(res.jsWait)}}, nil
 }
 
-// batch schedules the 4 pipeline instants and 6 chart ranges.
+// VectorValue reads the single value of a summed instant vector; no series or NaN is null.
+type VectorValue struct{}
+
+// Of returns the first sample's value or nil.
+func (VectorValue) Of(v query.Vector) *float64 {
+	if len(v) == 0 || math.IsNaN(v[0].Value) {
+		return nil
+	}
+	x := v[0].Value
+	return &x
+}
+
+// batch schedules the 4 pipeline instants, the 3 tuning instants and the 6 chart ranges.
 func (s *RouteOverviewService) batch(id string, r metrics.TimeRange, res *overviewResults) *query.Batch {
 	cat := query.ExprCatalog{}
 	p := query.ForRoute(id, r.Duration(), r.RateWindow())
@@ -81,6 +106,8 @@ func (s *RouteOverviewService) batch(id string, r metrics.TimeRange, res *overvi
 	b := query.NewBatch(s.Querier)
 	b.Instant(cat.Build(query.QueryPipelineConsumed, p), &res.consumed).Instant(cat.Build(query.QueryPipelineFiltered, p), &res.filtered).
 		Instant(cat.Build(query.QueryPipelineProduced, p), &res.produced).Instant(cat.Build(query.QueryPipelineDLQ, p), &res.dlq)
+	b.Instant(cat.Build(query.QueryInFlightLimit, p), &res.inflight).Instant(cat.Build(query.QueryJSInstances, p), &res.jsInstances).
+		Instant(cat.Build(query.QueryJSQueueWaitP95, p), &res.jsWait)
 	b.Range(cat.Build(query.QueryEventsIn, p), w, &res.in).Range(cat.Build(query.QueryEventsOut, p), w, &res.out).
 		Range(cat.Build(query.QueryLagByPartition, p), w, &res.lag).Range(cat.Build(query.QueryLatencyP50, p), w, &res.p50).
 		Range(cat.Build(query.QueryLatencyP95, p), w, &res.p95).Range(cat.Build(query.QueryErrorsPerMin, p), w, &res.errors)

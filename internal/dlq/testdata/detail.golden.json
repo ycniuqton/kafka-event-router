@@ -15,6 +15,8 @@
     "offset": 1
   },
   "resolution": null,
+  "errorClass": "data",
+  "fingerprint": "5547b185e8045895",
   "stack": "TypeError: x\n    at transform (step-1.js:7:22)",
   "key": {
     "encoding": "utf8",

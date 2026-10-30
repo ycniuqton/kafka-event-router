@@ -1,4 +1,4 @@
-import { ApiError, ApiErrorKind, ApiErrorListener, ApiErrorText, ProblemKind, type ApiErrorBus } from '../../api/http/core';
+import { ApiError, ApiErrorKind, ApiErrorListener, ApiErrorText, AuthProblemCode, ProblemKind, type ApiErrorBus } from '../../api/http/core';
 import { accessStore } from '../../access/AccessStore';
 import { ForbiddenToast } from '../../access/ForbiddenToast';
 
@@ -13,6 +13,20 @@ export class UnauthenticatedRedirect extends ApiErrorListener {
 
   handle(error: ApiError): void {
     if (error.is(ProblemKind.Unauthenticated)) this.toLogin();
+  }
+}
+
+/** 403 `password_change_required` on any call → the forced change-password screen (instead of a toast). */
+export class PasswordChangeRedirect extends ApiErrorListener {
+  private readonly toPasswordChange: () => void;
+
+  constructor(toPasswordChange: () => void) {
+    super();
+    this.toPasswordChange = toPasswordChange;
+  }
+
+  handle(error: ApiError): void {
+    if (error.code === AuthProblemCode.PasswordChangeRequired) this.toPasswordChange();
   }
 }
 
@@ -44,13 +58,14 @@ export class NetworkToast extends ApiErrorListener {
   }
 }
 
-export type GlobalHandlerTargets = { toLogin: () => void; toast: (message: string) => void };
+export type GlobalHandlerTargets = { toLogin: () => void; toPasswordChange: () => void; toast: (message: string) => void };
 
 /** Installs the app-wide API error reactions; returns the uninstall function. */
 export class GlobalApiErrorHandlers {
   static install(bus: ApiErrorBus, targets: GlobalHandlerTargets): () => void {
     const removers = [
       bus.add(new UnauthenticatedRedirect(targets.toLogin)),
+      bus.add(new PasswordChangeRedirect(targets.toPasswordChange)),
       bus.add(new ConflictToast(targets.toast)),
       bus.add(new NetworkToast(targets.toast)),
       bus.add(new ForbiddenToast(targets.toast, () => void accessStore.refresh())),

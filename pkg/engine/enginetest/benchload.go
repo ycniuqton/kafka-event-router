@@ -2,7 +2,12 @@ package enginetest
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"testing"
+
+	"github.com/eventrouter/router/pkg/engine"
+	"github.com/eventrouter/router/pkg/engine/codec"
 )
 
 // PayloadSize is the approximate encoded size of a benchmark order event.
@@ -142,6 +147,18 @@ const (
 }`
 )
 
+// BenchCodecEnv selects the codec of the S1 benchmarks (same key and values as the worker).
+const BenchCodecEnv = "ROUTER_ENGINE_CODEC"
+
+// BenchCodec returns the codec mode benchmarks compile with (default: the engine default).
+func BenchCodec(tb testing.TB) engine.CodecMode {
+	m, err := engine.CodecModes{}.Parse(os.Getenv(BenchCodecEnv))
+	if err != nil {
+		tb.Fatal(err)
+	}
+	return m
+}
+
 // BenchJSStep wraps BenchTransformJS as a js step document.
 var BenchJSStep = fmt.Sprintf(`{"id":"js","kind":"js","code":%q}`, BenchTransformJS)
 
@@ -216,6 +233,19 @@ func (s BenchShapeSet) Only(names ...ShapeName) BenchShapeSet {
 				out = append(out, shape)
 			}
 		}
+	}
+	return out
+}
+
+// Canonical renders the event as the tree codec writes it (sorted keys, compact).
+func (p OrderPayload) Canonical() []byte {
+	v, err := codec.TreeReader{}.Read(p.Bytes())
+	if err != nil {
+		panic(err)
+	}
+	out, err := codec.TreeWriter{}.Write(v)
+	if err != nil {
+		panic(err)
 	}
 	return out
 }

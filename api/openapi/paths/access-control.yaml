@@ -23,6 +23,32 @@ users:
       "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
       "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
       "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+  post:
+    tags: [access-control]
+    operationId: createUser
+    summary: Create a password user (workspace admins, user.manage; password mode only). Created users must change their password at first login.
+    description: |
+      Without `password` the server generates one and returns it once in `generatedPassword`.
+      409 `user_exists`; 422 `invalid_email`, `invalid_display_name`, `weak_password`, `unknown_team`, `role_not_assignable`.
+      404 when password mode is off (use `POST /users/invitations` with OIDC).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/UserCreate" }
+    responses:
+      "201":
+        description: The created user, plus the generated password when none was given.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/UserCreated" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
 user:
   parameters:
     - $ref: "../components/params.yaml#/IdParam"
@@ -68,6 +94,30 @@ user:
       "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
       "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
       "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+userPasswordReset:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [access-control]
+    operationId: resetUserPassword
+    summary: Set or generate a new password for a user (user.manage; password mode only); forces a change at next login and revokes their sessions.
+    description: Without `password` the server generates one and returns it once in `generatedPassword`. 422 `weak_password`.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/PasswordReset" }
+    responses:
+      "200":
+        description: Reset; `generatedPassword` only when the server generated it.
+        content: { application/json: { schema: { $ref: "#/components/schemas/PasswordResetResult" } } }
+      "400": { $ref: "../components/problem.yaml#/responses/BadRequest" }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
 roleBindings:
   get:
     tags: [access-control]
@@ -421,6 +471,7 @@ components:
       properties:
         aiAssistEnabled: { type: boolean }
         defaultRequireProdApproval: { type: boolean, description: Production approval default of new teams. }
+        routerCausedAlertDefault: { type: boolean, description: "Every route gets the router-caused dead-letter alert rule (default on)." }
         rowVersion: { type: integer }
     WorkspaceSettingsInput:
       type: object
@@ -428,6 +479,7 @@ components:
       properties:
         aiAssistEnabled: { type: boolean }
         defaultRequireProdApproval: { type: boolean }
+        routerCausedAlertDefault: { type: boolean }
     AuditExportCheckpoint:
       type: object
       required: [sink, lastId, exportedTotal, lastAttemptAt, updatedAt]
@@ -533,6 +585,34 @@ components:
         teams: { type: array, items: { $ref: "#/components/schemas/UserTeam" } }
         lastLoginAt: { type: [string, "null"], format: date-time }
         rowVersion: { type: integer }
+        passwordLogin: { type: boolean, description: The user has a password credential (password mode). }
+        mustChangePassword: { type: boolean, description: The user must change their password at next login. }
+    UserCreate:
+      type: object
+      additionalProperties: false
+      required: [email, displayName]
+      properties:
+        email: { type: string, format: email }
+        displayName: { type: string, minLength: 1, maxLength: 200 }
+        password: { type: string, minLength: 1, maxLength: 256, description: Omit to have the server generate one. }
+        workspaceAdmin: { type: boolean, default: false }
+        teamId: { type: string, format: uuid }
+        role: { $ref: "#/components/schemas/Role" }
+    UserCreated:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        generatedPassword: { type: string, description: "Only when the request had no password; shown once, never again." }
+    PasswordReset:
+      type: object
+      additionalProperties: false
+      properties:
+        password: { type: string, minLength: 1, maxLength: 256, description: Omit to have the server generate one. }
+    PasswordResetResult:
+      type: object
+      properties:
+        generatedPassword: { type: string, description: "Only when the request had no password; shown once, never again." }
     RoleBinding:
       type: object
       required: [userId, teamId, teamName, role, createdAt, rowVersion]

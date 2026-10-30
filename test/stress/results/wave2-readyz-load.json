@@ -1,0 +1,1 @@
+{"seconds": 60, "concurrency": 48, "requests": {"ok": 265, "429": 0, "err": 208}, "rps": 8, "readyz": {"probes": 292, "non200": 0, "p50Ms": 1.1, "p99Ms": 1.6, "maxMs": 37.6}}

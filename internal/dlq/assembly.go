@@ -15,7 +15,8 @@ import (
 )
 
 // AssemblyDeps are the ports the feature is built from (cmd/api supplies the adapters); nil Registries
-// keep plain payloads, nil Visibility shows raw payloads, nil Specs disables demo seeding.
+// keep plain payloads, nil Visibility shows raw payloads, nil Specs disables demo seeding, nil Sources fails
+// lookup steps in source mode as lookup_unavailable.
 type AssemblyDeps struct {
 	Settings   Settings
 	Routes     RouteSource
@@ -28,9 +29,11 @@ type AssemblyDeps struct {
 	Salts      ctxhelpers.SaltProvider
 	Registries codec.RegistryProvider
 	Library    config.LibraryResolver
+	Sources    ctxhelpers.SourceGateway
 	Visibility SampleVisibility
 	Metrics    prometheus.Registerer
 	Audit      AuditTrail
+	Gate       ReplayGate
 	Log        *slog.Logger
 }
 
@@ -70,7 +73,8 @@ func (a Assembly) BuildFeature(root context.Context, leader Leadership) (Feature
 		Routes: a.d.Routes, Locator: locator, Reader: reader, State: state,
 		Actions: []ActionHandler{RetryAction{Gate: gate, Lock: a.lock(), Executor: executor}, DiscardAction{Gate: gate}, RestoreAction{Gate: gate}},
 		Exports: NewExportManager(JSONArrayExporter{}, NDJSONExporter{}), Views: a.views(), Payloads: a.payloads(),
-		Studio: PreviewStudioLinker{Preview: a.d.Preview}, Summaries: a.summaries(), Audit: a.d.Audit,
+		Studio: PreviewStudioLinker{Preview: a.d.Preview}, Summaries: a.summaries(), Audit: a.d.Audit, Gate: a.d.Gate,
+		Groups:  NewMemoryGroupCache(time.Now),
 		Metrics: NewMetrics(a.d.Metrics), Log: a.d.Log, Now: time.Now,
 	})
 	janitor := StateJanitor{Routes: a.d.Routes, Locator: locator, Reader: reader, State: state, Leader: leader, Log: a.d.Log}
@@ -111,7 +115,7 @@ func (a Assembly) stateRegistry(root context.Context) *StateRegistry {
 }
 
 func (a Assembly) executors() *ExecutorRegistry {
-	cache := NewPipelineCache(a.d.Compiler, a.d.Scripts, a.d.Salts).WithRegistries(a.d.Registries).WithLibrary(a.d.Library)
+	cache := NewPipelineCache(a.d.Compiler, a.d.Scripts, a.d.Salts).WithRegistries(a.d.Registries).WithLibrary(a.d.Library).WithSources(a.d.Sources)
 	producer := NewFranzProducer(a.d.Clients)
 	return NewExecutorRegistry(InProcessExecutor{Pipelines: cache, Producer: producer}, PreviewExecutor{Preview: a.d.Preview, Producer: producer})
 }

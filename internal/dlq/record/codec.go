@@ -87,12 +87,15 @@ func (Headers) Metadata(r Record) []engine.Header {
 		{HeaderSourceOffset, strconv.FormatInt(s.Offset, int(decimal))},
 		{HeaderFailedAt, f.FailedAt.UTC().Format(string(FailedAtLayout))},
 	}
-	out := make([]engine.Header, 0, len(pairs)+1)
+	out := make([]engine.Header, 0, len(pairs)+2)
 	for _, p := range pairs {
 		out = append(out, engine.Header{Key: string(p.key), Value: []byte(p.value)})
 	}
 	if f.Delivered != "" {
 		out = append(out, engine.Header{Key: string(HeaderDelivered), Value: []byte(f.Delivered)})
+	}
+	if f.Attempts > 0 {
+		out = append(out, engine.Header{Key: string(HeaderRetryAttempts), Value: []byte(strconv.Itoa(f.Attempts))})
 	}
 	return out
 }
@@ -148,6 +151,7 @@ func (r *HeaderReader) Failure() Failure {
 		Stack:     r.values[HeaderStack],
 		FailedAt:  r.time(HeaderFailedAt),
 		Delivered: BranchSet(r.values[HeaderDelivered]),
+		Attempts:  int(r.number(HeaderRetryAttempts)),
 	}
 }
 

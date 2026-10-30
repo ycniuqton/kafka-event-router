@@ -126,6 +126,9 @@ type ProcessFailure struct{}
 // Result returns a failed result with the mapped error type.
 func (ProcessFailure) Result(ref Ref, err error) ItemResult {
 	kind := FailStep
+	if dep, ok := (DependencyKindOf{}).Of(err); ok {
+		return ItemResult{Ref: ref, Outcome: OutcomeFailed, ErrorType: dep, Message: err.Error()}
+	}
 	var pe *engine.ProcessError
 	if errors.As(err, &pe) {
 		kind = FailureKindOf[record.FromEngine(pe.Type)]

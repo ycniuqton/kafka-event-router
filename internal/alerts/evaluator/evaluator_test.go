@@ -27,6 +27,8 @@ func TestEvaluatorPromQLGolden(t *testing.T) {
 		{alerts.KindErrorRateAbove, `100 * sum(increase(router_events_dlq_total` + sel + `[10m])) / sum(increase(router_events_consumed_total` + sel + `[10m]))`},
 		{alerts.KindThroughputZero, `sum(increase(router_events_produced_total` + sel + `[10m]))`},
 		{alerts.KindMatchRateChange, `100 * abs((sum(increase(router_events_filtered_total` + sel + `[10m] offset 10m)) / sum(increase(router_events_consumed_total` + sel + `[10m] offset 10m))) - (sum(increase(router_events_filtered_total` + sel + `[10m])) / sum(increase(router_events_consumed_total` + sel + `[10m]))))`},
+		{alerts.KindRouterCausedDLQ, `sum(increase(router_events_dlq_total{route_id="` + routeID.String() +
+			`",error_type=~"internal_error|sandbox_crash|encode_error|produce_error|config_error|unknown"}[10m]))`},
 	}
 	m := NewDefaultEvaluatorManager()
 	for _, c := range cases {
@@ -66,6 +68,9 @@ func TestBreachedTruthTable(t *testing.T) {
 		{"match change above", alerts.KindMatchRateChange, 10, present(15, true), true},
 		{"match change below", alerts.KindMatchRateChange, 10, present(3, true), false},
 		{"match change no data", alerts.KindMatchRateChange, 10, absent(true), false},
+		{"router-caused dead letter", alerts.KindRouterCausedDLQ, 0, present(1, true), true},
+		{"no router-caused dead letter", alerts.KindRouterCausedDLQ, 0, present(0, true), false},
+		{"router-caused no series", alerts.KindRouterCausedDLQ, 0, absent(false), false},
 	}
 	m := NewDefaultEvaluatorManager()
 	for _, c := range cases {

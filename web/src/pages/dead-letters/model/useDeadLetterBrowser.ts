@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { services } from '../../../api';
-import { DeadLetterFileFormat, DeadLetterJobs, DeadLetterReports, type DeadLetterActionReport, type DeadLetterFilter, type DeadLetterJobAction } from '../../../domain';
+import {
+  DeadLetterFileFormat,
+  DeadLetterJobAction,
+  DeadLetterJobs,
+  DeadLetterReports,
+  type DeadLetterActionReport,
+  type DeadLetterApprovalRequest,
+  type DeadLetterFilter,
+  type DeadLetterJobOptions,
+} from '../../../domain';
 import { actions, useDeadLetterJobs } from '../../../store';
 import { DeadLetterBrowserState } from './DeadLetterBrowserState';
 import { DeadLetterViewParams, type DeadLetterView } from './DeadLetterQuery';
@@ -74,6 +83,7 @@ export function useDeadLetterBrowser(view: DeadLetterView, initialSelection: str
   const { state, setState, filter, loadMore, refresh } = useDeadLetterPages(view, initialSelection);
   const [report, setReport] = useState<DeadLetterActionReport | null>(null);
   const [format, setFormat] = useState<DeadLetterFileFormat>(DeadLetterFileFormat.Json);
+  const [approval, setApproval] = useState<DeadLetterApprovalRequest[]>([]);
   useJobRefresh(refresh);
   const showResolved = view.includeResolved;
 
@@ -83,6 +93,7 @@ export function useDeadLetterBrowser(view: DeadLetterView, initialSelection: str
       if (showResolved) refresh();
       else setState((s) => s.without(DeadLetterReports.gone(r)).withFailures(r.failed).clearChecked());
       if (r.failed.length || r.deliveredAtLeastOnce) setReport(r);
+      if (r.approvalRequired?.length) setApproval(r.approvalRequired);
     },
     [setState, refresh, showResolved],
   );
@@ -100,7 +111,17 @@ export function useDeadLetterBrowser(view: DeadLetterView, initialSelection: str
     discard: async (ids: string[]) => apply(await actions.deadLetters.discard(ids)),
     retryAll: async (routeId: string) => apply(await actions.deadLetters.retryMatching(routeId, filter.current)),
     restore: async (ids: string[]) => (await actions.deadLetters.restore(ids)) && refresh(),
-    startJob: (routeId: string, action: DeadLetterJobAction) => actions.deadLetters.startJob(routeId, action, filter.current),
+    startJob: (routeId: string, action: DeadLetterJobAction, options?: DeadLetterJobOptions) => actions.deadLetters.startJob(routeId, action, filter.current, options),
+    /** Events a sync retry could not send because a second person has to approve (strict 4-eyes). */
+    approval,
+    closeApproval: () => setApproval([]),
+    requestApproval: async (note: string) => {
+      const requests = approval;
+      setApproval([]);
+      await Promise.all(requests.map((a) => actions.deadLetters.startJob(a.routeId, DeadLetterJobAction.Retry, filter.current, { ids: a.ids, note })));
+    },
+    /** A replayed row leaves the list (the summary is refreshed by the action). */
+    resolved: (id: string) => (showResolved ? refresh() : setState((s) => s.without([id]))),
     format,
     setFormat,
     filter,

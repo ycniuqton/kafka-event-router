@@ -41,6 +41,9 @@ func (r *RouteRunner) Swap(ctx context.Context, next CompiledVersion) error {
 	r.mu.Lock()
 	r.retagMetricsLocked(next)
 	r.mu.Unlock()
+	if err := r.tuner.Rebind(next.Config.Limits.InFlight(), r.deps.Metrics.For(next)); err != nil {
+		r.deps.Log.Warn("runtime: in-flight bounds not applied", string(logging.AttrRouteID), next.Ref.RouteID, string(logging.AttrError), err)
+	}
 	return prev.processor.Close(ctx)
 }
 
@@ -61,6 +64,7 @@ func (r *RouteRunner) Stop(ctx context.Context, reason domain.StopReason) error 
 		r.setState(domain.RunnerDraining)
 		r.stopPoll()
 		<-r.pollDone
+		r.closeRetries(ctx)
 		r.drain(r.takeLanes(nil))
 		if err := r.committer.CommitNow(ctx, nil); err != nil {
 			r.deps.Log.Warn("runtime: final commit failed", string(logging.AttrRouteID), r.Version().Ref.RouteID, string(logging.AttrError), err)
@@ -68,6 +72,7 @@ func (r *RouteRunner) Stop(ctx context.Context, reason domain.StopReason) error 
 		r.stopFlow()
 		r.closeDelivery(ctx)
 		r.consumer.Close()
+		r.closeAccount()
 		_ = r.flow.state.Load().processor.Close(ctx)
 		r.finalState(reason)
 	})

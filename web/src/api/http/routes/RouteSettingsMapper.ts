@@ -1,5 +1,5 @@
 import type { RouteConfig } from '../../generated';
-import { DeliveryMode, ErrorAction, RouteSettingsRules, type RouteErrorPolicy, type RouteLimits, type RouteSettings, type RouteSettingsPatch } from '../../../domain';
+import { DeliveryMode, ErrorAction, InFlightMode, RetryPolicyRules, RouteSettingsRules, type RetryPolicySettings, type RouteErrorPolicy, type RouteLimits, type RouteSettings, type RouteSettingsPatch } from '../../../domain';
 import type { RouteDetailDto } from './RouteDtos';
 
 /** PATCH /routes/{id} body of the Settings tab. */
@@ -22,6 +22,7 @@ export class RouteSettingsMapper {
       replicas: dto.replicas,
       errorPolicy: RouteSettingsMapper.errorPolicy(doc),
       deliveryMode: RouteSettingsMapper.deliveryMode(doc),
+      inFlightMode: doc?.limits?.inFlightMode ?? InFlightMode.Auto,
       limits: {
         ...RouteSettingsRules.emptyLimits,
         ...RouteSettingsMapper.limits(doc),
@@ -38,7 +39,7 @@ export class RouteSettingsMapper {
       replicas: patch.replicas,
     };
     const doc = RouteSettingsMapper.document(dto);
-    if (doc && (patch.errorPolicy || patch.limits || patch.deliveryMode)) body.draft = RouteSettingsMapper.applyToDocument(doc, patch);
+    if (doc && (patch.errorPolicy || patch.limits || patch.deliveryMode || patch.inFlightMode)) body.draft = RouteSettingsMapper.applyToDocument(doc, patch);
     return body;
   }
 
@@ -49,7 +50,7 @@ export class RouteSettingsMapper {
   private static applyToDocument(doc: RouteConfig, patch: RouteSettingsPatch): RouteConfig {
     const next: RouteConfig = { ...doc };
     if (patch.errorPolicy) next.errorPolicy = RouteSettingsMapper.errorPolicyDoc(patch.errorPolicy, doc.errorPolicy);
-    if (patch.limits) next.limits = RouteSettingsMapper.limitsDoc(patch.limits);
+    if (patch.limits || patch.inFlightMode) next.limits = RouteSettingsMapper.limitsDoc(patch.limits ?? RouteSettingsMapper.limits(doc), patch.inFlightMode ?? doc.limits?.inFlightMode);
     if (patch.deliveryMode && patch.deliveryMode !== RouteSettingsMapper.deliveryMode(doc)) next.delivery = { mode: patch.deliveryMode };
     if (next.limits && !Object.keys(next.limits).length) delete next.limits;
     return next;
@@ -68,7 +69,14 @@ export class RouteSettingsMapper {
       dlqConnectionId: p.dlqConnectionId ?? '',
       dlqTopic: p.dlqTopic ?? '',
       maxRetries: p.maxRetries ?? null,
+      retry: p.retry ? RouteSettingsMapper.retry(p.retry) : null,
     };
+  }
+
+  /** Document retry policy with the schema defaults filled in. */
+  private static retry(r: NonNullable<NonNullable<RouteConfig['errorPolicy']>['retry']>): RetryPolicySettings {
+    const d = RetryPolicyRules.defaults;
+    return { enabled: r.enabled, maxAttempts: r.maxAttempts ?? d.maxAttempts, baseDelayMs: r.baseDelayMs ?? d.baseDelayMs, maxDelayMs: r.maxDelayMs ?? d.maxDelayMs };
   }
 
   private static errorPolicyDoc(policy: RouteErrorPolicy, base: RouteConfig['errorPolicy']): NonNullable<RouteConfig['errorPolicy']> {
@@ -79,16 +87,22 @@ export class RouteSettingsMapper {
     RouteSettingsMapper.setOptional(out, 'dlqConnectionId', policy.dlqConnectionId || undefined);
     RouteSettingsMapper.setOptional(out, 'dlqTopic', policy.dlqTopic || undefined);
     RouteSettingsMapper.setOptional(out, 'maxRetries', policy.maxRetries ?? undefined);
+    if (policy.retry !== undefined) RouteSettingsMapper.setOptional(out, 'retry', policy.retry ?? undefined);
     return out;
   }
 
-  private static limits(doc: RouteConfig | null): Partial<RouteLimits> {
-    return { ...(doc?.limits ?? {}) };
+  /** The numeric limits of the document (inFlightMode is mapped separately). */
+  private static limits(doc: RouteConfig | null): RouteLimits {
+    const src = doc?.limits ?? {};
+    const keys = Object.keys(RouteSettingsRules.emptyLimits) as (keyof RouteLimits)[];
+    return Object.fromEntries(keys.map((k) => [k, src[k] ?? null])) as RouteLimits;
   }
 
-  private static limitsDoc(limits: RouteLimits): NonNullable<RouteConfig['limits']> {
+  /** Numeric limits plus the in-flight mode; auto is the default, so only fixed is written. */
+  private static limitsDoc(limits: Partial<RouteLimits>, mode: InFlightMode | undefined): NonNullable<RouteConfig['limits']> {
     const out: NonNullable<RouteConfig['limits']> = {};
     (Object.keys(limits) as (keyof RouteLimits)[]).forEach((k) => RouteSettingsMapper.setOptional(out, k, limits[k] ?? undefined));
+    RouteSettingsMapper.setOptional(out, 'inFlightMode', mode === InFlightMode.Fixed ? mode : undefined);
     return out;
   }
 

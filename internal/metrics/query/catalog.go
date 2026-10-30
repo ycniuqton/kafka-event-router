@@ -34,6 +34,10 @@ const (
 	QueryAlertLagMin      MetricQuery = "alert_lag_min"
 	QueryAlertErrorRate   MetricQuery = "alert_error_rate"
 	QueryAlertMatchDelta  MetricQuery = "alert_match_delta"
+	QueryInFlightLimit    MetricQuery = "inflight_limit"
+	QueryJSInstances      MetricQuery = "js_instances"
+	QueryJSQueueWaitP95   MetricQuery = "js_queue_wait_p95"
+	QueryAlertRouterDLQ   MetricQuery = "alert_router_dlq"
 )
 
 // Placeholder is a template slot ExprCatalog fills.
@@ -44,14 +48,16 @@ const (
 	SlotRange    Placeholder = "{range}"
 	SlotRate     Placeholder = "{rate}"
 	SlotStep     Placeholder = "{step}"
+	SlotTypes    Placeholder = "{types}"
 )
 
 // Params are the values of one expression: which routes, the increase window and the rate window.
 type Params struct {
-	RouteIDs []string
-	Range    time.Duration
-	Rate     time.Duration
-	Step     time.Duration
+	RouteIDs   []string
+	Range      time.Duration
+	Rate       time.Duration
+	Step       time.Duration
+	ErrorTypes []string
 }
 
 // ForRoute returns params scoped to one route.
@@ -81,7 +87,10 @@ func (t tpl) dropRatio(offset bool) string {
 	return "(" + t.inc(in.MetricFiltered, offset) + " / " + t.inc(in.MetricConsumed, offset) + ")"
 }
 func (t tpl) quantile(q string) string {
-	return "histogram_quantile(" + q + ", sum by (" + string(in.LabelLe) + ") (rate(" + t.bucket(in.MetricLatency) + "[" + string(SlotRate) + "])))"
+	return t.quantileOf(q, in.MetricLatency)
+}
+func (t tpl) quantileOf(q string, n in.MetricName) string {
+	return "histogram_quantile(" + q + ", sum by (" + string(in.LabelLe) + ") (rate(" + t.bucket(n) + "[" + string(SlotRate) + "])))"
 }
 
 // Templates is the PromQL of every MetricQuery (golden-tested).
@@ -109,6 +118,10 @@ var Templates = func() map[MetricQuery]string {
 		QueryAlertErrorRate:   "100 * " + t.inc(in.MetricDLQ, false) + " / " + t.inc(in.MetricConsumed, false),
 		QueryAlertMatchDelta:  "100 * abs(" + t.dropRatio(true) + " - " + t.dropRatio(false) + ")",
 		QueryEventsInByRoute:  "sum by (" + string(in.LabelRouteID) + ") (rate(" + t.sel(in.MetricConsumed) + "[" + string(SlotRate) + "]))",
+		QueryInFlightLimit:    "sum(" + t.sel(in.MetricInFlightLimit) + ")",
+		QueryJSInstances:      "sum(" + t.sel(in.MetricJSPoolInstances) + ")",
+		QueryJSQueueWaitP95:   t.quantileOf("0.95", in.MetricJSQueueWait),
+		QueryAlertRouterDLQ:   "sum(increase(" + in.MetricDLQ.Full() + "{" + string(SlotSelector) + string(SlotTypes) + "}[" + string(SlotRange) + "]))",
 	}
 }()
 
@@ -119,8 +132,25 @@ type ExprCatalog struct{}
 func (ExprCatalog) Build(q MetricQuery, p Params) Expr {
 	r := strings.NewReplacer(string(SlotSelector), RouteSelector{IDs: p.RouteIDs}.String(),
 		string(SlotRange), PromDuration(p.Range).String(), string(SlotRate), PromDuration(p.Rate).String(),
-		string(SlotStep), PromDuration(p.Step).String())
+		string(SlotStep), PromDuration(p.Step).String(), string(SlotTypes), ErrorTypeMatcher{Types: p.ErrorTypes}.String())
 	return Expr(r.Replace(Templates[q]))
+}
+
+// ErrorTypeMatcher renders the error_type matcher appended to a route selector (empty without types).
+type ErrorTypeMatcher struct {
+	Types []string
+}
+
+// String implements fmt.Stringer.
+func (m ErrorTypeMatcher) String() string {
+	if len(m.Types) == 0 {
+		return ""
+	}
+	quoted := make([]string, len(m.Types))
+	for i, t := range m.Types {
+		quoted[i] = RouteSelector{}.escape(regexp.QuoteMeta(t))
+	}
+	return "," + string(in.LabelErrorType) + `=~"` + strings.Join(quoted, "|") + `"`
 }
 
 // RouteSelector renders the route_id matcher: none, one id, or a regex alternation.

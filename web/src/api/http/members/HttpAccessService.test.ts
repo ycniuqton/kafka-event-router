@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RoleKey, UserStatus } from '../../../domain';
+import { PasswordSource, RoleKey, UserStatus } from '../../../domain';
 import { HttpContext } from '../core/HttpContext';
 import { TestFetch } from '../core/TestFetch.test-util';
 import { HttpAccessService } from './HttpAccessService';
@@ -63,5 +63,25 @@ describe('HttpAccessService', () => {
     expect(fetch.calls[1].init.method).toBe('PATCH');
     expect(fetch.header(1, 'If-Match')).toBe('"4"');
     expect(JSON.parse(String(fetch.calls[1].init.body))).toEqual({ aiAssistEnabled: true });
+  });
+
+  it('creates a user (POST /users) and returns the one-time generated password', async () => {
+    const fetch = new TestFetch().json(201, { user: { ...user, passwordLogin: true, mustChangePassword: true }, generatedPassword: 'Gen3rated-Pass' });
+    const created = await service(fetch).createUser({
+      email: ' hoa@x.io ', displayName: 'Hoa L.', passwordSource: PasswordSource.Generate, password: 'ignored', workspaceAdmin: false, teamId: 't1', role: RoleKey.Editor,
+    });
+    expect(created.generatedPassword).toBe('Gen3rated-Pass');
+    expect(created.members[0]).toMatchObject({ userId: 'u1', passwordLogin: true, mustChangePassword: true });
+    expect(fetch.calls[0].url).toBe('/api/v1/users');
+    expect(JSON.parse(String(fetch.calls[0].init.body))).toEqual({ email: 'hoa@x.io', displayName: 'Hoa L.', workspaceAdmin: false, teamId: 't1', role: RoleKey.Editor });
+  });
+
+  it('resets a password with an admin-typed value (no generated password back)', async () => {
+    const fetch = new TestFetch().json(200, {});
+    const [hoa] = MemberMapper.rows([user]);
+    expect(await service(fetch).resetPassword(hoa, { passwordSource: PasswordSource.Manual, password: 'long-enough-password' })).toEqual({ generatedPassword: null });
+    expect(fetch.calls[0].url).toBe('/api/v1/users/u1/password-reset');
+    expect(JSON.parse(String(fetch.calls[0].init.body))).toEqual({ password: 'long-enough-password' });
+    expect(hoa).toMatchObject({ passwordLogin: false, mustChangePassword: false });
   });
 });

@@ -1,0 +1,17 @@
+name: wave2-mem
+description: >
+  Wave-2 memory overload: worker started with GOMEMLIMIT=512MiB and ROUTER_WORKER_MEMORY_BUDGET_BYTES=268435456
+  (256 MiB). 25 routes fan out one 12-partition input at 5k ev/s (output 125k ev/s, more than one worker can
+  produce: the destinations are the slow side; in wave 1 this case grew RSS to 4.8 GB). Pass = no crash/OOM, RSS under
+  512 MiB, lost = 0, router_worker_memory_paused_routes > 0. Delivery tracked per output topic.
+target: local
+criteria: {p99Limit: 600s, lagSlopeAbs: 1000000, lagSlopeRel: 1, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 12
+  routes: {topology: shared_input}
+  measure: {trackBy: topic-stream}
+  load: {size: 1024, lanes: 4, streams: 256}
+  drain: {timeout: 15m}
+cases:
+  - {name: fanout25, routes: {count: 25}, load: {steps: [{rate: 5000, duration: 3m}]}}
+  - {name: fanout50, routes: {count: 50}, load: {steps: [{rate: 5000, duration: 3m}]}}

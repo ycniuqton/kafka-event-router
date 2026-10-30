@@ -1,4 +1,4 @@
-import { DeadLetterResolutionState, DeadLetterSummaries, type DeadLetter, type DeadLetterFilter, type DeadLetterKindCount, type DeadLetterSelection, type DeadLetterSummary, type Route } from '../../../domain';
+import { DeadLetterClasses, DeadLetterResolutionState, type DeadLetterErrorClass, DeadLetterSummaries, type DeadLetter, type DeadLetterFilter, type DeadLetterKindCount, type DeadLetterSelection, type DeadLetterSummary, type Route } from '../../../domain';
 import type { DeadLetterView } from './DeadLetterQuery';
 
 /** Route display names: the routes store first, then the DLQ summary, then the row's own name. */
@@ -28,6 +28,12 @@ export class DeadLetterRouteNames {
 export class DeadLetterViewCounts {
   static unresolved(summary: DeadLetterSummary, view: DeadLetterView): number {
     return view.routeId ? (DeadLetterSummaries.route(summary, view.routeId)?.unresolved ?? 0) : summary.unresolved;
+  }
+
+  /** Class chips: the server's class counts on the global view, else derived from the kind counts. */
+  static classes(summary: DeadLetterSummary, view: DeadLetterView): Record<DeadLetterErrorClass, number> {
+    const derived = DeadLetterClasses.counts(DeadLetterViewCounts.kinds(summary, view));
+    return view.routeId || !summary.byClass ? derived : { ...derived, ...summary.byClass };
   }
 
   /** Kind chips: summary counts of the route (or all routes), plus selected kinds without unresolved events. */

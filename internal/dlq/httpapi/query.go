@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +27,9 @@ const (
 	QueryStep            QueryParam = "step"
 	QueryVersion         QueryParam = "version"
 	QueryText            QueryParam = "q"
+	QueryClass           QueryParam = "class"
+	QueryFingerprint     QueryParam = "fingerprint"
+	QueryStatus          QueryParam = "status"
 )
 
 // ListSeparator separates multi-value query parameters.
@@ -57,6 +61,29 @@ func (p QueryParser) Parse(r *http.Request) (dlq.Query, error) {
 	if q.Until, err = p.time(v.Get(string(QueryUntil)), dlq.PathUntil); err != nil {
 		return dlq.Query{}, err
 	}
+	return CauseFilters{}.Apply(q, v.Get(string(QueryClass)), v.Get(string(QueryFingerprint)))
+}
+
+// CauseFilters parses the workflow filters: error classes and the cause fingerprint (design 00001 §3.3).
+type CauseFilters struct{}
+
+// FingerprintPattern is the shape of a fingerprint id.
+var FingerprintPattern = regexp.MustCompile(`^[0-9a-f]{16}$`)
+
+// Apply validates and sets classes and fingerprint on q.
+func (CauseFilters) Apply(q dlq.Query, classes, fingerprint string) (dlq.Query, error) {
+	for i, part := range (Values{}).Split(classes) {
+		c := record.ErrorClass(part)
+		if !c.Valid() {
+			return dlq.Query{}, dlq.ErrInvalidFilter.At(dlq.PathClass.Indexed(i))
+		}
+		q.Classes = append(q.Classes, c)
+	}
+	fingerprint = strings.TrimSpace(fingerprint)
+	if fingerprint != "" && !FingerprintPattern.MatchString(fingerprint) {
+		return dlq.Query{}, dlq.ErrInvalidFilter.At(string(dlq.PathFingerprint))
+	}
+	q.Fingerprint = fingerprint
 	return q, nil
 }
 

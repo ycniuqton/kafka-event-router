@@ -5,6 +5,7 @@ export type { Services, DeployResult, SampleField, StepProposal, AssistContext, 
 export {
   RoutesService,
   ConnectionsService,
+  LookupSourcesService,
   DeadLettersService,
   ActivityService,
   AuditService,

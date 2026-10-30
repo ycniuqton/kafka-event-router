@@ -5,14 +5,10 @@ package changes
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 	"sync"
 
-	"github.com/jackc/pgx/v5/pgxpool"
-
-	"github.com/eventrouter/router/internal/platform/logging"
 	"github.com/eventrouter/router/internal/runtime/domain"
-	"github.com/eventrouter/router/internal/runtime/retry"
+	"github.com/eventrouter/router/internal/store"
 )
 
 // BufferSize is the per-subscriber hint buffer; slow subscribers drop hints (they also resync on timers).
@@ -65,44 +61,38 @@ type notifyPayload struct {
 	Kind    domain.ChangeKind `json:"kind"`
 }
 
-// PgListener LISTENs on router_runtime on a dedicated connection and publishes hints; it reconnects with backoff.
+// PgListener relays router_runtime notifications from the process listener hub (one dedicated session, not a
+// pooled connection) to the broker; a hub reset (reconnect, overflow) publishes a resync hint.
 type PgListener struct {
-	Pool   *pgxpool.Pool
-	Broker *Broker
-	Retry  retry.Policy
-	Log    *slog.Logger
+	Notifications store.NotificationSource
+	Broker        *Broker
 }
 
-// Run listens until ctx ends.
+// Run relays until ctx ends.
 func (l PgListener) Run(ctx context.Context) {
-	for attempt := 0; ctx.Err() == nil; attempt++ {
-		if err := l.listen(ctx); err != nil && ctx.Err() == nil {
-			l.Log.Warn("runtime: change listener reconnecting", string(logging.AttrError), err)
-		}
-		l.Broker.Publish(domain.ChangeHint{Kind: domain.ChangeResync})
-		if l.Retry.Wait(ctx, attempt) != nil {
+	sub := l.Notifications.Subscribe(store.Channel(domain.ChannelRouterRuntime))
+	defer sub.Close()
+	for {
+		select {
+		case <-ctx.Done():
 			return
+		case n, ok := <-sub.C():
+			if !ok {
+				return
+			}
+			l.relay(n)
 		}
 	}
 }
 
-func (l PgListener) listen(ctx context.Context) error {
-	conn, err := l.Pool.Acquire(ctx)
-	if err != nil {
-		return err
+// relay turns one hub notice into a hint (unparsable payloads are ignored).
+func (l PgListener) relay(n store.Notice) {
+	if n.Kind == store.NoticeReset {
+		l.Broker.Publish(domain.ChangeHint{Kind: domain.ChangeResync})
+		return
 	}
-	defer conn.Release()
-	if _, err := conn.Exec(ctx, "LISTEN "+string(domain.ChannelRouterRuntime)); err != nil {
-		return err
-	}
-	for {
-		n, err := conn.Conn().WaitForNotification(ctx)
-		if err != nil {
-			return err
-		}
-		var p notifyPayload
-		if json.Unmarshal([]byte(n.Payload), &p) == nil {
-			l.Broker.Publish(domain.ChangeHint{RouteID: p.RouteID, Kind: p.Kind})
-		}
+	var p notifyPayload
+	if json.Unmarshal([]byte(n.Payload), &p) == nil {
+		l.Broker.Publish(domain.ChangeHint{RouteID: p.RouteID, Kind: p.Kind})
 	}
 }

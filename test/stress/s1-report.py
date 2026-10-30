@@ -9,7 +9,8 @@ import statistics
 BENCH_LINE = re.compile(r"^(Benchmark\S+?)(?:-\d+)?\s+(\d+)\s+(.*)$")
 METRIC = re.compile(r"([\d.]+)\s+(\S+)")
 TOP_LINE = re.compile(r"^\s*([\d.]+\w*)\s+([\d.]+)%\s+([\d.]+)%\s+([\d.]+\w*)\s+([\d.]+)%\s+(.+)$")
-UNIT_KEYS = {"ns/op": "nsPerOp", "B/op": "bytesPerOp", "allocs/op": "allocsPerOp", "MB/s": "mbPerSec", "events/s": "eventsPerSec"}
+UNIT_KEYS = {"ns/op": "nsPerOp", "B/op": "bytesPerOp", "allocs/op": "allocsPerOp", "MB/s": "mbPerSec", "events/s": "eventsPerSec",
+             "cpu-ns/op": "cpuNsPerOp", "events/cpu-s": "eventsPerCpuSec"}
 
 
 class BenchSamples:

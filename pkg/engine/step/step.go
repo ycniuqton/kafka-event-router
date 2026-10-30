@@ -119,6 +119,7 @@ func (m *StepCompilerManager) Compile(c *StepCompileCtx, raw config.Step) (Step,
 		c.Fail(config.IssueStepUnsupported, config.TokenKind, "step kind %q is not supported", raw.Kind)
 		return nil, false
 	}
+	c.Scope.Access.Step(raw.Kind)
 	return sc.Compile(c, raw)
 }
 
@@ -168,3 +169,10 @@ func (e *StepError) Error() string {
 }
 
 func (e *StepError) Unwrap() error { return e.Cause }
+
+// TypedError is a step failure that declares its engine error type (e.g. lookup_unavailable);
+// ProcessErrors.ForStep uses it before the built-in classification.
+type TypedError interface {
+	error
+	EngineErrorType() engine.ErrorType
+}

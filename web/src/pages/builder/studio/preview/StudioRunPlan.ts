@@ -1,7 +1,7 @@
 import type { RouteConfig, Step } from '../../../../api/generated';
 import { StepMapper } from '../../../../domain/routeConfig/StepMapper';
 import { RouteDocumentDefaults } from '../../../../domain/routeConfig/RouteDraftMapper';
-import type { InlineEvent, RunRequest, SampleEvent, TransformStep } from '../../../../domain';
+import { LookupMode, LookupMockPlan, type InlineEvent, type LookupMocks, type RunRequest, type SampleEvent, type TransformStep } from '../../../../domain';
 import { StepCompleteness } from './StepCompleteness';
 
 /**
@@ -43,8 +43,10 @@ export class StudioRunPlan {
     this.samples = samples;
     this.source = source;
     const runSteps = this.stepIndexes.map((i) => StepMapper.toStep(steps[i]));
+    const mocks = StudioRunPlan.lookupMocks(this.stepIndexes.map((i) => steps[i]), runSteps);
     const request: RunRequest = { config: StudioRunPlan.document(runSteps, samples, source), events: samples.map((s) => StudioRunPlan.inline(s)) };
     if (source.sessionId) request.sampleSessionId = source.sessionId;
+    if (Object.keys(mocks).length) request.lookupMocks = mocks;
     this.request = request;
   }
 
@@ -57,6 +59,18 @@ export class StudioRunPlan {
   /** The same plan with one more step left out (after the preview rejected it). */
   without(steps: TransformStep[], draftIndex: number, reason: string): StudioRunPlan {
     return new StudioRunPlan(steps, this.samples, this.source, new Map([...this.skipped, [draftIndex, reason]]));
+  }
+
+  /** Mock answers of lookup source steps; each mocked step gets the id its mock is keyed by. */
+  private static lookupMocks(steps: TransformStep[], runSteps: Step[]): LookupMocks {
+    const mocks: LookupMocks = {};
+    steps.forEach((step, i) => {
+      const mock = step.lookupMode === LookupMode.Source && step.lookupSource ? LookupMockPlan.mockOf(step.lookupSource) : null;
+      if (!mock) return;
+      runSteps[i].id = LookupMockPlan.idOf(i);
+      mocks[runSteps[i].id as string] = mock;
+    });
+    return mocks;
   }
 
   private static document(steps: Step[], samples: SampleEvent[], source: StudioSampleSource): RouteConfig {

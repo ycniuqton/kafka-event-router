@@ -1,6 +1,6 @@
 import { UrlBuilder } from '../HttpMessages';
 import type { HttpContext } from '../HttpContext';
-import { AuthEndpoint, ReturnToParam, SessionService, type AuthConfig, type SessionUser } from './SessionService';
+import { AuthEndpoint, ReturnToParam, SessionService, type AuthConfig, type PasswordChangeBody, type PasswordCredentials, type SessionUser } from './SessionService';
 
 /** Session over the real auth endpoints; keeps the CSRF token from `/auth/me` for later writes. */
 export class HttpSessionService extends SessionService {
@@ -23,6 +23,15 @@ export class HttpSessionService extends SessionService {
 
   async devLogin(email?: string): Promise<void> {
     await this.context.auth.post<void>(AuthEndpoint.DevLogin, email ? { email } : {}, { silent: true });
+  }
+
+  async passwordLogin(credentials: PasswordCredentials, loginUrl: string = AuthEndpoint.PasswordLogin): Promise<void> {
+    await this.context.auth.post<void>(loginUrl, credentials, { silent: true });
+  }
+
+  async changePassword(body: PasswordChangeBody): Promise<SessionUser> {
+    await this.context.api.post<void>(AuthEndpoint.PasswordChange, body, { silent: true });
+    return this.me();
   }
 
   async logout(): Promise<void> {

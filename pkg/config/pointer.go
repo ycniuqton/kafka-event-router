@@ -65,6 +65,9 @@ const (
 	TokenStart       PointerToken = "start"
 	TokenTarget      PointerToken = "target"
 	TokenVersion     PointerToken = "version"
+	TokenErrorPolicy PointerToken = "errorPolicy"
+	TokenRetry       PointerToken = "retry"
+	TokenMaxDelayMs  PointerToken = "maxDelayMs"
 )
 
 var pointerEscaper = strings.NewReplacer("~", "~0", "/", "~1")

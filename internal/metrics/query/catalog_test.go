@@ -33,6 +33,11 @@ func TestExprCatalogGolden(t *testing.T) {
 		{QueryAlertLagMin, Params{RouteIDs: []string{"a"}, Range: 5 * time.Minute, Step: 30 * time.Second}, `min_over_time(sum(router_consumer_lag{route_id="a"})[5m:30s])`},
 		{QueryAlertErrorRate, Params{RouteIDs: []string{"a"}, Range: 10 * time.Minute}, `100 * sum(increase(router_events_dlq_total{route_id="a"}[10m])) / sum(increase(router_events_consumed_total{route_id="a"}[10m]))`},
 		{QueryAlertMatchDelta, Params{RouteIDs: []string{"a"}, Range: time.Hour}, `100 * abs((sum(increase(router_events_filtered_total{route_id="a"}[1h] offset 1h)) / sum(increase(router_events_consumed_total{route_id="a"}[1h] offset 1h))) - (sum(increase(router_events_filtered_total{route_id="a"}[1h])) / sum(increase(router_events_consumed_total{route_id="a"}[1h]))))`},
+		{QueryInFlightLimit, one, `sum(router_route_inflight_limit{route_id="r1"})`},
+		{QueryJSInstances, one, `sum(router_js_pool_instances{route_id="r1"})`},
+		{QueryJSQueueWaitP95, one, `histogram_quantile(0.95, sum by (le) (rate(router_js_queue_wait_seconds_bucket{route_id="r1"}[2m])))`},
+		{QueryAlertRouterDLQ, Params{RouteIDs: []string{"a"}, Range: 15 * time.Minute, ErrorTypes: []string{"internal_error", "sandbox_crash"}},
+			`sum(increase(router_events_dlq_total{route_id="a",error_type=~"internal_error|sandbox_crash"}[15m]))`},
 	}
 	if len(cases) != len(Templates) {
 		t.Fatalf("golden covers %d of %d queries", len(cases), len(Templates))

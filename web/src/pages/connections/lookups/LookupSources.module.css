@@ -1,0 +1,13 @@
+.secondary{font-size:12px;color:var(--tx2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.env{justify-self:start}
+.status{font-size:12px}
+.checked{font-size:11px;color:var(--tx3)}
+.actions{display:flex;gap:4px;justify-content:flex-end}
+.deleteWrap{display:inline-flex}
+.deleteWrap:has(button:disabled){cursor:not-allowed}
+.deleteWrap button:disabled{pointer-events:none}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:14px}
+.search{width:280px;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.toolbar{display:flex;justify-content:flex-end;margin-bottom:12px}
+.spacer{flex:1}

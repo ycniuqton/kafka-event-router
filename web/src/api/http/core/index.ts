@@ -15,7 +15,10 @@ export { WsClient, WsMessageHandler, WsState, WsUrl, ReconnectPolicy, type WsMes
 export { HttpContext, HttpRuntime, ApiRoot, type HttpContextOptions } from './HttpContext';
 export { HttpServiceModule, ServiceKeys, type ServiceKey } from './HttpServiceModule';
 export { HttpServicesFactory } from './HttpServicesFactory';
-export { SessionService, AuthMode, AuthEndpoint, ReturnToParam, type AuthConfig, type SessionUser, type TeamRole } from './session/SessionService';
+export {
+  SessionService, AuthMode, AuthEndpoint, AuthProblemCode, ReturnToParam,
+  type AuthConfig, type SessionUser, type TeamRole, type PasswordCredentials, type PasswordChangeBody,
+} from './session/SessionService';
 export { HttpSessionService } from './session/HttpSessionService';
 export { HttpMembersService, HttpMembersModule } from './session/HttpMembersModule';
 export { CurrentUserMapper } from './session/CurrentUserMapper';

@@ -18,8 +18,25 @@ export type RouteMetricSeries = {
   errorsPerMin: MetricPoint[];
 };
 
-/** Overview metrics of one route for a range. */
-export type RouteOverviewMetrics = { range: MetricsRange; step: string; pipeline: PipelineCounts[]; series: RouteMetricSeries };
+/** Current auto-tuned values of a route summed over its runners; null when no runner reports them. */
+export type RouteTuning = { inFlightLimit: number | null; jsInstances: number | null; jsQueueWaitP95: number | null };
+
+/** Overview metrics of one route for a range (`tuning` absent on older servers). */
+export type RouteOverviewMetrics = { range: MetricsRange; step: string; pipeline: PipelineCounts[]; series: RouteMetricSeries; tuning?: RouteTuning };
+
+/** One-line summary of the auto-tuned values shown next to the limits. */
+export class RouteTuningText {
+  static readonly msPerSecond = 1_000;
+
+  static summary(t: RouteTuning | null | undefined): string | null {
+    if (!t) return null;
+    const parts: string[] = [];
+    if (t.inFlightLimit !== null) parts.push(`in-flight limit ${Math.round(t.inFlightLimit).toLocaleString('en-US')}`);
+    if (t.jsInstances !== null) parts.push(`JS instances ${Math.round(t.jsInstances)}`);
+    if (t.jsQueueWaitP95 !== null) parts.push(`JS queue wait p95 ${(t.jsQueueWaitP95 * RouteTuningText.msPerSecond).toFixed(1)} ms`);
+    return parts.length ? `Now: ${parts.join(' · ')}` : null;
+  }
+}
 
 /** Server-configured consumer-lag thresholds (returned with the dashboard summary). */
 export type LagThresholds = { routeLagWarn: number; routeLagError: number; totalLagWarn: number; totalLagError: number };

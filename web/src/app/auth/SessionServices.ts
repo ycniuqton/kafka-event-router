@@ -1,5 +1,6 @@
 import { ApiConfig, DataSource } from '../../api';
 import { HttpRuntime, HttpSessionService, type HttpContext, type SessionService } from '../../api/http/core';
+import { AuthPaths } from './AuthPaths';
 import { MockSessionService } from './MockSessionService';
 
 type SessionFactory = () => SessionService;
@@ -19,6 +20,15 @@ export class SessionServices {
   static current(): SessionService {
     SessionServices.active ??= SessionServices.resolve(ApiConfig.dataSource());
     return SessionServices.active;
+  }
+
+  /** Signs out (best effort) and leaves for the login screen with a full reload, dropping all in-memory state. */
+  static async signOut(): Promise<void> {
+    try {
+      await SessionServices.current().logout();
+    } finally {
+      window.location.assign(AuthPaths.login);
+    }
   }
 
   /** The shared HTTP context whose failures drive global handling (idle with the mock data source). */

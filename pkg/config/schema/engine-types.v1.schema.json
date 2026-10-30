@@ -38,7 +38,7 @@
       }
     },
     "eventStatus": { "title": "EventStatus", "type": "string", "enum": ["passed", "filtered", "error", "dropped"] },
-    "errorType": { "title": "ErrorType", "type": "string", "enum": ["decode", "decode_transient", "step", "step_timeout", "output_invalid", "limit"] },
+    "errorType": { "title": "ErrorType", "type": "string", "enum": ["decode", "decode_transient", "step", "step_timeout", "output_invalid", "limit", "lookup_unavailable", "lookup_miss"] },
     "traceError": {
       "title": "TraceError",
       "type": "object",

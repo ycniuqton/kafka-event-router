@@ -1,0 +1,9 @@
+.wrap{position:relative;flex:none}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--p3);border:1px solid var(--ln2);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--tx2);cursor:pointer;padding:0}
+.avatar:hover,.avatar[aria-expanded="true"]{border-color:var(--acc)}
+.menu{position:absolute;right:0;top:38px;width:220px;display:flex;flex-direction:column;padding:4px 0;background:var(--p1);border:1px solid var(--ln2);border-radius:var(--radius-xl);box-shadow:var(--shadow-pop);z-index:var(--z-popover)}
+.who{display:flex;flex-direction:column;padding:8px 14px 10px;border-bottom:1px solid var(--ln);margin-bottom:4px;min-width:0}
+.name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{font-size:12px;color:var(--tx3)}
+.item{padding:8px 14px;border:none;background:none;color:var(--tx);text-align:left;font-size:13px;cursor:pointer}
+.item:hover{background:var(--p3)}

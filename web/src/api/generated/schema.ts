@@ -72,6 +72,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/password/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Email + password login (password mode); sets the same session cookies as OIDC/dev login.
+         * @description Only mounted when `ROUTER_AUTH_MODES` contains `password`; there is no self-registration.
+         *     401 `invalid_credentials` never says whether the email exists. 429 `login_locked` (account locked
+         *     after repeated failures, or the per-IP limit) carries `Retry-After`. 403 `disabled` for a disabled
+         *     account (same reason the OIDC callback reports as `/login?error=disabled`).
+         */
+        post: operations["passwordLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/logout": {
         parameters: {
             query?: never;
@@ -100,6 +123,31 @@ export interface paths {
         get: operations["getCurrentUser"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change the caller's own password (password users); revokes all their sessions and starts a new one.
+         * @description Requires the current password. On success every session of the user is revoked and new `er_session`
+         *     / `er_csrf` cookies are set on this response: re-read `GET /auth/me` for the new `csrf_token`.
+         *     While `must_change_password` is true this (with `GET /auth/me`, `POST /auth/logout`, `GET /auth/config`)
+         *     is the only call allowed; every other call answers 403 `password_change_required`.
+         *     422 codes: `invalid_current_password` (`/current_password`), `weak_password` (`/new_password`, shorter than
+         *     `password_policy.min_length` or longer than 256), `password_reused` (`/new_password`, equals the current one).
+         */
+        post: operations["changeOwnPassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -151,7 +199,13 @@ export interface paths {
         /** Workspace members (any member may read). */
         get: operations["listUsers"];
         put?: never;
-        post?: never;
+        /**
+         * Create a password user (workspace admins, user.manage; password mode only). Created users must change their password at first login.
+         * @description Without `password` the server generates one and returns it once in `generatedPassword`.
+         *     409 `user_exists`; 422 `invalid_email`, `invalid_display_name`, `weak_password`, `unknown_team`, `role_not_assignable`.
+         *     404 when password mode is off (use `POST /users/invitations` with OIDC).
+         */
+        post: operations["createUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -176,6 +230,28 @@ export interface paths {
         head?: never;
         /** Rename, make workspace admin, or disable (workspace admins only). Disabling revokes sessions. */
         patch: operations["updateUser"];
+        trace?: never;
+    };
+    "/users/{id}/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set or generate a new password for a user (user.manage; password mode only); forces a change at next login and revokes their sessions.
+         * @description Without `password` the server generates one and returns it once in `generatedPassword`. 422 `weak_password`.
+         */
+        post: operations["resetUserPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/role-bindings": {
@@ -599,6 +675,81 @@ export interface paths {
         put?: never;
         /** Create a topic (only when the connection has `allowTopicCreate`). */
         post: operations["createConnectionTopic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lookup-sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lookup sources (HTTP, Redis, Postgres read-only, static library tables); every member may read. */
+        get: operations["listLookupSources"];
+        put?: never;
+        /** Create a lookup source; secrets are write-only and envelope-encrypted (connection.write on the owner team). */
+        post: operations["createLookupSource"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lookup-sources/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run the checklist on an unsaved draft (nothing is stored). */
+        post: operations["testLookupSourceDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lookup-sources/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        /** One lookup source with the routes using it. */
+        get: operations["getLookupSource"];
+        put?: never;
+        post?: never;
+        /** Delete an unused source and its stored secret. */
+        delete: operations["deleteLookupSource"];
+        options?: never;
+        head?: never;
+        /** JSON merge patch; `secrets` keys present replace stored values, absent keys keep them. The kind cannot change. */
+        patch: operations["updateLookupSource"];
+        trace?: never;
+    };
+    "/lookup-sources/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run reachable → authenticated → sample on a saved source; updates health. */
+        post: operations["testLookupSource"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1319,6 +1470,7 @@ export interface paths {
         /**
          * Re-run selected dead letters through the route's active version and produce to the destination (≤ 500 per call).
          * @description Requires `dlq.act`. Sent and filtered events become resolved; failed events stay and are only reported.
+         *     409 with `code: replay_approval_required` when the strict 4-eyes gate holds the replay back (request approval with a job).
          */
         post: operations["retryRouteDeadLetters"];
         delete?: never;
@@ -1413,6 +1565,136 @@ export interface paths {
         put?: never;
         /** Cancel a job (queued → cancelled at once; running → stops after the current page). */
         post: operations["cancelDeadLetterJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dlq/jobs/{jobId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve a replay waiting for a second person (pending_approval → queued).
+         * @description Requires `deployment.approve` on the route's team; the requester can never approve (403 `self_approval`, admins included). Audited as `dlq.replay_approved`.
+         */
+        post: operations["approveDeadLetterJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dlq/jobs/{jobId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject a replay waiting for a second person (pending_approval → rejected; a stored edit is dropped). */
+        post: operations["rejectDeadLetterJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dlq/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Replays waiting for approval on routes the caller may read (oldest first). */
+        get: operations["listPendingDeadLetterJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routes/{id}/dlq/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cause groups of a route's unresolved dead letters (fingerprint = route + step + error type + normalized message).
+         * @description Requires `dlq.read`. Scans up to 10,000 newest records (cached 15 s); `approximate` when the scan did not cover the whole DLQ.
+         */
+        get: operations["listRouteDeadLetterGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/dlq/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cause groups across every route the caller may read (at most 2,000 newest records per route). */
+        get: operations["listDeadLetterGroups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routes/{id}/dlq/dry-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run up to 20 newest events of a selection or cause group through the active version without producing. */
+        post: operations["dryRunRouteDeadLetters"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/routes/{id}/dlq/{dlqId}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Dry-run or replay one dead letter, optionally edited, through the route's active version.
+         * @description Requires `dlq.act`. Masked editors edit the masked view; leaves left at their mask are restored server side.
+         *     A replay of an edited event is audited as `dlq.edited_replayed` with the changed paths (never values); dry runs as
+         *     `dlq.replay_previewed`. Avro/Protobuf payloads are not editable (422 `edit_unsupported_format`).
+         */
+        post: operations["replayRouteDeadLetter"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1552,11 +1834,27 @@ export interface components {
             /** @description Opaque, tamper-checked cursor of the next page; null on the last page. */
             next_cursor: string | null;
         };
+        /** @description Present in `/auth/config` only when password mode is on. */
+        PasswordPolicy: {
+            /** @example 12 */
+            min_length: number;
+        };
         AuthConfig: {
-            modes: ("oidc" | "dev" | "api_token")[];
+            modes: ("oidc" | "dev" | "api_token" | "password")[];
             oidc_login_url?: string;
             dev_login_url?: string;
+            /**
+             * @description Present only when password mode is on.
+             * @example /auth/password/login
+             */
+            password_login_url?: string;
+            password_policy?: components["schemas"]["PasswordPolicy"];
             workspace: string;
+        };
+        PasswordLogin: {
+            /** Format: email */
+            email: string;
+            password: string;
         };
         TeamRole: {
             /** Format: uuid */
@@ -1575,8 +1873,14 @@ export interface components {
             teams: components["schemas"]["TeamRole"][];
             workspace: string;
             csrf_token: string;
+            /** @description Present only when password mode is on (missing = false). While true, only the password change, me, logout and config calls are allowed. */
+            must_change_password?: boolean;
         } & {
             [key: string]: unknown;
+        };
+        PasswordChange: {
+            current_password: string;
+            new_password: string;
         };
         /**
          * @description read: GET only; write: read + changes; admin: everything the owner may do.
@@ -1646,6 +1950,35 @@ export interface components {
             /** Format: date-time */
             lastLoginAt: string | null;
             rowVersion: number;
+            /** @description The user has a password credential (password mode). */
+            passwordLogin?: boolean;
+            /** @description The user must change their password at next login. */
+            mustChangePassword?: boolean;
+        };
+        UserCreate: {
+            /** Format: email */
+            email: string;
+            displayName: string;
+            /** @description Omit to have the server generate one. */
+            password?: string;
+            /** @default false */
+            workspaceAdmin: boolean;
+            /** Format: uuid */
+            teamId?: string;
+            role?: components["schemas"]["Role"];
+        };
+        UserCreated: {
+            user: components["schemas"]["User"];
+            /** @description Only when the request had no password; shown once, never again. */
+            generatedPassword?: string;
+        };
+        PasswordReset: {
+            /** @description Omit to have the server generate one. */
+            password?: string;
+        };
+        PasswordResetResult: {
+            /** @description Only when the request had no password; shown once, never again. */
+            generatedPassword?: string;
         };
         RoleBinding: {
             /** Format: uuid */
@@ -1715,11 +2048,14 @@ export interface components {
             aiAssistEnabled: boolean;
             /** @description Production approval default of new teams. */
             defaultRequireProdApproval: boolean;
+            /** @description Every route gets the router-caused dead-letter alert rule (default on). */
+            routerCausedAlertDefault?: boolean;
             rowVersion: number;
         };
         WorkspaceSettingsInput: {
             aiAssistEnabled?: boolean;
             defaultRequireProdApproval?: boolean;
+            routerCausedAlertDefault?: boolean;
         };
         Team: {
             /** Format: uuid */
@@ -1999,6 +2335,142 @@ export interface components {
             replicationFactor?: number;
             internal?: boolean;
             ratePerSec?: number | null;
+        };
+        /** @enum {string} */
+        LookupSourceKind: "http" | "redis" | "postgres" | "static";
+        LookupHTTPSettings: {
+            /** Format: uri */
+            baseUrl: string;
+            auth: {
+                /** @enum {string} */
+                mode: "none" | "bearer" | "basic" | "header";
+                username?: string;
+                headerName?: string;
+            };
+            tls: {
+                insecureSkipVerify?: boolean;
+                caPem?: string;
+            };
+            headers?: {
+                [key: string]: string;
+            };
+        };
+        LookupRedisSettings: {
+            addr: string;
+            db: number;
+            username?: string;
+            tls: boolean;
+        };
+        LookupPostgresSettings: {
+            host: string;
+            port: number;
+            database: string;
+            user: string;
+            /** @enum {string} */
+            sslMode: "" | "disable" | "allow" | "prefer" | "require" | "verify-ca" | "verify-full";
+            statementTimeoutMs: number;
+        };
+        LookupStaticSettings: {
+            tableRef: string;
+            version: number;
+        };
+        LookupLimits: {
+            maxConcurrency: number;
+            ratePerSec: number;
+            burst: number;
+            breakerFailures: number;
+            breakerOpenMs: number;
+        };
+        /** @enum {string} */
+        LookupSecretField: "token" | "password" | "headerValue";
+        /** @enum {string} */
+        LookupHealthStatus: "unknown" | "healthy" | "degraded" | "unreachable" | "auth_failed";
+        LookupSource: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string;
+            kind: components["schemas"]["LookupSourceKind"];
+            envTag: components["schemas"]["EnvTag"];
+            sensitive: boolean;
+            owner: {
+                /** Format: uuid */
+                teamId: string;
+                teamName: string;
+            };
+            http: components["schemas"]["LookupHTTPSettings"] | null;
+            redis: components["schemas"]["LookupRedisSettings"] | null;
+            postgres: components["schemas"]["LookupPostgresSettings"] | null;
+            static: components["schemas"]["LookupStaticSettings"] | null;
+            limits: components["schemas"]["LookupLimits"];
+            secretFields: components["schemas"]["LookupSecretField"][];
+            health: {
+                status: components["schemas"]["LookupHealthStatus"];
+                /** Format: date-time */
+                checkedAt: string | null;
+                lastFailure: null | {
+                    step?: string;
+                    message?: string;
+                    hint?: string;
+                };
+            };
+            usedBy: {
+                count: number;
+                routes: {
+                    /** Format: uuid */
+                    id?: string;
+                    name?: string;
+                }[];
+            };
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        LookupSourceInput: {
+            name: string;
+            description?: string;
+            kind: components["schemas"]["LookupSourceKind"];
+            envTag: components["schemas"]["EnvTag"];
+            sensitive?: boolean;
+            owner?: {
+                /** Format: uuid */
+                teamId?: string;
+            };
+            http?: components["schemas"]["LookupHTTPSettings"] | null;
+            redis?: components["schemas"]["LookupRedisSettings"] | null;
+            postgres?: components["schemas"]["LookupPostgresSettings"] | null;
+            static?: components["schemas"]["LookupStaticSettings"] | null;
+            limits?: components["schemas"]["LookupLimits"];
+            /** @description Write-only; never returned. */
+            secrets?: {
+                token?: string;
+                password?: string;
+                headerValue?: string;
+            };
+        };
+        LookupTestResult: {
+            ok: boolean;
+            health: components["schemas"]["LookupHealthStatus"];
+            /** Format: date-time */
+            checkedAt: string;
+            steps: {
+                /** @enum {string} */
+                step: "reachable" | "authenticated" | "sample";
+                /** @enum {string} */
+                state: "passed" | "failed" | "skipped";
+                durationMs: number;
+                message?: string;
+                hint?: string;
+            }[];
+        };
+        LookupSourceProblem: components["schemas"]["Problem"] & {
+            routes?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string;
+            }[];
         };
         /** @enum {string} */
         RouteStatus: "draft" | "running" | "paused" | "error" | "archived";
@@ -2365,6 +2837,15 @@ export interface components {
         };
         /** @description [unixSeconds, value] */
         Point: number[];
+        /** @description Current auto-tuned values summed over the route's runners; null when no runner reports them. */
+        RouteTuning: {
+            /** @description Current in-flight record limit (router_route_inflight_limit). */
+            inFlightLimit: number | null;
+            /** @description Live JS sandbox instances (router_js_pool_instances). */
+            jsInstances: number | null;
+            /** @description p95 seconds a JS call waited for an instance. */
+            jsQueueWaitP95: number | null;
+        };
         RouteMetrics: {
             range: components["schemas"]["TimeRange"];
             /** @example 30s */
@@ -2381,6 +2862,7 @@ export interface components {
                 latencyP95: components["schemas"]["Point"][];
                 errorsPerMin: components["schemas"]["Point"][];
             };
+            tuning?: components["schemas"]["RouteTuning"];
         };
         FlowNode: {
             id: string;
@@ -2407,7 +2889,7 @@ export interface components {
             metricsAvailable: boolean;
         };
         /** @enum {string} */
-        AlertRuleKind: "lag_above" | "error_rate_above" | "throughput_zero" | "match_rate_change";
+        AlertRuleKind: "lag_above" | "error_rate_above" | "throughput_zero" | "match_rate_change" | "router_caused_dead_letters";
         /** @enum {string} */
         ChannelType: "email" | "slack" | "teams" | "webhook";
         ChannelView: {
@@ -2487,7 +2969,7 @@ export interface components {
             intent: components["schemas"]["ActionIntent"];
         };
         /** @enum {string} */
-        ErrorType: "decode_error" | "step_error" | "timeout" | "output_invalid" | "unknown";
+        ErrorType: "decode_error" | "step_error" | "timeout" | "output_invalid" | "lookup_unavailable" | "dependency_unavailable" | "produce_retriable" | "internal_error" | "sandbox_crash" | "encode_error" | "produce_error" | "config_error" | "unknown";
         SourcePosition: {
             topic: string;
             partition: number;
@@ -2509,6 +2991,11 @@ export interface components {
             destination?: components["schemas"]["schemas-Destination"];
             jobId?: string;
         } | null;
+        /**
+         * @description Whose fault: bad input data, a router bug, or a transient condition (pure function of the error type).
+         * @enum {string}
+         */
+        ErrorClass: "data" | "router" | "transient";
         DeadLetter: {
             id: string;
             routeId: string;
@@ -2529,6 +3016,11 @@ export interface components {
              * @enum {string}
              */
             deliveryMode?: "at_least_once" | "exactly_once";
+            errorClass?: components["schemas"]["ErrorClass"];
+            /** @description Cause group fingerprint. */
+            fingerprint?: string;
+            /** @description Delayed retry attempts of the route's auto-retry policy before the event was parked. */
+            attempts?: number;
         };
         /** @description Cursor page (`next_cursor` as in PageMeta) plus scan statistics. */
         DeadLetterPage: {
@@ -2552,6 +3044,9 @@ export interface components {
             /** Format: date-time */
             newestAt: string | null;
             approximate: boolean;
+            byErrorClass?: {
+                [key: string]: number;
+            };
         };
         Match: {
             errorType?: components["schemas"]["ErrorType"][];
@@ -2563,6 +3058,8 @@ export interface components {
             version?: number;
             q?: string;
             includeResolved?: boolean;
+            errorClass?: components["schemas"]["ErrorClass"][];
+            fingerprint?: string;
         };
         /** @description Exactly one of `ids` or `match`. */
         DeadLetterSelection: {
@@ -2577,7 +3074,7 @@ export interface components {
             outcome: "sent" | "filtered" | "failed" | "skipped" | "discarded" | "restored";
             destination?: components["schemas"]["schemas-Destination"];
             /** @enum {string} */
-            errorType?: "step_error" | "timeout" | "output_invalid" | "decode_error" | "compile" | "destination";
+            errorType?: "step_error" | "timeout" | "output_invalid" | "decode_error" | "compile" | "destination" | "lookup_unavailable" | "dependency_unavailable";
             message?: string;
             /** @enum {string} */
             reason?: "locked" | "already_resolved" | "expired" | "not_found" | "not_discarded";
@@ -2620,7 +3117,7 @@ export interface components {
             action: "retry" | "discard";
             match?: Record<string, never>;
             /** @enum {string} */
-            status: "queued" | "running" | "cancel_requested" | "cancelled" | "succeeded" | "failed";
+            status: "queued" | "running" | "cancel_requested" | "cancelled" | "succeeded" | "failed" | "pending_approval" | "rejected";
             total: number;
             processed: number;
             counts: {
@@ -2634,6 +3131,67 @@ export interface components {
             startedAt?: string | null;
             /** Format: date-time */
             finishedAt?: string | null;
+            ratePerSecond?: number;
+            note?: string;
+            /** @description A single edited replay (the edit stays server side until the job ends). */
+            edited?: boolean;
+            /** @description Number of explicit ids of an ids selection (ids are not echoed). */
+            idsCount?: number;
+            /** @description The caller requested this job (Approve/Reject are hidden). */
+            requestedByMe?: boolean;
+            approval?: {
+                required: boolean;
+                decidedBy?: string;
+                /** Format: date-time */
+                decidedAt?: string;
+                decisionNote?: string;
+            };
+        };
+        DecisionBody: {
+            note?: string;
+        };
+        CauseGroup: {
+            fingerprint: string;
+            routeId: string;
+            routeName: string;
+            step: string;
+            stepLabel: string;
+            errorType: components["schemas"]["ErrorType"];
+            errorClass: components["schemas"]["ErrorClass"];
+            /** @description Normalized message: ids, numbers, offsets and positions replaced by <id>, <n>, <uuid>, <hex>, <ts>. */
+            pattern: string;
+            count: number;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** Format: date-time */
+            lastSeenAt: string;
+            versions: number[];
+            sample: {
+                id: string;
+                message: string;
+                /** Format: date-time */
+                failedAt: string;
+            };
+            trend: {
+                /** Format: date-time */
+                since: string;
+                bucketSeconds: number;
+                counts: number[];
+            };
+        };
+        GroupPage: {
+            items: components["schemas"]["CauseGroup"][];
+            scanned: number;
+            truncated: boolean;
+            approximate: boolean;
+            byClass: {
+                [key: string]: number;
+            };
+            warnings?: {
+                routeId?: string;
+                /** @enum {string} */
+                reason: "dlq_topic_missing" | "scan_failed";
+            }[];
         };
         EncodedValue: {
             /** @enum {string} */
@@ -2647,6 +3205,61 @@ export interface components {
             value: string;
             /** @enum {string} */
             encoding: "utf8" | "base64";
+        };
+        OutputView: {
+            branch: string;
+            connectionId: string;
+            topic: string;
+            key: components["schemas"]["EncodedValue"] | null;
+            value: components["schemas"]["EncodedValue"];
+            headers: components["schemas"]["EncodedHeader"][];
+        };
+        DryRunResult: {
+            id: string;
+            /** @enum {string} */
+            outcome: "would_send" | "filtered" | "failed";
+            errorType?: string;
+            message?: string;
+            outputs: components["schemas"]["OutputView"][];
+        };
+        DryRunReport: {
+            activeVersionNo: number;
+            sampled: number;
+            total: number;
+            results: components["schemas"]["DryRunResult"][];
+            counts: {
+                [key: string]: number;
+            };
+            masked: boolean;
+        };
+        /** @description Replacement key, value and headers; an omitted member keeps the original. */
+        RecordEdit: {
+            key?: components["schemas"]["EncodedValue"];
+            value?: components["schemas"]["EncodedValue"];
+            headers?: components["schemas"]["EncodedHeader"][];
+        };
+        ReplayRequest: {
+            edit?: components["schemas"]["RecordEdit"];
+            /** @default false */
+            dryRun: boolean;
+            note?: string;
+        };
+        DiffEntry: {
+            /** @example /value/items/0 */
+            path: string;
+            /** @enum {string} */
+            op: "add" | "remove" | "replace";
+        };
+        ReplayResponse: {
+            dryRun: boolean;
+            /** @enum {string} */
+            status?: "done" | "pending_approval";
+            activeVersionNo: number;
+            masked: boolean;
+            diff: components["schemas"]["DiffEntry"][];
+            result?: components["schemas"]["DryRunResult"];
+            report?: components["schemas"]["RetryReport"];
+            job?: components["schemas"]["DeadLetterJob"];
         };
         DeadLetterDetail: components["schemas"]["DeadLetter"] & {
             stack: string;
@@ -2813,6 +3426,10 @@ export interface components {
         Text: string;
         /** @description Also list retried/filtered/discarded events with their resolution. */
         IncludeResolved: boolean;
+        /** @description Comma-separated error classes (data, router, transient). */
+        ErrorClass: string;
+        /** @description Cause group fingerprint (from the groups endpoints). */
+        Fingerprint: string;
         JobId: string;
         /** @description Opaque dead-letter id (base64url of DLQ topic, partition and offset). */
         DLQId: string;
@@ -2921,6 +3538,36 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    passwordLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordLogin"];
+            };
+        };
+        responses: {
+            /** @description Signed in; `er_session` and `er_csrf` cookies set. */
+            204: {
+                headers: {
+                    /** @description `er_session` (HttpOnly) and `er_csrf`. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
     logout: {
         parameters: {
             query?: never;
@@ -2963,6 +3610,39 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             503: components["responses"]["Unavailable"];
+        };
+    };
+    changeOwnPassword: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordChange"];
+            };
+        };
+        responses: {
+            /** @description Changed; new session cookies set. */
+            204: {
+                headers: {
+                    /** @description New `er_session` (HttpOnly) and `er_csrf`. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
         };
     };
     listApiTokens: {
@@ -3084,6 +3764,40 @@ export interface operations {
             422: components["responses"]["ValidationFailed"];
         };
     };
+    createUser: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserCreate"];
+            };
+        };
+        responses: {
+            /** @description The created user, plus the generated password when none was given. */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETagHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserCreated"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     getUser: {
         parameters: {
             query?: never;
@@ -3151,6 +3865,40 @@ export interface operations {
             412: components["responses"]["PreconditionFailed"];
             422: components["responses"]["ValidationFailed"];
             428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    resetUserPassword: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PasswordReset"];
+            };
+        };
+        responses: {
+            /** @description Reset; `generatedPassword` only when the server generated it. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordResetResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
         };
     };
     listRoleBindings: {
@@ -4242,6 +4990,218 @@ export interface operations {
                     "application/problem+json": components["schemas"]["ConnectionProblem"];
                 };
             };
+        };
+    };
+    listLookupSources: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["LookupSourceKind"];
+                env?: components["schemas"]["EnvTag"];
+                /** @description Matches name or description. */
+                q?: string;
+                /** @description Page size; values above 200 are clamped, values ≤ 0 are rejected (422). */
+                limit?: components["parameters"]["Limit"];
+                /** @description Opaque cursor from a previous page's `next_cursor`. */
+                cursor?: components["parameters"]["Cursor"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page ordered by name; `usedBy.routes` is empty (count only). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["LookupSource"][];
+                        next_cursor: string | null;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    createLookupSource: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LookupSourceInput"];
+            };
+        };
+        responses: {
+            /** @description Created source (health `unknown` until tested). */
+            201: {
+                headers: {
+                    ETag: components["headers"]["ETagHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupSource"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    testLookupSourceDraft: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LookupSourceInput"];
+            };
+        };
+        responses: {
+            /** @description The checklist. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupTestResult"];
+                };
+            };
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
+    getLookupSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The source. */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETagHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupSource"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteLookupSource: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+            /** @description `lookup-source-in-use`: lookup steps of routes (draft or active version) still use it. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["LookupSourceProblem"];
+                };
+            };
+        };
+    };
+    updateLookupSource: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+                /** @description ETag of the version being edited. */
+                "If-Match": components["parameters"]["IfMatch"];
+            };
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/merge-patch+json": components["schemas"]["LookupSourceInput"];
+            };
+        };
+        responses: {
+            /** @description Updated source. */
+            200: {
+                headers: {
+                    ETag: components["headers"]["ETagHeader"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupSource"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            412: components["responses"]["PreconditionFailed"];
+            422: components["responses"]["ValidationFailed"];
+            428: components["responses"]["PreconditionRequired"];
+        };
+    };
+    testLookupSource: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The checklist. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupTestResult"];
+                };
+            };
+            404: components["responses"]["NotFound"];
         };
     };
     listRoutes: {
@@ -5468,6 +6428,10 @@ export interface operations {
                 q?: components["parameters"]["Text"];
                 /** @description Also list retried/filtered/discarded events with their resolution. */
                 includeResolved?: components["parameters"]["IncludeResolved"];
+                /** @description Comma-separated error classes (data, router, transient). */
+                class?: components["parameters"]["ErrorClass"];
+                /** @description Cause group fingerprint (from the groups endpoints). */
+                fingerprint?: components["parameters"]["Fingerprint"];
             };
             header?: never;
             path: {
@@ -5660,12 +6624,19 @@ export interface operations {
                 "application/json": {
                     /** @enum {string} */
                     action: "retry" | "discard";
-                    match: components["schemas"]["Match"];
+                    match?: components["schemas"]["Match"];
+                    ids?: string[];
+                    /**
+                     * @description Replay rate limit (retry jobs; discard jobs are not throttled).
+                     * @default 50
+                     */
+                    ratePerSecond?: number;
+                    note?: string;
                 };
             };
         };
         responses: {
-            /** @description The queued job. */
+            /** @description The job: queued, or pending_approval when the strict 4-eyes gate holds the replay back. */
             202: {
                 headers: {
                     [name: string]: unknown;
@@ -5731,6 +6702,237 @@ export interface operations {
             404: components["responses"]["NotFound"];
         };
     };
+    approveDeadLetterJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DecisionBody"];
+            };
+        };
+        responses: {
+            /** @description The job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterJob"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    rejectDeadLetterJob: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DecisionBody"];
+            };
+        };
+        responses: {
+            /** @description The job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeadLetterJob"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listPendingDeadLetterJobs: {
+        parameters: {
+            query?: {
+                status?: "pending_approval";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The pending jobs. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["DeadLetterJob"][];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    listRouteDeadLetterGroups: {
+        parameters: {
+            query?: {
+                /** @description Comma-separated error types. */
+                errorType?: components["parameters"]["ErrorType"];
+                /** @description Comma-separated error classes (data, router, transient). */
+                class?: components["parameters"]["ErrorClass"];
+                since?: components["parameters"]["Since"];
+                until?: components["parameters"]["Until"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Groups by count. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listDeadLetterGroups: {
+        parameters: {
+            query?: {
+                /** @description Comma-separated error types. */
+                errorType?: components["parameters"]["ErrorType"];
+                /** @description Comma-separated error classes (data, router, transient). */
+                class?: components["parameters"]["ErrorClass"];
+                since?: components["parameters"]["Since"];
+                until?: components["parameters"]["Until"];
+                /** @description Comma-separated route ids to restrict to. */
+                routeId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Groups by count; failing routes are listed in `warnings`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupPage"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    dryRunRouteDeadLetters: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path: {
+                id: components["parameters"]["IdParam"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeadLetterSelection"];
+            };
+        };
+        responses: {
+            /** @description The sample's outcomes. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DryRunReport"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    replayRouteDeadLetter: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required on cookie-authenticated POST/PUT/PATCH/DELETE; equals the er_csrf cookie. */
+                "X-CSRF-Token"?: components["parameters"]["CSRFToken"];
+            };
+            path: {
+                id: components["parameters"]["IdParam"];
+                /** @description Opaque dead-letter id (base64url of DLQ topic, partition and offset). */
+                dlqId: components["parameters"]["DLQId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplayRequest"];
+            };
+        };
+        responses: {
+            /** @description The dry run (`dryRun=true`, `result`) or the done replay (`status=done`, `report`). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayResponse"];
+                };
+            };
+            /** @description Held back by the strict 4-eyes gate (`status=pending_approval`, `job`). */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayResponse"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+        };
+    };
     exportRouteDeadLetters: {
         parameters: {
             query?: {
@@ -5746,6 +6948,10 @@ export interface operations {
                 version?: components["parameters"]["Version"];
                 /** @description Case-insensitive text in the error message. */
                 q?: components["parameters"]["Text"];
+                /** @description Comma-separated error classes (data, router, transient). */
+                class?: components["parameters"]["ErrorClass"];
+                /** @description Cause group fingerprint (from the groups endpoints). */
+                fingerprint?: components["parameters"]["Fingerprint"];
                 format?: "json" | "ndjson";
             };
             header?: never;
@@ -5847,6 +7053,10 @@ export interface operations {
                 q?: components["parameters"]["Text"];
                 /** @description Also list retried/filtered/discarded events with their resolution. */
                 includeResolved?: components["parameters"]["IncludeResolved"];
+                /** @description Comma-separated error classes (data, router, transient). */
+                class?: components["parameters"]["ErrorClass"];
+                /** @description Cause group fingerprint (from the groups endpoints). */
+                fingerprint?: components["parameters"]["Fingerprint"];
                 /** @description Comma-separated route ids to restrict to. */
                 routeId?: string;
             };

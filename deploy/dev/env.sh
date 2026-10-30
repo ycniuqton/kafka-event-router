@@ -31,6 +31,8 @@ ROUTER_REDIS_URL=redis://:${redis_pw}@127.0.0.1:${DEV_REDIS_PORT}/${DEV_REDIS_DB
 ROUTER_KAFKA_BOOTSTRAP=127.0.0.1:${DEV_KAFKA_PORT}
 ROUTER_METRICS_BACKEND=prometheus
 ROUTER_METRICS_URL=http://127.0.0.1:${DEV_PROM_PORT}
+# Local processes share the staging Postgres; keep their pools small (default would be 2 x CPUs = 28 here).
+ROUTER_DB_POOL_MAX_CONNS=${ROUTER_DB_POOL_MAX_CONNS:-8}
 EOF
 }
 

@@ -18,4 +18,11 @@ describe('ForbiddenToast', () => {
     expect(toasts).toEqual(['You need route.write on team Logistics.', ForbiddenText.fallback]);
     expect(reloads).toBe(2);
   });
+
+  it('leaves password_change_required to the session gate', () => {
+    const toasts: string[] = [];
+    const listener = new ForbiddenToast((m) => toasts.push(m));
+    listener.handle(ApiError.fromProblem({ type: ProblemCatalog.typeOf(ProblemKind.Forbidden), title: 't', status: 403, code: 'password_change_required' }));
+    expect(toasts).toEqual([]);
+  });
 });

@@ -37,7 +37,7 @@ follow-up optimisations (`RR-OPT-xx`). Mark the step you start `[~]`, finished `
 ## Follow-up optimisations (priority order, see design §7)
 - [ ] RR-OPT-01 Faster JSON codec: pooled buffers, zero-reflection decode/encode, lazy field decode, raw pass-through when no transform — expected 2–3× per core
 - [ ] RR-OPT-02 Adaptive or higher default `maxInFlight` (5000 or sized from ack latency) — expected +25–35 % single route
-- [ ] RR-OPT-03 GOMEMLIMIT from the container limit + worker-wide lane byte budget — bounded RSS under overload
+- [x] RR-OPT-03 GOMEMLIMIT from the container limit + worker-wide lane byte budget — bounded RSS under overload — done in `00002-memory-budget` (RR-MB-01..07; overload re-run is RR-MB-08)
 - [ ] RR-OPT-04 Shared source per (connection, topic): decode once, evaluate N routes — fan-out 3–5× at N = 10–50
 - [ ] RR-OPT-05 Configurable JS sandbox pool (default = cores) and payload-scaled JS timeout — JS routes ~5k → ~7.5k on 6 cores
 - [ ] RR-OPT-06 Calibrate scheduler load units from measured per-route cost; parallel runner starts in reconcile; bulk-deploy rate limit — > 500 routes per default worker, deploy p95 to a few s

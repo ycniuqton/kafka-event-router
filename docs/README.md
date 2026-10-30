@@ -8,15 +8,15 @@ folders refer to them as `needs: <folder>#<id>`.
 
 | Folder | Item ids | Purpose |
 | --- | --- | --- |
-| [systems/platform-core](systems/platform-core/00000-init/) | `PC-xx` | API base and conventions (RFC 7807, JSON Pointer paths, cursor, If-Match), Postgres + migrations, OIDC/dev auth, secrets (Vault/local/KMS), audit write, deploy, generated web client |
-| [systems/pipeline-engine](systems/pipeline-engine/00000-init/) | `PE-xx` | Route config JSON Schema + generated Go/TS types, doc-only validation, `pkg/engine` (codecs, filter, recipes, trace), `routerctl`, static engine catalogue |
-| [systems/js-sandbox](systems/js-sandbox/00000-init/) | `JS-xx` | QuickJS-on-wazero sandbox for JS steps and `expr` filters: limits, host `ctx` helpers, determinism, pools |
-| [systems/route-runtime](systems/route-runtime/00001-stress-test/) | `RR-xx`, `RR-ST-xx`, `RR-OPT-xx` | Worker runners (at-least-once, DLQ write, backpressure), scheduler/leases, hot reload, rollout + auto-rollback detection, replay mechanism. Versions: `00000-init` (base), `00001-stress-test` (active: stress-test results, limits, follow-up optimisations) |
-| [features/connections](features/connections/00000-init/) | `CN-xx` | Kafka connections: CRUD, security modes, write-only secrets, live test checklist, health probe, topic browser, create topic, `connections.*` columns |
+| [systems/platform-core](systems/platform-core/00002-lite-profile/) | `PC-xx`, `PC-HD-xx`, `PC-LT-xx` | API base and conventions (RFC 7807, JSON Pointer paths, cursor, If-Match), Postgres + migrations, OIDC/dev auth, secrets (Vault/local/KMS/static key), audit write, deploy, generated web client. Versions: `00000-init` (base), `00001-hardening` (shared DB ListenerHub, DB health probe, leader-lock hijack protection), `00002-lite-profile` (`static_key` master-key provider, `deploy/lite` Postgres + Redis compose with mTLS certs-init, `api health`) |
+| [systems/pipeline-engine](systems/pipeline-engine/00002-lookups/) | `PE-xx`, `PE-FC-xx`, `PE-LK-xx` | Route config JSON Schema + generated Go/TS types, doc-only validation, `pkg/engine` (codecs, filter, recipes, trace), `routerctl`, static engine catalogue. Versions: `00000-init` (base), `00001-fast-codec` (partial-decode JSON codec for path-bounded routes, `ROUTER_ENGINE_CODEC=fast|tree`, byte-identical to tree), `00002-lookups` (lookup step source mode, `pkg/lookup` runtime, `lookup_unavailable` error contract shared with dead-letters) |
+| [systems/js-sandbox](systems/js-sandbox/00001-pool-autoscale/) | `JS-xx`, `JS-PA-xx` | QuickJS-on-wazero sandbox for JS steps and `expr` filters: limits, host `ctx` helpers, determinism, pools. Versions: `00000-init` (base), `00001-pool-autoscale` (per-route JS pool autoscaling, CPU-bounded ceiling) |
+| [systems/route-runtime](systems/route-runtime/00003-autotune/) | `RR-xx`, `RR-ST-xx`, `RR-OPT-xx`, `RR-MB-xx`, `RR-AT-xx` | Worker runners (at-least-once, DLQ write, backpressure), scheduler/leases, hot reload, rollout + auto-rollback detection, replay mechanism. Versions: `00000-init` (base), `00001-stress-test` (stress-test results, limits, follow-up optimisations), `00002-memory-budget` (worker-wide byte budget, fair per-route fetch pausing, GOMEMLIMIT), `00003-autotune` (adaptive in-flight limit; worker memory budget is its pressure signal) |
+| [features/connections](features/connections/00001-lookup-sources/) | `CN-xx`, `CN-LS-xx` | Kafka connections: CRUD, security modes, write-only secrets, live test checklist, health probe, topic browser, create topic, `connections.*` columns. Versions: `00000-init` (base), `00001-lookup-sources` (HTTP / Redis / Postgres / static lookup sources, migration 3020) |
 | [features/routes](features/routes/00000-init/) | `routes#<slug>` | Routes list, 3-zone builder, external-data validation, deploy/versions/diff/rollback, route-detail shell, YAML import/export, replay API |
 | [features/live-preview](features/live-preview/00000-init/) | `LP-xx` | Sample sessions (latest/time range/upload), preview run with trace, sample panel, masking, Peek backend |
-| [features/access-control](features/access-control/00000-init/) | `AC-xx` | RBAC roles/permissions, users & role bindings, teams + connection grants, approvals (4-eyes), masking decision, audit log read/export |
-| [features/dead-letters](features/dead-letters/00000-init/) | `DL-xx` | DLQ browse (route + global), detail, retry (in-API engine), discard, export, Open in Studio |
+| [features/access-control](features/access-control/00001-password-auth/) | `AC-xx`, `AC-PW-xx` | RBAC roles/permissions, users & role bindings, teams + connection grants, approvals (4-eyes), masking decision, audit log read/export. Versions: `00000-init` (base), `00001-password-auth` (password login mode, first-start admin, forced change, admin create/reset, lockout) |
+| [features/dead-letters](features/dead-letters/00001-workflow/) | `DL-xx`, `DLW-xx` | DLQ browse (route + global), detail, retry (in-API engine), discard, export, Open in Studio. Versions: `00000-init` (base), `00001-workflow` (error classes, cause groups, edit / dry-run / bulk replay, 4-eyes approvals, retry topics, migration 3100) |
 | [features/monitoring](features/monitoring/00000-init/) | `M-BE/M-FE/M-T-xx`, `P2-*`, `P3-*` | Dashboard, route overview metrics, alerts + bell, WS events, flow map, live tail, demo data, replay confirm dialog |
 | [features/transform-studio](features/transform-studio/00000-init/) | `TS-xx` | Transform Studio (recipes, JS editor, click-to-transform), saved test cases, visual mapper, library, AI assist (mock) |
 
@@ -51,6 +51,14 @@ until it lands.
 | 0008 | `0008_route_runtime` (incl. `router_runtime_notify` trigger, `deployments.activated_at`) | route-runtime |
 
 0009 is unassigned. P2/P3 migrations start at **0010** and take the next free number at implementation time.
+
+### Migration ranges after MVP
+Numbers are `<phase><folder block>`: the thousands digit is the phase (1xxx P2, 2xxx P3, 3xxx P4) and the
+last three digits are the owner folder's block of ten (platform-core x000, access-control x010, connections x020,
+route-runtime x060, live-preview x070, transform-studio x080, monitoring x090, dead-letters x100). Applied in
+ascending order; P4 so far: `3020_lookup_sources` (connections), `3100_dlq_workflow` (dead-letters, renumbered
+from 2100 at integration), `3110_access_control_passwords` (access-control; numbered after 3100 instead of
+its block number 3010 because databases already at 3100 would skip a lower version).
 
 ## Decisions
 

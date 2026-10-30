@@ -17,3 +17,4 @@
 .settings{border:0;border-top:1px solid var(--ln);margin:0;min-width:0;padding:10px;display:flex;flex-direction:column;gap:8px;font-size:12px}
 .issue{padding:0 10px 8px 34px;font-size:11.5px;color:var(--err)}
 .dirty{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-left:6px;vertical-align:middle}
+.badge{margin-left:6px;font-weight:400}

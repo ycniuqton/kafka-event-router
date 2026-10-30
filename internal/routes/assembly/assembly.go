@@ -35,6 +35,8 @@ type Ports struct {
 	Rollouts         []routes.RolloutNotifier
 	Library          validation.LibraryLookup
 	Replays          routes.OffsetResetter
+	// Validators are extra external-data rules contributed by other folders (e.g. lookup-source refs).
+	Validators []validation.ContextValidator
 }
 
 // Deps is the shared infrastructure the feature is built from.
@@ -182,6 +184,9 @@ func (f ValidatorFactory) Build(s Settings) (*validation.ValidationManager, erro
 	}
 	if f.Ports.Library != nil {
 		set.Add(validation.LibraryRefValidator{Library: f.Ports.Library})
+	}
+	for _, v := range f.Ports.Validators {
+		set.Add(v)
 	}
 	return validation.NewValidationManager(set, validation.ManagerOptions{Parallelism: s.ValidationParallel, Timeout: s.ValidationTimeout}), nil
 }

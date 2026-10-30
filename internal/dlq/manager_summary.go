@@ -53,9 +53,10 @@ type SummaryOf struct{}
 
 // Build is exact when the sample covered the whole DLQ, else approximate from watermarks.
 func (SummaryOf) Build(page ScanPage, total int) Summary {
-	s := Summary{ByErrorType: map[record.ErrorType]int{}, Warnings: nil}
+	s := Summary{ByErrorType: map[record.ErrorType]int{}, ByClass: ClassCounts{}, Warnings: nil}
 	for _, r := range page.Records {
 		s.ByErrorType[r.Failure.ErrorType]++
+		s.ByClass[r.Failure.ErrorType.Class()]++
 		at := r.Failure.FailedAt
 		if s.NewestAt == nil || at.After(*s.NewestAt) {
 			s.NewestAt = &at
@@ -79,6 +80,7 @@ func (SummaryOf) Build(page ScanPage, total int) Summary {
 type GlobalSummary struct {
 	Unresolved  int                      `json:"unresolved"`
 	ByErrorType map[record.ErrorType]int `json:"byErrorType"`
+	ByClass     ClassCounts              `json:"byErrorClass"`
 	Approximate bool                     `json:"approximate"`
 	Routes      []RouteSummary           `json:"routes"`
 }
@@ -89,6 +91,7 @@ type RouteSummary struct {
 	RouteName   string                   `json:"routeName"`
 	Unresolved  int                      `json:"unresolved"`
 	ByErrorType map[record.ErrorType]int `json:"byErrorType"`
+	ByClass     ClassCounts              `json:"byErrorClass"`
 	Approximate bool                     `json:"approximate"`
 }
 
@@ -102,9 +105,9 @@ func (m *Manager) GlobalSummary(ctx context.Context, routes []RouteInfo) GlobalS
 		if err != nil || s.Unresolved == 0 {
 			return nil
 		}
-		return &RouteSummary{RouteID: r.ID, RouteName: r.Name, Unresolved: s.Unresolved, ByErrorType: s.ByErrorType, Approximate: s.Approximate}
+		return &RouteSummary{RouteID: r.ID, RouteName: r.Name, Unresolved: s.Unresolved, ByErrorType: s.ByErrorType, ByClass: s.ByClass, Approximate: s.Approximate}
 	})
-	out := GlobalSummary{ByErrorType: map[record.ErrorType]int{}, Routes: []RouteSummary{}}
+	out := GlobalSummary{ByErrorType: map[record.ErrorType]int{}, ByClass: ClassCounts{}, Routes: []RouteSummary{}}
 	for _, s := range sums {
 		if s != nil {
 			out.add(*s)
@@ -119,5 +122,11 @@ func (g *GlobalSummary) add(s RouteSummary) {
 	for t, n := range s.ByErrorType {
 		g.ByErrorType[t] += n
 	}
+	for c, n := range s.ByClass {
+		g.ByClass[c] += n
+	}
 	g.Routes = append(g.Routes, s)
 }
+
+// ClassCounts counts dead letters per error class.
+type ClassCounts map[record.ErrorClass]int

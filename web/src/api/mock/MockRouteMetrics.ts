@@ -20,6 +20,9 @@ export class MockRouteMetrics {
   static readonly matchShare = 0.8;
   static readonly dlqShare = 0.01;
   static readonly latencyScale = 0.0001;
+  static readonly inFlightScale = 5;
+  static readonly jsInstances = 4;
+  static readonly jsQueueWaitP95 = 0.0012;
 
   static build(routeId: string, range: MetricsRange): RouteOverviewMetrics {
     const shape = RangeShape[range];
@@ -41,6 +44,11 @@ export class MockRouteMetrics {
         latencyP50: series('p50', MockRouteMetrics.latencyScale),
         latencyP95: series('p95', MockRouteMetrics.latencyScale * 3),
         errorsPerMin: series('err', MockRouteMetrics.dlqShare),
+      },
+      tuning: {
+        inFlightLimit: Math.round(MockRouteMetrics.base(`${routeId}:inflight`) * MockRouteMetrics.inFlightScale),
+        jsInstances: MockRouteMetrics.jsInstances,
+        jsQueueWaitP95: MockRouteMetrics.jsQueueWaitP95,
       },
     };
   }

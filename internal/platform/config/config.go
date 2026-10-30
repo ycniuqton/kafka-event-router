@@ -79,9 +79,11 @@ type LogConfig struct {
 }
 
 // DatabaseConfig points at the PostgreSQL metadata store.
+// PoolMaxConns 0 keeps the store default; a pool_max_conns DSN parameter wins over both.
 type DatabaseConfig struct {
 	URL            string
 	MigrateOnStart bool
+	PoolMaxConns   int
 }
 
 // RedisConfig points at the short-lived data store (sessions, samples, live tail).
@@ -98,6 +100,7 @@ type KafkaConfig struct {
 type SecretsConfig struct {
 	Provider     SecretsProviderKind
 	LocalKeyFile string
+	Static       StaticKeyConfig
 	Rotation     SecretsRotationConfig
 	Vault        VaultConfig
 	KMS          KMSConfig
@@ -121,6 +124,7 @@ type AuthConfig struct {
 	SessionMaxTTL  time.Duration
 	OIDC           OIDCConfig
 	Dev            DevLoginConfig
+	Password       PasswordLoginConfig
 }
 
 // HasMode reports whether the given authentication mode is enabled.

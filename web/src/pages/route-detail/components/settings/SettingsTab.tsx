@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { services } from '../../../../api';
 import { useCan } from '../../../../access';
 import { Button, EmptyState } from '../../../../components/ui';
-import { Permission, type Route, type RouteSettings } from '../../../../domain';
+import { MetricsRange, Permission, type Route, type RouteSettings } from '../../../../domain';
 import { actions, useServiceQuery } from '../../../../store';
 import { SettingsField, SettingsForm, type SettingsFormValues } from '../../model/SettingsForm';
 import { DeliverySection } from './DeliverySection';
@@ -47,12 +47,13 @@ function SettingsEditor({ route, settings, onReload }: SettingsEditorProps) {
     }
   };
   const section = { values, errors, readOnly: !canWrite, onChange: (patch: Partial<SettingsFormValues>) => setValues((v) => ({ ...v, ...patch })) };
+  const metrics = useServiceQuery(() => services.metrics.routeMetrics(route.id, MetricsRange.M15), [route.id]);
   return (
     <div className={styles.tab}>
       <GeneralSection {...section} />
       <ErrorPolicySection {...section} />
       <DeliverySection {...section} route={route} />
-      <LimitsSection {...section} />
+      <LimitsSection {...section} tuning={metrics.data?.tuning} />
       {canWrite && (
         <div className={styles.footer}>
           {errors[SettingsField.Form] ? <span className={styles.formError}>{errors[SettingsField.Form]}</span> : <span className={styles.saved} />}

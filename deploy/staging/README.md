@@ -54,9 +54,16 @@ Dev login is refused outside `local`.
   to the same values): `ROUTER_ASSIST_PROVIDER=mock`, `ROUTER_LIVETAIL_TAP=redis`, `ROUTER_EVENTS_BUS=redis`,
   `ROUTER_ROUTE_METRICS_READER=prometheus`, `ROUTER_ALERTS_CHANNELS=slack,teams,webhook` (email off: no SMTP host).
 - `ROUTER_DATABASE_URL` (api/worker/preview; `migrate` keeps the plain DSN because golang-migrate forwards unknown
-  parameters to Postgres) carries `pool_max_conns` (`ROUTER_DB_POOL_MAX_CONNS`, default 16): pgxpool otherwise caps at
-  max(4, CPUs), and the api keeps several pooled connections in LISTEN (runtime changes, RBAC invalidation), which
-  starves the pool on a small host (readiness ping times out). 3 services x 16 + router_dev stay under Postgres' 100.
+  parameters to Postgres) carries `pool_max_conns` (`ROUTER_DB_POOL_MAX_CONNS`, default 16). Historical workaround:
+  the api used to park pooled connections in LISTEN, which starved the pool on a small host (readiness ping timed
+  out). Since platform-core 00001-hardening all LISTENs share one dedicated session, readiness pings on its own
+  session, held leader locks leave the pool, and the pool defaults to max(10, 2 x CPUs) (`ROUTER_DB_POOL_MAX_CONNS`
+  read by the process when the DSN has no `pool_max_conns`), so the DSN parameter is optional. Per api process:
+  pool + 2 + up to 3 lock sessions; 3 services x 16 + extras + router_dev stay under Postgres' 100.
+- Postgres sizing: on 2026-10-18 a 48-connection load probe pushed the postgres container past its old 512M cgroup
+  limit and the OOM killer took down the checkpointer (crash recovery, ~2 s outage). The container now gets 1536M with
+  `max_connections=150`, `shared_buffers=128MB`, `work_mem=4MB`; local dev processes cap their pools at 8
+  (`deploy/dev/env.sh`).
 - Secrets provider `vault` (Transit key `event-router`, mount `transit`). `vault-init` keeps
   `/opt/event-router/vault-init.json` (unseal key + root token, 0600), unseals after every Vault restart and
   creates the app token with the fixed id `ROUTER_VAULT_TOKEN` (policy `event-router-transit`).

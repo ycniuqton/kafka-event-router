@@ -1,5 +1,6 @@
 import { Format, Mono, TableCell, TableRow, ToneBadge } from '../../../components/ui';
-import { DeadLetterResolutionMeta, Tone, type DeadLetter } from '../../../domain';
+import { DeadLetterClasses, DeadLetterResolutionMeta, Tone, type DeadLetter } from '../../../domain';
+import { ErrorClassBadge } from './ErrorClassBadge';
 import styles from './DeadLetterRow.module.css';
 
 export type DeadLetterRowProps = {
@@ -32,10 +33,12 @@ export function DeadLetterRow({ deadLetter: d, routeName, selected, checked, onS
               <ToneBadge tone={DeadLetterResolutionMeta[d.resolution.state].tone}>{DeadLetterResolutionMeta[d.resolution.state].label}</ToneBadge>
             </span>
           )}
+          <ErrorClassBadge errorClass={DeadLetterClasses.of(d)} />
           <Mono>{d.message}</Mono>
         </TableCell>
         <div className={styles.meta}>
           {routeName} · {d.step} · p{d.partition}@{d.offset}
+          {d.attempts ? ` · ${d.attempts} auto-retries` : ''}
         </div>
       </div>
     </TableRow>

@@ -25,6 +25,10 @@ const upsertUserSQL = `INSERT INTO users (email, display_name, sso_subject) VALU
 	WHERE users.email IS DISTINCT FROM EXCLUDED.email OR users.display_name IS DISTINCT FROM EXCLUDED.display_name
 	RETURNING id, email, display_name, disabled_at IS NOT NULL`
 
+// loadUserSQL reads the principal fields of a user, including a pending forced password change.
+const loadUserSQL = `SELECT u.email, u.display_name, u.disabled_at IS NOT NULL,
+	COALESCE((SELECT p.must_change FROM user_passwords p WHERE p.user_id = u.id), false) FROM users u WHERE u.id = $1`
+
 // Upsert creates or refreshes the user identified by the identity's subject.
 func (r *UserRepository) Upsert(ctx context.Context, id auth.Identity) (auth.User, error) {
 	var u auth.User
@@ -41,8 +45,7 @@ func (r *UserRepository) Upsert(ctx context.Context, id auth.Identity) (auth.Use
 // LoadUser returns the user and their team roles.
 func (r *UserRepository) LoadUser(ctx context.Context, id uuid.UUID) (auth.User, []auth.TeamRole, error) {
 	u := auth.User{ID: id}
-	err := r.db.Q(ctx).QueryRow(ctx, `SELECT email, display_name, disabled_at IS NOT NULL FROM users WHERE id = $1`, id).
-		Scan(&u.Email, &u.DisplayName, &u.Disabled)
+	err := r.db.Q(ctx).QueryRow(ctx, loadUserSQL, id).Scan(&u.Email, &u.DisplayName, &u.Disabled, &u.MustChangePassword)
 	if err != nil {
 		return auth.User{}, nil, r.db.Translate(err)
 	}

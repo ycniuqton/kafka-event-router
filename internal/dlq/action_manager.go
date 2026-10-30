@@ -22,7 +22,7 @@ func (m *Manager) Act(ctx context.Context, kind ActionKind, actor Actor, routeID
 	}
 	ac := ActionContext{Location: loc, Actor: actor, Now: m.d.Now()}
 	if handler.NeedsActiveVersion() {
-		if ac.Target, err = m.retryTarget(ctx, loc.Route); err != nil {
+		if ac.Target, err = m.gatedTarget(ctx, loc.Route); err != nil {
 			return ActionReport{}, err
 		}
 	}
@@ -50,6 +50,19 @@ func (SelectionOf) For(h ActionHandler, sel Selection) Selection {
 	q.IncludeResolved = true
 	sel.Match = &q
 	return sel
+}
+
+// gatedTarget loads the active version and refuses sync replays the 4-eyes gate does not allow.
+func (m *Manager) gatedTarget(ctx context.Context, route RouteInfo) (*RetryTarget, error) {
+	target, err := m.retryTarget(ctx, route)
+	if err != nil {
+		return nil, err
+	}
+	decision, err := m.replayGate().Check(ctx, *target)
+	if err != nil {
+		return nil, err
+	}
+	return target, GateError{}.Of(decision)
 }
 
 // retryTarget loads the active version; an undeployed route cannot be retried.
@@ -140,9 +153,12 @@ func (AuditDetailOf) Match(sel Selection) *MatchAudit {
 	if sel.Match == nil {
 		return nil
 	}
-	out := &MatchAudit{Step: sel.Match.Step, VersionNo: sel.Match.VersionNo, Text: sel.Match.Text}
+	out := &MatchAudit{Step: sel.Match.Step, VersionNo: sel.Match.VersionNo, Text: sel.Match.Text, Cause: sel.Match.Fingerprint}
 	for _, t := range sel.Match.ErrorTypes {
 		out.ErrorTypes = append(out.ErrorTypes, string(t))
+	}
+	for _, c := range sel.Match.Classes {
+		out.Classes = append(out.Classes, string(c))
 	}
 	if !sel.Match.Since.IsZero() {
 		out.Since = sel.Match.Since.Format(time.RFC3339)

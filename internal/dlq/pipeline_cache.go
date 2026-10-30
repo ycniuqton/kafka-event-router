@@ -37,6 +37,7 @@ type PipelineCache struct {
 	salts    ctxhelpers.SaltProvider
 	regs     codec.RegistryProvider
 	library  config.LibraryResolver
+	sources  ctxhelpers.SourceGateway
 	size     int
 	mu       sync.Mutex
 	order    *list.List
@@ -63,6 +64,12 @@ func (c *PipelineCache) WithRegistries(regs codec.RegistryProvider) *PipelineCac
 // WithLibrary makes compiled versions resolve library steps and named lookup tables.
 func (c *PipelineCache) WithLibrary(library config.LibraryResolver) *PipelineCache {
 	c.library = library
+	return c
+}
+
+// WithSources makes compiled versions serve lookup steps in source mode (dry-run and retry, CN-LS-19).
+func (c *PipelineCache) WithSources(sources ctxhelpers.SourceGateway) *PipelineCache {
+	c.sources = sources
 	return c
 }
 
@@ -94,7 +101,7 @@ func (c *PipelineCache) compile(ctx context.Context, route RouteInfo, v VersionC
 	}
 	opts := engine.CompileOptions{
 		Scripts:          c.scripts.Runtime(route, v),
-		Helpers:          ctxhelpers.Set{Hash: ctxhelpers.NewSaltedHasher(c.salts, route.TeamID)}.WithDefaults(),
+		Helpers:          ctxhelpers.Set{Hash: ctxhelpers.NewSaltedHasher(c.salts, route.TeamID), Sources: c.sources}.WithDefaults(),
 		Meta:             engine.RouteMeta{RouteID: route.ID, Name: route.Name, Version: v.No, TeamID: route.TeamID},
 		SchemaRegistries: c.regs,
 		Library:          c.library,

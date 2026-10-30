@@ -406,6 +406,15 @@ components:
             latencyP50: { type: array, items: { $ref: "#/components/schemas/Point" } }
             latencyP95: { type: array, items: { $ref: "#/components/schemas/Point" } }
             errorsPerMin: { type: array, items: { $ref: "#/components/schemas/Point" } }
+        tuning: { $ref: "#/components/schemas/RouteTuning" }
+    RouteTuning:
+      type: object
+      description: Current auto-tuned values summed over the route's runners; null when no runner reports them.
+      required: [inFlightLimit, jsInstances, jsQueueWaitP95]
+      properties:
+        inFlightLimit: { type: [number, "null"], description: Current in-flight record limit (router_route_inflight_limit). }
+        jsInstances: { type: [number, "null"], description: Live JS sandbox instances (router_js_pool_instances). }
+        jsQueueWaitP95: { type: [number, "null"], description: p95 seconds a JS call waited for an instance. }
     FlowNode:
       type: object
       required: [id, type, label, connectionId]
@@ -437,7 +446,7 @@ components:
         metricsAvailable: { type: boolean }
     AlertRuleKind:
       type: string
-      enum: [lag_above, error_rate_above, throughput_zero, match_rate_change]
+      enum: [lag_above, error_rate_above, throughput_zero, match_rate_change, router_caused_dead_letters]
     ChannelType:
       type: string
       enum: [email, slack, teams, webhook]

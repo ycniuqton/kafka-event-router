@@ -37,7 +37,8 @@ func (t *testCasesWiring) build(w *Wiring) *testcases.TestCaseService {
 		t.repo, t.library = testcases.NewRepository(w.Deps.DB), resolver.New(w.Deps.DB)
 		t.scripts = &testcases.LazySandboxScripts{Salts: salts}
 		runner := testcases.NewTestCaseRunner(testcases.RunnerDeps{Compiler: compile.NewDefaultCompiler(),
-			Scripts: t.scripts, Salts: salts, Comparators: testcases.DefaultComparatorManager(), Library: t.library})
+			Scripts: t.scripts, Salts: salts, Comparators: testcases.DefaultComparatorManager(), Library: t.library,
+			Sources: lookupsFeature.Gateway(w)})
 		targets := map[testcases.OwnerKind]testcases.TargetSource{
 			testcases.OwnerRoute: testcases.RouteTargets{Routes: t.repo}, testcases.OwnerTransform: testcases.TransformTargets{Transforms: t.repo},
 		}

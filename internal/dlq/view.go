@@ -67,6 +67,9 @@ type ItemView struct {
 	Source     SourceView          `json:"source"`
 	Resolution *ResolutionView     `json:"resolution"`
 	Delivery   config.DeliveryMode `json:"deliveryMode,omitempty"`
+	ErrorClass record.ErrorClass   `json:"errorClass"`
+	Cause      string              `json:"fingerprint"`
+	Attempts   int                 `json:"attempts,omitempty"`
 }
 
 // DetailView is the detail (and export) shape of a dead letter (design §4.3).
@@ -93,7 +96,8 @@ func (p Presenter) Item(route RouteInfo, r record.Record, res *Resolution) ItemV
 		ErrorType: r.Failure.ErrorType, Message: r.Failure.Message, Step: r.Failure.Step, Branch: r.Failure.Branch,
 		StepLabel: p.Steps.Of(r.Failure.VersionNo, r.Failure.Branch, r.Failure.Step),
 		VersionNo: r.Failure.VersionNo, Source: SourceView{Topic: r.Source.Topic, Partition: r.Source.Partition, Offset: r.Source.Offset},
-		Delivery: p.Delivery,
+		Delivery: p.Delivery, ErrorClass: r.Failure.ErrorType.Class(), Cause: NewFingerprinter().Of(r.Failure.RouteID, r.Failure).ID,
+		Attempts: r.Failure.Attempts,
 	}
 	if res != nil {
 		v.Resolution = &ResolutionView{State: res.State, By: res.By, At: res.At, Destination: res.Destination, JobID: res.JobID}

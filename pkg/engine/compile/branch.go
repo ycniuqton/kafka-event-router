@@ -67,13 +67,31 @@ func (b *branch) pass(r *eventRun, ev *engine.Event) (bool, error) {
 	return false, pe
 }
 
+// ValueEncoder encodes the value of one output record.
+type ValueEncoder interface {
+	Encode(ctx context.Context, v any) ([]byte, error)
+}
+
 // Encode shapes key and headers, encodes with the destination codecs and enforces maxOutputBytes.
 func (s *OutputShaper) Encode(ctx context.Context, o engine.Out, maxBytes int) (engine.RawRecord, error) {
+	return s.EncodeWith(ctx, o, maxBytes, NullableEncoder{Codec: s.valCodec})
+}
+
+// ValueFormat returns the destination value format (empty when its codec failed to build).
+func (s *OutputShaper) ValueFormat() config.FormatType {
+	if s.valCodec == nil {
+		return ""
+	}
+	return s.valCodec.Format()
+}
+
+// EncodeWith is Encode with the value written by values instead of the destination codec.
+func (s *OutputShaper) EncodeWith(ctx context.Context, o engine.Out, maxBytes int, values ValueEncoder) (engine.RawRecord, error) {
 	key, err := NullableEncoder{Codec: s.keyCodec}.Encode(ctx, s.key.Key(&o))
 	if err != nil {
 		return engine.RawRecord{}, s.invalid(o, err)
 	}
-	value, err := NullableEncoder{Codec: s.valCodec}.Encode(ctx, o.Value)
+	value, err := values.Encode(ctx, o.Value)
 	if err != nil {
 		return engine.RawRecord{}, s.invalid(o, err)
 	}

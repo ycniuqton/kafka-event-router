@@ -7,6 +7,7 @@ export type AssistChoice = (typeof AssistChoice)[keyof typeof AssistChoice];
 /** Texts of the workspace section. */
 export const WorkspaceText = {
   assistHint: 'Transform Studio suggestions and explanations (off by default)',
+  routerAlertHint: 'Alert on router-caused dead letters for every route (on by default; each route can still disable its rule)',
   assistOn: 'On',
   assistOff: 'Off',
   saved: 'Workspace settings saved',

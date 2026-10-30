@@ -14,6 +14,7 @@ import (
 type Summary struct {
 	Unresolved  int                      `json:"unresolved"`
 	ByErrorType map[record.ErrorType]int `json:"byErrorType"`
+	ByClass     ClassCounts              `json:"byErrorClass"`
 	OldestAt    *time.Time               `json:"oldestAt"`
 	NewestAt    *time.Time               `json:"newestAt"`
 	Approximate bool                     `json:"approximate"`

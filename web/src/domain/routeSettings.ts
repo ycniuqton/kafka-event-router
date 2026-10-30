@@ -1,18 +1,34 @@
+import type { RetryPolicySettings } from './retryPolicy';
+
 /** What happens to an event a step fails on (route document `errorPolicy.onError`). */
 export const ErrorAction = { Skip: 'skip', DeadLetter: 'dlq', Pause: 'pause' } as const;
 export type ErrorAction = (typeof ErrorAction)[keyof typeof ErrorAction];
 
 /** Error handling of a route; empty DLQ connection means the source connection. */
-export type RouteErrorPolicy = { onError: ErrorAction; dlqConnectionId: string; dlqTopic: string; maxRetries: number | null };
+export type RouteErrorPolicy = {
+  onError: ErrorAction;
+  dlqConnectionId: string;
+  dlqTopic: string;
+  maxRetries: number | null;
+  /** Auto-retry of transient failures; undefined keeps the document's value, null removes it. */
+  retry?: RetryPolicySettings | null;
+};
 
 /** Per-route processing limits; null keeps the engine default. */
 export type RouteLimits = {
   maxInFlight: number | null;
+  minInFlight: number | null;
   jsTimeoutMs: number | null;
   jsMemoryMb: number | null;
+  jsMinInstances: number | null;
+  jsMaxInstances: number | null;
   maxOutputsPerEvent: number | null;
   maxOutputBytes: number | null;
 };
+
+/** How the in-flight limit is sized (route document `limits.inFlightMode`); absent means auto. */
+export const InFlightMode = { Auto: 'auto', Fixed: 'fixed' } as const;
+export type InFlightMode = (typeof InFlightMode)[keyof typeof InFlightMode];
 
 /** Delivery guarantee of a route (route document `delivery.mode`). */
 export const DeliveryMode = { AtLeastOnce: 'at_least_once', ExactlyOnce: 'exactly_once' } as const;
@@ -26,6 +42,7 @@ export type RouteSettings = {
   replicas: number;
   errorPolicy: RouteErrorPolicy;
   deliveryMode: DeliveryMode;
+  inFlightMode: InFlightMode;
   limits: RouteLimits;
 };
 
@@ -64,13 +81,43 @@ export class RouteSettingsRules {
 
   static readonly limitLabels: Record<keyof RouteLimits, string> = {
     maxInFlight: 'Max in-flight events',
+    minInFlight: 'Min in-flight events',
     jsTimeoutMs: 'JS timeout (ms)',
     jsMemoryMb: 'JS memory (MB)',
+    jsMinInstances: 'Min JS instances',
+    jsMaxInstances: 'Max JS instances',
     maxOutputsPerEvent: 'Max outputs per event',
     maxOutputBytes: 'Max output size (bytes)',
   };
 
-  static readonly emptyLimits: RouteLimits = { maxInFlight: null, jsTimeoutMs: null, jsMemoryMb: null, maxOutputsPerEvent: null, maxOutputBytes: null };
+  /** Field hints; in auto mode max in-flight is the cap of the adaptive limit. */
+  static limitHint(key: keyof RouteLimits, mode: InFlightMode): string {
+    if (key === 'maxInFlight') return mode === InFlightMode.Auto ? `Cap of the auto limit · empty: ${RouteSettingsRules.autoMaxInFlight}` : `Empty: ${RouteSettingsRules.fixedInFlight}`;
+    if (key === 'minInFlight') return mode === InFlightMode.Auto ? `Floor of the auto limit · empty: ${RouteSettingsRules.autoMinInFlight}` : 'Not used in fixed mode';
+    if (key === 'jsMaxInstances') return 'Per JS step · empty: worker cores';
+    if (key === 'jsMinInstances') return 'Per JS step · empty: 1';
+    return 'Empty: default';
+  }
+
+  static readonly autoMaxInFlight = 10_000;
+  static readonly autoMinInFlight = 64;
+  static readonly fixedInFlight = 1_000;
+
+  static readonly inFlightModeLabels: Record<InFlightMode, string> = {
+    [InFlightMode.Auto]: 'Auto-tune',
+    [InFlightMode.Fixed]: 'Fixed',
+  };
+
+  static readonly emptyLimits: RouteLimits = {
+    maxInFlight: null,
+    minInFlight: null,
+    jsTimeoutMs: null,
+    jsMemoryMb: null,
+    jsMinInstances: null,
+    jsMaxInstances: null,
+    maxOutputsPerEvent: null,
+    maxOutputBytes: null,
+  };
 
   static readonly defaultErrorPolicy: RouteErrorPolicy = { onError: ErrorAction.DeadLetter, dlqConnectionId: '', dlqTopic: '', maxRetries: null };
 

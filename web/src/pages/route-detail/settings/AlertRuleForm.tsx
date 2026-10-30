@@ -23,7 +23,7 @@ export function AlertRuleForm({ routeId, rule, onSaved, onCancel }: AlertRuleFor
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const patch = (p: Partial<AlertRuleFormValues>) => setValues((v) => ({ ...v, ...p }));
-  const setKind = (kind: AlertRuleKind) => patch({ kind, threshold: String(AlertRuleKindMeta[kind].defaultThreshold) });
+  const setKind = (kind: AlertRuleKind) => patch(AlertRuleRules.kindPatch(kind, values));
   const save = async () => {
     const invalid = AlertRuleRules.validate(values);
     setErrors(invalid);

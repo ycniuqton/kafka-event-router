@@ -44,9 +44,14 @@ func (SettingsSection) limits(es *Entries, l *config.Limits) {
 	values := map[LimitName]*int{
 		LimitJSTimeout: l.JSTimeoutMs, LimitJSMemory: l.JSMemoryMb, LimitMaxInFlight: l.MaxInFlight,
 		LimitMaxOutputs: l.MaxOutputsPerEvent, LimitMaxOutputBytes: l.MaxOutputBytes,
+		LimitMinInFlight: l.MinInFlight, LimitJSMinInstances: l.JSMinInstances, LimitJSMaxInstances: l.JSMaxInstances,
 	}
 	for _, name := range LimitNames {
 		es.Add(string(KeyLimit)+string(KeySep)+string(name), at.Key(string(name)), t.Labeled(string(LabelLimit)+" "+string(name), t.Int(values[name])))
+	}
+	if l.InFlightMode != nil {
+		name := string(LimitInFlightMode)
+		es.Add(string(KeyLimit)+string(KeySep)+name, at.Key(name), t.Labeled(string(LabelLimit)+" "+name, string(*l.InFlightMode)))
 	}
 }
 
@@ -59,7 +64,12 @@ const (
 	LimitMaxInFlight    LimitName = "maxInFlight"
 	LimitMaxOutputs     LimitName = "maxOutputsPerEvent"
 	LimitMaxOutputBytes LimitName = "maxOutputBytes"
+	LimitMinInFlight    LimitName = "minInFlight"
+	LimitInFlightMode   LimitName = "inFlightMode"
+	LimitJSMinInstances LimitName = "jsMinInstances"
+	LimitJSMaxInstances LimitName = "jsMaxInstances"
 )
 
-// LimitNames lists the limit members in display order.
-var LimitNames = []LimitName{LimitJSTimeout, LimitJSMemory, LimitMaxInFlight, LimitMaxOutputs, LimitMaxOutputBytes}
+// LimitNames lists the numeric limit members in display order (inFlightMode is listed after them).
+var LimitNames = []LimitName{LimitJSTimeout, LimitJSMemory, LimitMaxInFlight, LimitMinInFlight, LimitJSMinInstances, LimitJSMaxInstances,
+	LimitMaxOutputs, LimitMaxOutputBytes}

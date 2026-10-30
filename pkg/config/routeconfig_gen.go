@@ -128,6 +128,9 @@ type ErrorPolicy struct {
 
 	// OnError corresponds to the JSON schema field "onError".
 	OnError ErrorAction `json:"onError"`
+
+	// Retry corresponds to the JSON schema field "retry".
+	Retry *RetryPolicy `json:"retry,omitempty,omitzero"`
 }
 
 type FilterNode struct {
@@ -212,6 +215,11 @@ type HeaderPolicy struct {
 	Mode HeaderMode `json:"mode"`
 }
 
+type InFlightMode string
+
+const InFlightModeAuto InFlightMode = "auto"
+const InFlightModeFixed InFlightMode = "fixed"
+
 type KeyMode string
 
 const KeyModeField KeyMode = "field"
@@ -227,13 +235,23 @@ type KeyPolicy struct {
 }
 
 type Limits struct {
+	// InFlightMode corresponds to the JSON schema field "inFlightMode".
+	InFlightMode *InFlightMode `json:"inFlightMode,omitempty,omitzero"`
+
+	// Largest JS sandbox pool size per JS step; absent means the worker's cores.
+	JSMaxInstances *int `json:"jsMaxInstances,omitempty,omitzero"`
+
 	// JSMemoryMb corresponds to the JSON schema field "jsMemoryMb".
 	JSMemoryMb *int `json:"jsMemoryMb,omitempty,omitzero"`
+
+	// Smallest JS sandbox pool size per JS step.
+	JSMinInstances *int `json:"jsMinInstances,omitempty,omitzero"`
 
 	// JSTimeoutMs corresponds to the JSON schema field "jsTimeoutMs".
 	JSTimeoutMs *int `json:"jsTimeoutMs,omitempty,omitzero"`
 
-	// MaxInFlight corresponds to the JSON schema field "maxInFlight".
+	// In auto in-flight mode the cap of the adaptive limit; in fixed mode the limit
+	// itself.
 	MaxInFlight *int `json:"maxInFlight,omitempty,omitzero"`
 
 	// MaxOutputBytes corresponds to the JSON schema field "maxOutputBytes".
@@ -241,7 +259,121 @@ type Limits struct {
 
 	// MaxOutputsPerEvent corresponds to the JSON schema field "maxOutputsPerEvent".
 	MaxOutputsPerEvent *int `json:"maxOutputsPerEvent,omitempty,omitzero"`
+
+	// Floor of the adaptive in-flight limit (auto mode).
+	MinInFlight *int `json:"minInFlight,omitempty,omitzero"`
 }
+
+// Per-worker LRU cache of answers; absent means no cache.
+type LookupCache struct {
+	// Absent means 10000.
+	MaxEntries *int `json:"maxEntries,omitempty,omitzero"`
+
+	// Lifetime of misses; absent or 0 caches no misses.
+	NegativeTtlMs *int `json:"negativeTtlMs,omitempty,omitzero"`
+
+	// Lifetime of found answers; 0 disables.
+	TtlMs *int `json:"ttlMs,omitempty,omitzero"`
+}
+
+type LookupErrorAction string
+
+const LookupErrorActionDefault LookupErrorAction = "default"
+const LookupErrorActionFail LookupErrorAction = "fail"
+const LookupErrorActionSkip LookupErrorAction = "skip"
+
+// What a lookup does when the source fails after retries; value is written to
+// every target for action default.
+type LookupErrorPolicy struct {
+	// Action corresponds to the JSON schema field "action".
+	Action LookupErrorAction `json:"action"`
+
+	// Value corresponds to the JSON schema field "value".
+	Value interface{} `json:"value,omitempty,omitzero"`
+}
+
+type LookupHttpMethod string
+
+const LookupHttpMethodGET LookupHttpMethod = "GET"
+const LookupHttpMethodPOST LookupHttpMethod = "POST"
+
+type LookupMapping struct {
+	// Pick from the answer: $, $.a.b, $.items[0].name.
+	From string `json:"from"`
+
+	// Target field path.
+	To string `json:"to"`
+}
+
+type LookupMissAction string
+
+const LookupMissActionDefault LookupMissAction = "default"
+const LookupMissActionDrop LookupMissAction = "drop"
+const LookupMissActionFail LookupMissAction = "fail"
+const LookupMissActionSkip LookupMissAction = "skip"
+
+// What a lookup does when the source has no answer; value is written to every
+// target for action default.
+type LookupMissPolicy struct {
+	// Action corresponds to the JSON schema field "action".
+	Action LookupMissAction `json:"action"`
+
+	// Value corresponds to the JSON schema field "value".
+	Value interface{} `json:"value,omitempty,omitzero"`
+}
+
+type LookupRedisOp string
+
+const LookupRedisOpGet LookupRedisOp = "get"
+const LookupRedisOpHget LookupRedisOp = "hget"
+const LookupRedisOpMget LookupRedisOp = "mget"
+
+// Request template; strings may hold ${field.path} placeholders bound from the
+// event (HTTP body string leaves too).
+type LookupRequest struct {
+	// Body corresponds to the JSON schema field "body".
+	Body interface{} `json:"body,omitempty,omitzero"`
+
+	// Redis hash field of hget.
+	HashField *string `json:"hashField,omitempty,omitzero"`
+
+	// Headers corresponds to the JSON schema field "headers".
+	Headers LookupTemplates `json:"headers,omitempty,omitzero"`
+
+	// Redis key or static table key.
+	Key *string `json:"key,omitempty,omitzero"`
+
+	// Keys corresponds to the JSON schema field "keys".
+	Keys []string `json:"keys,omitempty,omitzero"`
+
+	// Kind corresponds to the JSON schema field "kind".
+	Kind LookupRequestKind `json:"kind"`
+
+	// Method corresponds to the JSON schema field "method".
+	Method *LookupHttpMethod `json:"method,omitempty,omitzero"`
+
+	// Op corresponds to the JSON schema field "op".
+	Op *LookupRedisOp `json:"op,omitempty,omitzero"`
+
+	// Params corresponds to the JSON schema field "params".
+	Params LookupTemplates `json:"params,omitempty,omitzero"`
+
+	// HTTP path appended to the source base URL.
+	Path *string `json:"path,omitempty,omitzero"`
+
+	// Query corresponds to the JSON schema field "query".
+	Query LookupTemplates `json:"query,omitempty,omitzero"`
+
+	// One SELECT statement with :name parameters.
+	Sql *string `json:"sql,omitempty,omitzero"`
+}
+
+type LookupRequestKind string
+
+const LookupRequestKindHttp LookupRequestKind = "http"
+const LookupRequestKindRedis LookupRequestKind = "redis"
+const LookupRequestKindSql LookupRequestKind = "sql"
+const LookupRequestKindStatic LookupRequestKind = "static"
 
 type LookupRow struct {
 	// Key corresponds to the JSON schema field "key".
@@ -252,6 +384,36 @@ type LookupRow struct {
 }
 
 type LookupRows []LookupRow
+
+// Source mode of the lookup step: call a managed lookup source per event and map
+// the answer into fields.
+type LookupSpec struct {
+	// Cache corresponds to the JSON schema field "cache".
+	Cache *LookupCache `json:"cache,omitempty,omitzero"`
+
+	// Map corresponds to the JSON schema field "map".
+	Map []LookupMapping `json:"map"`
+
+	// OnError corresponds to the JSON schema field "onError".
+	OnError *LookupErrorPolicy `json:"onError,omitempty,omitzero"`
+
+	// OnMiss corresponds to the JSON schema field "onMiss".
+	OnMiss *LookupMissPolicy `json:"onMiss,omitempty,omitzero"`
+
+	// Request corresponds to the JSON schema field "request".
+	Request LookupRequest `json:"request"`
+
+	// Extra attempts on transient errors; absent means 1.
+	Retries *int `json:"retries,omitempty,omitzero"`
+
+	// Id of the lookup source (connections feature).
+	SourceID string `json:"sourceId"`
+
+	// Timeout of one attempt; absent means 500.
+	TimeoutMs *int `json:"timeoutMs,omitempty,omitzero"`
+}
+
+type LookupTemplates map[string]string
 
 // One node of the map step target tree under value: a leaf with a value source, a
 // removal, or nested fields.
@@ -330,6 +492,23 @@ const RedactPresetCreditCard RedactPreset = "credit_card"
 const RedactPresetEmail RedactPreset = "email"
 const RedactPresetIban RedactPreset = "iban"
 const RedactPresetPhone RedactPreset = "phone"
+
+// Delayed retry of transient failures through retry topics; exhausted records
+// follow onError.
+type RetryPolicy struct {
+	// Delay of the first attempt; attempt n waits min(base * 2^(n-1), maxDelayMs)
+	// (default 1000).
+	BaseDelayMs *int `json:"baseDelayMs,omitempty,omitzero"`
+
+	// Enabled corresponds to the JSON schema field "enabled".
+	Enabled bool `json:"enabled"`
+
+	// Delayed attempts before the record follows onError (default 5).
+	MaxAttempts *int `json:"maxAttempts,omitempty,omitzero"`
+
+	// Upper bound of one attempt's delay, at least baseDelayMs (default 300000).
+	MaxDelayMs *int `json:"maxDelayMs,omitempty,omitzero"`
+}
 
 // Route configuration document (router/v1): source, branches (filter, transform,
 // destination), error policy, delivery and limits.
@@ -441,6 +620,9 @@ type Step struct {
 
 	// Layout corresponds to the JSON schema field "layout".
 	Layout *DateLayout `json:"layout,omitempty,omitzero"`
+
+	// Lookup corresponds to the JSON schema field "lookup".
+	Lookup *LookupSpec `json:"lookup,omitempty,omitzero"`
 
 	// NewHeader corresponds to the JSON schema field "newHeader".
 	NewHeader *string `json:"newHeader,omitempty,omitzero"`

@@ -20,6 +20,14 @@ const (
 	MetricRunnerState  MetricName = "runner_state"
 )
 
+// Autotune series (route-runtime 00003-autotune, js-sandbox 00001-pool-autoscale): written by the runner
+// (in-flight limit) and the sandbox observer (JS pool); named here so queries never spell metric literals.
+const (
+	MetricInFlightLimit   MetricName = "route_inflight_limit"
+	MetricJSPoolInstances MetricName = "js_pool_instances"
+	MetricJSQueueWait     MetricName = "js_queue_wait_seconds"
+)
+
 // SeriesSuffix names the derived series of histograms.
 type SeriesSuffix string
 

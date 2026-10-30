@@ -1,5 +1,6 @@
 import { Page, PageHeader, PageWidth } from '../../components/ui';
 import { DeadLetterAuditLink } from './components/DeadLetterAuditLink';
+import { ReplayApprovalsPanel } from './components/ReplayApprovalsPanel';
 import { DeadLetterBrowser } from './DeadLetterBrowser';
 import styles from './DeadLettersPage.module.css';
 
@@ -9,6 +10,7 @@ export default function DeadLettersPage() {
     <div className={styles.root}>
       <Page width={PageWidth.Wide}>
         <PageHeader title="Dead letters" subtitle="Events that failed, kept with the reason." actions={<DeadLetterAuditLink />} />
+        <ReplayApprovalsPanel />
         <DeadLetterBrowser />
       </Page>
     </div>

@@ -2,6 +2,7 @@ import { Card, CardHeader, Field, SegmentedControl, Select, TextInput } from '..
 import { ErrorAction, RouteSettingsRules } from '../../../../domain';
 import { useConnections } from '../../../../store';
 import { SettingsField } from '../../model/SettingsForm';
+import { RetryPolicyFields } from './RetryPolicyFields';
 import type { SettingsSectionProps } from './SettingsSectionProps';
 import styles from './SettingsTab.module.css';
 
@@ -36,6 +37,7 @@ export function ErrorPolicySection({ values, errors, onChange, readOnly }: Setti
           <TextInput block mono type="number" min={1} value={values.maxRetries} disabled={readOnly} onChange={(e) => onChange({ maxRetries: e.target.value })} />
         </Field>
       </div>
+      <RetryPolicyFields values={values} errors={errors} onChange={onChange} readOnly={readOnly} />
     </Card>
   );
 }

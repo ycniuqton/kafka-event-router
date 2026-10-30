@@ -1,0 +1,24 @@
+File: recipe-5-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 08:58:53 -02
+Duration: 25.77s, Total samples = 25590ms (99.29%)
+Showing nodes accounting for 8750ms, 34.19% of 25590ms total
+Dropped 287 nodes (cum <= 127.95ms)
+Showing top 15 nodes out of 200
+      flat  flat%   sum%        cum   cum%
+    1470ms  5.74%  5.74%     1910ms  7.46%  runtime.tryDeferToSpanScan
+     780ms  3.05%  8.79%     1670ms  6.53%  runtime.scanObject
+     750ms  2.93% 11.72%      750ms  2.93%  runtime.memclrNoHeapPointers
+     660ms  2.58% 14.30%      670ms  2.62%  encoding/json/internal/jsonwire.ConsumeSimpleString (inline)
+     640ms  2.50% 16.80%     1010ms  3.95%  runtime.gcmarknewobject
+     630ms  2.46% 19.27%      860ms  3.36%  encoding/json/internal/jsonwire.AppendQuote
+     550ms  2.15% 21.41%     2440ms  9.53%  encoding/json/jsontext.(*decoderState).ReadToken
+     490ms  1.91% 23.33%     6020ms 23.52%  encoding/json/jsontext.(*encoderState).WriteToken
+     480ms  1.88% 25.21%      480ms  1.88%  internal/runtime/maps.memHashAES
+     450ms  1.76% 26.96%     1280ms  5.00%  runtime.mallocgcTinySC2
+     420ms  1.64% 28.60%     1350ms  5.28%  encoding/json/jsontext.(*objectNamespace).insert
+     380ms  1.48% 30.09%      380ms  1.48%  runtime.memmove
+     370ms  1.45% 31.54%      840ms  3.28%  runtime.scanObjectsSmall
+     340ms  1.33% 32.86%     8990ms 35.13%  runtime.mallocgc
+     340ms  1.33% 34.19%     3070ms 12.00%  runtime.mapassign_faststr

@@ -45,6 +45,7 @@ type AlertEvaluatorJob struct {
 	Errors     EvalErrorCounter
 	Interval   time.Duration
 	Log        *slog.Logger
+	Defaults   *DefaultRuleProvisioner
 }
 
 // Run ticks until ctx ends.
@@ -66,8 +67,11 @@ func (j *AlertEvaluatorJob) Run(ctx context.Context) {
 	}
 }
 
-// Tick evaluates all enabled rules of live routes and dispatches pending notifications.
+// Tick provisions default rules, evaluates all enabled rules of live routes and dispatches pending notifications.
 func (j *AlertEvaluatorJob) Tick(ctx context.Context) error {
+	if j.Defaults != nil {
+		j.Defaults.Ensure(ctx)
+	}
 	rules, err := j.Rules.ListEnabled(ctx)
 	if err != nil {
 		return err

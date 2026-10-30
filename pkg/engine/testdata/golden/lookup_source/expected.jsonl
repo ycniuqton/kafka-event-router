@@ -1,0 +1,5 @@
+{"branch":"main","topic":"orders-enriched","key":null,"value":{"customer":{"region":"eu","tier":"gold"},"customerId":"c1","feature":"beta","flag":"on","orderId":1},"headers":[]}
+{"branch":"main","topic":"orders-enriched","key":null,"value":{"customer":{"region":"us","tier":"silver"},"customerId":"c2","feature":"gamma","flag":"off","orderId":2},"headers":[]}
+{"branch":"main","topic":"orders-enriched","key":null,"value":{"customer":{"region":"unknown","tier":"unknown"},"customerId":"c404","feature":"beta","flag":"on","orderId":3},"headers":[]}
+{"branch":"main","topic":"orders-enriched","key":null,"value":{"customer":{"region":"unknown","tier":"unknown"},"feature":"beta","flag":"on","orderId":5},"headers":[]}
+{"branch":"main","topic":"orders-enriched","key":null,"value":{"customer":{"region":"eu","tier":"gold"},"customerId":"c1","feature":"beta","flag":"on","orderId":6},"headers":[]}

@@ -29,7 +29,7 @@ type harness struct {
 	mask  bool
 }
 
-func newHarness(t *testing.T) *harness {
+func newHarness(t *testing.T, opts ...func(*preview.PipelineBuilder)) *harness {
 	t.Helper()
 	h := &harness{now: time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)}
 	clock := func() time.Time { return h.now }
@@ -37,6 +37,9 @@ func newHarness(t *testing.T) *harness {
 	builder, err := preview.NewPipelineBuilder(compile.NewDefaultCompiler(), preview.NoScripts{}, ctxhelpers.StaticSaltProvider{})
 	if err != nil {
 		t.Fatal(err)
+	}
+	for _, opt := range opts {
+		opt(&builder)
 	}
 	clients, _ := preview.NewSamplingClientRegistry().Build(preview.SamplerUnavailable)
 	decoder := preview.NewSampleDecoder(nil)

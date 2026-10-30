@@ -1,0 +1,11 @@
+# Optional override: nginx terminates TLS itself with an operator-supplied certificate (e.g. from certbot).
+# Enable with COMPOSE_FILE=docker-compose.yml:docker-compose.tls.yml in .env (or pass both with -f).
+# Volumes merge by container path, so tls.conf replaces the plain-HTTP default.conf.
+services:
+  web:
+    volumes:
+      - ./nginx/tls.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${WEB_TLS_CERT_FILE:?set WEB_TLS_CERT_FILE in .env}:/etc/nginx/tls/tls.crt:ro
+      - ${WEB_TLS_KEY_FILE:?set WEB_TLS_KEY_FILE in .env}:/etc/nginx/tls/tls.key:ro
+    ports:
+      - "${WEB_BIND:-0.0.0.0}:${WEB_TLS_PORT:-443}:8443"

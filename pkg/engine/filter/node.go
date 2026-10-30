@@ -96,6 +96,7 @@ func (m *NodeCompilerManager) Compile(c *NodeCompileCtx, rel config.Pointer, raw
 		c.Scope.Fail(config.IssueSchemaInvalid, c.Abs(rel).Token(config.TokenType), "unknown filter node type %q", raw.Type)
 		return nil, false
 	}
+	c.Scope.Access.Node(raw.Type)
 	return nc.Compile(c, rel, raw)
 }
 

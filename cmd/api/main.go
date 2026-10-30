@@ -1,5 +1,5 @@
 // Command api runs the control-plane REST/WS API (public listener) and the internal workload
-// listener, and offers `api migrate up|down N|status` and `api secrets rotate|status`.
+// listener, and offers `api migrate up|down N|status` `api secrets rotate|status` and `api health <url>`.
 package main
 
 import (
@@ -34,6 +34,7 @@ func cliCommands() map[Subcommand]CLICommand {
 	return map[Subcommand]CLICommand{
 		SubcommandMigrate: NewMigrateCommand(os.Stdout),
 		SubcommandSecrets: NewSecretsCommand(os.Stdout),
+		SubcommandHealth:  NewHealthCommand(os.Stdout),
 	}
 }
 

@@ -102,10 +102,13 @@ func (SnapshotList) Of(evs []engine.Event) []any {
 // ProcessErrors maps step failures to typed engine errors.
 type ProcessErrors struct{}
 
-// ForStep classifies err: script timeout, fan-out limit or generic step error.
+// ForStep classifies err: a type declared by the error, script timeout, fan-out limit or generic step error.
 func (ProcessErrors) ForStep(branch engine.BranchID, e ChainEntry, err error) *engine.ProcessError {
 	t := engine.ErrStep
+	var typed TypedError
 	switch {
+	case errors.As(err, &typed):
+		t = typed.EngineErrorType()
 	case errors.Is(err, script.ErrTimeout):
 		t = engine.ErrStepTimeout
 	case errors.Is(err, ErrTooManyOutputs):

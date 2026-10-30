@@ -1,0 +1,8 @@
+goos: linux
+goarch: amd64
+pkg: github.com/eventrouter/router/pkg/engine
+cpu: Intel(R) Xeon(R) Gold 6148 CPU @ 2.40GHz
+BenchmarkS1Engine/shape=recipe-5/payload=1KB         	  177315	     66219 ns/op	  15.89 MB/s	     66193 cpu-ns/op	     15107 events/cpu-s	     15101 events/s	   18232 B/op	     278 allocs/op
+BenchmarkS1EngineCanonicalInput/shape=recipe-5/payload=1KB         	  199357	     63728 ns/op	  16.51 MB/s	     63710 cpu-ns/op	     15696 events/cpu-s	     15692 events/s	   18200 B/op	     277 allocs/op
+PASS
+ok  	github.com/eventrouter/router/pkg/engine	25.809s

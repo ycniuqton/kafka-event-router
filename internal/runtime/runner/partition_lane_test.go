@@ -87,3 +87,22 @@ func TestLanePausesOnBytesBeforeRecordMark(t *testing.T) {
 		t.Fatalf("resumed with %d bytes queued, above the low-water mark", f.lane.QueuedBytes())
 	}
 }
+
+func TestLaneDoesNotKeepHandedOutRecordsAlive(t *testing.T) {
+	f := newLaneFixture()
+	f.lane.Enqueue(f.batch(4, 16))
+	backing := f.lane.queue[:4]
+	for i := 0; i < 3; i++ {
+		if _, ok := f.lane.next(); !ok {
+			t.Fatal("lane stopped")
+		}
+	}
+	for i := 0; i < 3; i++ {
+		if backing[i] != nil {
+			t.Fatalf("slot %d of the queue's backing array still references a handed-out record", i)
+		}
+	}
+	if backing[3] == nil {
+		t.Fatal("the queued record must stay")
+	}
+}

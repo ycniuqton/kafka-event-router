@@ -4,6 +4,7 @@ import { LibraryKind, LibraryRules, LookupCsv, LookupMode, type ImportIssue } fr
 import { LibraryPicker } from '../../library/LibraryPicker';
 import { StepChangeLabel } from '../../model/StudioText';
 import { FieldSelect } from './FieldSelect';
+import { LookupSourceSettings } from './lookup/LookupSourceSettings';
 import type { StepSettingsProps } from './StepSettingsProps';
 import styles from '../../library/Library.module.css';
 
@@ -12,6 +13,7 @@ class LookupText {
   static readonly modes = [
     { value: LookupMode.Inline, label: 'Inline rows' },
     { value: LookupMode.Table, label: 'Library table' },
+    { value: LookupMode.Source, label: 'External source' },
   ];
   static readonly mode = 'Lookup table source';
   static readonly target = 'Write to (empty = replace the key)';
@@ -20,10 +22,19 @@ class LookupText {
   static readonly rowCount = (n: number) => `${n} row${n === 1 ? '' : 's'}`;
 }
 
-/** Lookup recipe: key field → value from inline rows (CSV text) or a named library table pinned to a version. */
+/** Lookup recipe: key field → value from inline rows (CSV text) or a pinned library table; or a call to a lookup source. */
 export function LookupSettings({ step, update }: StepSettingsProps) {
   const label = StepChangeLabel.edited(step.kind);
   const mode = step.lookupMode ?? LookupMode.Inline;
+  const modes = <SegmentedControl size={SegmentSize.Xs} options={LookupText.modes} value={mode} ariaLabel={LookupText.mode} onChange={(lookupMode) => update({ lookupMode }, label)} />;
+  if (mode === LookupMode.Source) {
+    return (
+      <div className={styles.settings}>
+        {modes}
+        <LookupSourceSettings step={step.lookupSource} onChange={(lookupSource) => update({ lookupSource }, label)} />
+      </div>
+    );
+  }
   return (
     <div className={styles.settings}>
       <div className={styles.row}>
@@ -32,7 +43,7 @@ export function LookupSettings({ step, update }: StepSettingsProps) {
         <TextInput controlSize={ControlSize.Sm} mono sunken className={styles.grow} placeholder="region" value={step.argument}
           onChange={(e) => update({ argument: e.target.value }, label)} aria-label={LookupText.target} title={LookupText.target} />
       </div>
-      <SegmentedControl size={SegmentSize.Xs} options={LookupText.modes} value={mode} ariaLabel={LookupText.mode} onChange={(lookupMode) => update({ lookupMode }, label)} />
+      {modes}
       {mode === LookupMode.Table ? (
         <LibraryPicker kind={LibraryKind.LookupTable} name={step.lookupRef ?? ''} version={step.lookupVersion}
           onChange={(lookupRef, lookupVersion) => update({ lookupRef, lookupVersion }, label)} />

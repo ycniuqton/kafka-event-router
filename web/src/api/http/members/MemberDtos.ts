@@ -1,4 +1,4 @@
-import { RoleKeys, UserStatus, type Access, type RoleKey, type TeamMember, type WorkspaceSettings } from '../../../domain';
+import { PasswordRules, RoleKeys, UserStatus, type Access, type CreatedUser, type NewUserDraft, type PasswordResetDraft, type RoleKey, type TeamMember, type WorkspaceSettings } from '../../../domain';
 
 /** `UserTeam` of `GET /users` (paths/access-control.yaml). */
 export type UserTeamDto = { teamId: string; teamName: string; role: RoleKey; rowVersion: number };
@@ -12,13 +12,24 @@ export type UserDto = {
   status: UserStatus;
   teams: UserTeamDto[];
   rowVersion: number;
+  passwordLogin?: boolean;
+  mustChangePassword?: boolean;
 };
+
+/** `POST /users` body (password mode). */
+export type UserCreateDto = { email: string; displayName: string; password?: string; workspaceAdmin?: boolean; teamId?: string; role?: RoleKey };
+
+/** `POST /users` response: the user and the one-time generated password. */
+export type UserCreatedDto = { user: UserDto; generatedPassword?: string };
+
+/** `POST /users/{id}/password-reset` response. */
+export type PasswordResetDto = { generatedPassword?: string };
 
 /** `RoleBinding` of `PUT /role-bindings/{userId}/{teamId}`. */
 export type RoleBindingDto = { userId: string; teamId: string; teamName: string; role: RoleKey; rowVersion: number };
 
 /** `WorkspaceSettings` of `GET/PATCH /workspace-settings`. */
-export type WorkspaceSettingsDto = { aiAssistEnabled: boolean; defaultRequireProdApproval: boolean; rowVersion: number };
+export type WorkspaceSettingsDto = { aiAssistEnabled: boolean; defaultRequireProdApproval: boolean; routerCausedAlertDefault?: boolean; rowVersion: number };
 
 /** The `access` member of `GET /auth/me`. */
 export type MeAccessDto = { access: Access };
@@ -32,6 +43,10 @@ export class AccessEndpoint {
 
   static user(userId: string): string {
     return `${AccessEndpoint.users}/${encodeURIComponent(userId)}`;
+  }
+
+  static passwordReset(userId: string): string {
+    return `${AccessEndpoint.user(userId)}/password-reset`;
   }
 
   static binding(userId: string, teamId: string): string {
@@ -67,6 +82,8 @@ export class MemberMapper {
       status: u.status,
       workspaceAdmin: u.workspaceAdmin,
       userVersion: u.rowVersion,
+      passwordLogin: u.passwordLogin ?? false,
+      mustChangePassword: u.mustChangePassword ?? false,
     };
   }
 
@@ -75,9 +92,27 @@ export class MemberMapper {
   }
 }
 
+/** Maps the create-user and password-reset drafts onto request bodies and their one-time passwords back. */
+export class PasswordAdminMapper {
+  static createBody(draft: NewUserDraft): UserCreateDto {
+    const password = PasswordRules.chosen(draft.passwordSource, draft.password) ?? undefined;
+    const team = draft.teamId ? { teamId: draft.teamId, role: draft.role } : {};
+    return { email: draft.email.trim(), displayName: draft.displayName.trim(), password, workspaceAdmin: draft.workspaceAdmin, ...team };
+  }
+
+  static created(dto: UserCreatedDto): CreatedUser {
+    return { members: MemberMapper.rows([dto.user]), generatedPassword: dto.generatedPassword ?? null };
+  }
+
+  static resetBody(draft: PasswordResetDraft): { password?: string } {
+    const password = PasswordRules.chosen(draft.passwordSource, draft.password);
+    return password === null ? {} : { password };
+  }
+}
+
 /** Maps workspace settings; the row version becomes the If-Match token. */
 export class WorkspaceSettingsMapper {
   static settings(dto: WorkspaceSettingsDto): WorkspaceSettings {
-    return { aiAssistEnabled: dto.aiAssistEnabled, defaultRequireProdApproval: dto.defaultRequireProdApproval, version: dto.rowVersion };
+    return { aiAssistEnabled: dto.aiAssistEnabled, defaultRequireProdApproval: dto.defaultRequireProdApproval, routerCausedAlertDefault: dto.routerCausedAlertDefault, version: dto.rowVersion };
   }
 }

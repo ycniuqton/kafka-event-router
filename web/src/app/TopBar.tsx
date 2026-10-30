@@ -6,9 +6,10 @@ import { Permission, Theme } from '../domain';
 import { actions, Keys, settingsStore, useCurrentUser, useSettings, useShortcut } from '../store';
 import { AlertsBell } from './AlertsBell';
 import { AppPaths, QueryParam } from './paths';
+import { UserMenu } from './UserMenu';
 import styles from './TopBar.module.css';
 
-/** 52px top bar: logo, global search ("/"), alerts, theme toggle, avatar, "+ New route". */
+/** 52px top bar: logo, global search ("/"), alerts, theme toggle, account menu, "+ New route". */
 export function TopBar() {
   const { theme } = useSettings();
   const user = useCurrentUser();
@@ -27,11 +28,7 @@ export function TopBar() {
       <Button size="lg" className={styles.themeButton} onClick={() => settingsStore.toggleTheme()}>
         {theme === Theme.Dark ? 'Light theme' : 'Dark theme'}
       </Button>
-      {user && (
-        <div className={styles.avatar} title={`${user.name} · ${user.role}`}>
-          {user.initials}
-        </div>
-      )}
+      {user && <UserMenu user={user} />}
       <Can permission={Permission.RouteWrite}>
         <Button variant="primary" size="lg" onClick={() => actions.openNewRouteChooser()}>
           + New route

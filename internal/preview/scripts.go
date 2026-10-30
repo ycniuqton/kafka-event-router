@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"github.com/eventrouter/router/pkg/lookup"
 	"sync"
 	"time"
 
@@ -17,9 +18,10 @@ import (
 
 // RunScope identifies who a run executes for (hash salt team, sandbox log retention).
 type RunScope struct {
-	TeamID     string
-	Mode       RunMode
-	LookupPins []host.LookupPin
+	TeamID      string
+	Mode        RunMode
+	LookupPins  []host.LookupPin
+	LookupMocks map[string]lookup.MockAnswer
 }
 
 // ScopeRoute names the pseudo route id preview sandboxes run under.

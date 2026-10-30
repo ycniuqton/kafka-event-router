@@ -33,6 +33,12 @@ import type {
   DeadLetterSelection,
   DeadLetterStudioLink,
   DeadLetterSummary,
+  DeadLetterEdit,
+  DeadLetterGroupPage,
+  DeadLetterJobOptions,
+  DryRunReport,
+  DeadLetterReplayOptions,
+  DeadLetterReplayResult,
   LibraryLookupTable,
   LibraryTransform,
   Member,
@@ -51,9 +57,10 @@ import type {
   TopicQuery,
   TopicSettings,
 } from '../domain';
-import type { Access, RoleKey, TeamMember, UserPatch, WorkspaceSettings, WorkspaceSettingsPatch } from '../domain';
+import type { Access, CreatedUser, NewUserDraft, PasswordResetDraft, PasswordResetResult, RoleKey, TeamMember, UserPatch, WorkspaceSettings, WorkspaceSettingsPatch } from '../domain';
 import type { Approval, ApprovalComment, ApprovalDetail, ApprovalFilter, ConnectionGrant, InviteDraft, Team, TeamDraft } from '../domain';
 import type { TransformStep } from '../domain';
+import type { LookupSource, LookupSourceDraft, LookupTestResult } from '../domain';
 import type { InlineEvent, JsonValue } from '../domain';
 import type { LibraryKind, LibraryQuery, LibraryUsage, LibraryVersion, LookupRowsInput, LookupRowsPage, NewLibraryTransform, NewLookupTable } from '../domain';
 import type { NewTestCase, TestCase, TestCasePatch, TestCaseRunReport } from '../domain';
@@ -141,6 +148,21 @@ export abstract class ConnectionsService {
   abstract createTopic(id: string, name: string, settings?: TopicSettings): Promise<TopicInfo>;
 }
 
+/** Lookup sources (`/lookup-sources`): enrichment targets of lookup steps (HTTP, Redis, Postgres, static table). */
+export abstract class LookupSourcesService {
+  abstract list(): Promise<LookupSource[]>;
+  abstract get(id: string): Promise<LookupSource>;
+  abstract create(draft: LookupSourceDraft): Promise<LookupSource>;
+  /** Saves an edit (merge patch + If-Match); blank secrets keep the stored ones. */
+  abstract update(id: string, draft: LookupSourceDraft): Promise<LookupSource>;
+  /** Deletes an unused source; rejects with `LookupSourceInUseError` while routes use it. */
+  abstract remove(id: string): Promise<void>;
+  /** Tests a saved source and updates its health. */
+  abstract test(id: string): Promise<LookupTestResult>;
+  /** Tests an unsaved draft; never changes saved health. */
+  abstract testDraft(draft: LookupSourceDraft): Promise<LookupTestResult>;
+}
+
 /** Failed events per route (`/routes/{id}/dlq`, `/dlq`). */
 export abstract class DeadLettersService {
   /** One page of unresolved dead letters matching `filter`, newest first; pass the previous `nextCursor` to continue. */
@@ -161,9 +183,20 @@ export abstract class DeadLettersService {
   /** P2: un-resolves discarded events still inside DLQ retention. */
   abstract restore(ids: string[]): Promise<DeadLetterActionReport>;
   /** P2: queues a background retry/discard of every event of one route matching `filter` (any size). */
-  abstract startJob(routeId: string, action: DeadLetterJobAction, filter: DeadLetterFilter): Promise<DeadLetterJob>;
+  abstract startJob(routeId: string, action: DeadLetterJobAction, filter: DeadLetterFilter, options?: DeadLetterJobOptions): Promise<DeadLetterJob>;
   abstract job(jobId: string): Promise<DeadLetterJob>;
   abstract cancelJob(jobId: string): Promise<DeadLetterJob>;
+  /** Distinct causes (fingerprint groups) of one route or every readable route, biggest first. */
+  abstract groups(filter: DeadLetterFilter): Promise<DeadLetterGroupPage>;
+  /** Replays one record, optionally edited; `dryRun` previews it through the active version without sending. */
+  abstract replay(deadLetter: DeadLetter, edit: DeadLetterEdit | null, options: DeadLetterReplayOptions): Promise<DeadLetterReplayResult>;
+  /** Previews up to 20 events of a selection or group through the active version. */
+  abstract dryRun(routeId: string, selection: DeadLetterSelection): Promise<DryRunReport>;
+  /** Strict 4-eyes: a second person approves or rejects a replay job waiting for approval. */
+  abstract approveJob(jobId: string, note: string): Promise<DeadLetterJob>;
+  abstract rejectJob(jobId: string, note: string): Promise<DeadLetterJob>;
+  /** Replay jobs of readable routes waiting for approval. */
+  abstract pendingApprovals(): Promise<DeadLetterJob[]>;
 }
 
 export abstract class ActivityService {
@@ -313,6 +346,10 @@ export abstract class AccessService {
   abstract updateUser(member: TeamMember, patch: UserPatch): Promise<void>;
   /** Pre-invites a user with one team role (`POST /users/invitations`); resolves with their member rows. */
   abstract invite(draft: InviteDraft): Promise<TeamMember[]>;
+  /** Creates a password user (`POST /users`, password mode); a server-generated password is returned once. */
+  abstract createUser(draft: NewUserDraft): Promise<CreatedUser>;
+  /** Sets or generates a user's password (`POST /users/{id}/password-reset`); they must change it at next sign-in. */
+  abstract resetPassword(member: TeamMember, draft: PasswordResetDraft): Promise<PasswordResetResult>;
   /** Workspace-wide settings (`/workspace-settings`; changes need `settings.manage`). */
   abstract settings(): Promise<WorkspaceSettings>;
   abstract updateSettings(current: WorkspaceSettings, patch: WorkspaceSettingsPatch): Promise<WorkspaceSettings>;
@@ -398,6 +435,7 @@ export abstract class ApiTokensService {
 export type Services = {
   routes: RoutesService;
   connections: ConnectionsService;
+  lookupSources: LookupSourcesService;
   deadLetters: DeadLettersService;
   activity: ActivityService;
   audit: AuditService;

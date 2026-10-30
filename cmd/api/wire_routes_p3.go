@@ -19,7 +19,6 @@ import (
 	"github.com/eventrouter/router/internal/routes/validation"
 	"github.com/eventrouter/router/internal/runtime/changes"
 	"github.com/eventrouter/router/internal/runtime/domain"
-	"github.com/eventrouter/router/internal/runtime/retry"
 	"github.com/eventrouter/router/internal/runtime/state"
 	"github.com/eventrouter/router/internal/scheduler"
 	"github.com/eventrouter/router/internal/store"
@@ -139,7 +138,7 @@ func (r *replayProgressWiring) start(w *Wiring) {
 		pushFeature.build(w)
 		ctx, _ := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		broker := changes.NewBroker()
-		go changes.PgListener{Pool: w.Deps.DB.Pool(), Broker: broker, Retry: retry.DefaultPolicy(), Log: w.Deps.Log}.Run(ctx)
+		go changes.PgListener{Notifications: w.Deps.DB.Notifications(), Broker: broker}.Run(ctx)
 		relay := &routes.ReplayProgressRelay{Hints: replayHints{broker: broker}, Open: openReplays{stores: runtimestore.New(w.Deps.DB, w.Tx)},
 			Resetter: routesOffsetResetter{}, Routes: routestore.NewRouteRepository(w.Deps.DB),
 			Out: replayPush{out: pushFeature.hub, factory: events.EventFactory{Now: time.Now}, w: w}, Log: w.Deps.Log}

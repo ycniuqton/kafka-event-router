@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/eventrouter/router/internal/alerts"
+	"github.com/eventrouter/router/internal/dlq/record"
 	"github.com/eventrouter/router/internal/metrics/query"
 )
 
@@ -64,9 +65,10 @@ func NewEvaluatorManager(evaluators ...RuleEvaluator) *EvaluatorManager {
 	return m
 }
 
-// NewDefaultEvaluatorManager registers the four built-in kinds.
+// NewDefaultEvaluatorManager registers the built-in kinds.
 func NewDefaultEvaluatorManager() *EvaluatorManager {
-	return NewEvaluatorManager(LagAboveEvaluator{}, ErrorRateEvaluator{}, ThroughputZeroEvaluator{}, MatchRateChangeEvaluator{})
+	return NewEvaluatorManager(LagAboveEvaluator{}, ErrorRateEvaluator{}, ThroughputZeroEvaluator{}, MatchRateChangeEvaluator{},
+		RouterCausedEvaluator{})
 }
 
 // For returns the evaluator of kind.
@@ -136,5 +138,23 @@ func (MatchRateChangeEvaluator) Expr(rule alerts.AlertRule) query.Expr {
 }
 
 func (MatchRateChangeEvaluator) Breached(s Sample, rule alerts.AlertRule) bool {
+	return s.Present && s.Value > rule.Threshold
+}
+
+// RouterCausedEvaluator fires when more than N dead letters of the router class (our bugs: internal errors,
+// sandbox crashes, encode/produce/config failures, unreadable records) were written in the window.
+type RouterCausedEvaluator struct{}
+
+func (RouterCausedEvaluator) Kind() alerts.AlertRuleKind { return alerts.KindRouterCausedDLQ }
+
+func (RouterCausedEvaluator) Expr(rule alerts.AlertRule) query.Expr {
+	p := RuleQuery{}.Params(rule)
+	for _, t := range record.TypesOf(record.ClassRouter) {
+		p.ErrorTypes = append(p.ErrorTypes, string(t))
+	}
+	return query.ExprCatalog{}.Build(query.QueryAlertRouterDLQ, p)
+}
+
+func (RouterCausedEvaluator) Breached(s Sample, rule alerts.AlertRule) bool {
 	return s.Present && s.Value > rule.Threshold
 }

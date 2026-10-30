@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # S1 engine-only benchmark matrix (no Kafka): step type x payload size on one pinned core.
 # Writes test/stress/results/s1-engine.json, raw go test output and CPU profiles with pprof top-15.
-# Env: BENCHTIME (default 3s), COUNT (3), PROFILE_BENCHTIME (10s), CPU (0), RESULTS (output dir), SKIP_PROFILES.
+# Env: BENCHTIME (default 3s), COUNT (3), PROFILE_BENCHTIME (10s), CPU (0), RESULTS (output dir), SKIP_PROFILES,
+# ENGINE_CODEC (fast | tree, exported as ROUTER_ENGINE_CODEC; empty = engine default), SKIP_SANDBOX, OUT_JSON.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -15,7 +16,8 @@ CPU="${CPU:-0}"
 RESULTS="${RESULTS:-$ROOT/test/stress/results}"
 RAW="$RESULTS/s1-raw"
 PROFILES="$RESULTS/s1-profiles"
-OUT_JSON="$RESULTS/s1-engine.json"
+OUT_JSON="${OUT_JSON:-$RESULTS/s1-engine.json}"
+export ROUTER_ENGINE_CODEC="${ENGINE_CODEC:-}"
 PIN=(taskset -c "$CPU")
 
 mkdir -p "$RAW" "$PROFILES"
@@ -39,10 +41,13 @@ profile_cell() {
 }
 
 run_matrix engine ./pkg/engine/ 'BenchmarkS1Engine'
-run_matrix sandbox ./pkg/sandbox/ 'BenchmarkS1SandboxCall'
+if [[ -z "${SKIP_SANDBOX:-}" ]]; then
+  run_matrix sandbox ./pkg/sandbox/ 'BenchmarkS1SandboxCall'
+fi
 run_matrix runner ./internal/runtime/runner/ 'BenchmarkS1RecordProcessor'
 
 if [[ -z "${SKIP_PROFILES:-}" ]]; then
+  profile_cell filter-only-1KB ./pkg/engine/ 'BenchmarkS1Engine/shape=filter-only/payload=1KB$'
   profile_cell recipe-5-1KB ./pkg/engine/ 'BenchmarkS1Engine/shape=recipe-5/payload=1KB$'
   profile_cell js-1KB ./pkg/engine/ 'BenchmarkS1Engine/shape=js/payload=1KB$'
 fi

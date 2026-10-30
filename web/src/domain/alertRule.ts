@@ -6,6 +6,7 @@ export const AlertRuleKind = {
   ErrorRateAbove: 'error_rate_above',
   ThroughputZero: 'throughput_zero',
   MatchRateChange: 'match_rate_change',
+  RouterCausedDeadLetters: 'router_caused_dead_letters',
 } as const;
 export type AlertRuleKind = (typeof AlertRuleKind)[keyof typeof AlertRuleKind];
 
@@ -42,7 +43,7 @@ export type AlertRuleSave = { draft: AlertRuleDraft; existing?: { id: string; ve
 /** Result of the "Send test" button for one channel. */
 export type ChannelTestResult = { channel: ChannelType; ok: boolean; error?: string };
 
-type KindPresentation = { label: string; thresholdLabel: string; unit: string; defaultThreshold: number; min: number; max: number; hasThreshold: boolean };
+type KindPresentation = { label: string; thresholdLabel: string; unit: string; defaultThreshold: number; min: number; max: number; hasThreshold: boolean; defaultWindow?: number };
 
 /** Form labels and limits per kind (same limits as the server's `KindLimits`). */
 export const AlertRuleKindMeta: Record<AlertRuleKind, KindPresentation> = {
@@ -50,6 +51,16 @@ export const AlertRuleKindMeta: Record<AlertRuleKind, KindPresentation> = {
   [AlertRuleKind.ErrorRateAbove]: { label: 'Error rate above', thresholdLabel: 'Error rate (%)', unit: '%', defaultThreshold: 5, min: 0.01, max: 100, hasThreshold: true },
   [AlertRuleKind.ThroughputZero]: { label: 'Throughput is 0', thresholdLabel: '', unit: '', defaultThreshold: 0, min: 0, max: 0, hasThreshold: false },
   [AlertRuleKind.MatchRateChange]: { label: 'Match rate changes', thresholdLabel: 'Change (points)', unit: 'pts', defaultThreshold: 20, min: 1, max: 100, hasThreshold: true },
+  [AlertRuleKind.RouterCausedDeadLetters]: {
+    label: 'Router-caused dead letters',
+    thresholdLabel: 'More than (events)',
+    unit: 'events',
+    defaultThreshold: 0,
+    min: 0,
+    max: 1e6,
+    hasThreshold: true,
+    defaultWindow: 15,
+  },
 };
 
 /** Channel labels and what their target field means. */
@@ -103,6 +114,12 @@ export class AlertRuleRules {
       enabled: rule.enabled,
       channels: rule.channels.map((c) => ({ type: c.type, target: c.target ?? '', secret: '', secretSet: c.secretSet })),
     };
+  }
+
+  /** Form values that change with the kind: its default threshold, and its default window when it has one. */
+  static kindPatch(kind: AlertRuleKind, current: AlertRuleFormValues): Partial<AlertRuleFormValues> {
+    const meta = AlertRuleKindMeta[kind];
+    return { kind, threshold: String(meta.defaultThreshold), windowMinutes: meta.defaultWindow ? String(meta.defaultWindow) : current.windowMinutes };
   }
 
   static channel(type: ChannelType): ChannelFormValue {

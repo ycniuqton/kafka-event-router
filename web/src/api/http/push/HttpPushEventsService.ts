@@ -27,7 +27,7 @@ export class HttpPushEventsService extends PushEventsService {
   private readonly client: WsClient;
   private readonly listeners = new Set<(event: PushEvent) => void>();
 
-  constructor(client: WsClient = new WsClient({ url: WsUrl.from(`${ApiRoot.api()}${PushEndpoint.events}`) })) {
+  constructor(client: WsClient = new WsClient({ url: () => WsUrl.from(`${ApiRoot.api()}${PushEndpoint.events}`) })) {
     super();
     this.client = client;
     Object.values(PushEventType).forEach((type) => this.client.on(new PushFrameHandler(type, (e) => this.listeners.forEach((l) => l(e)))));

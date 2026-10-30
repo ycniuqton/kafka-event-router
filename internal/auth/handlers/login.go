@@ -26,6 +26,19 @@ type ConfigResponse struct {
 	OIDCLoginURL string          `json:"oidc_login_url,omitempty"`
 	DevLoginURL  string          `json:"dev_login_url,omitempty"`
 	Workspace    string          `json:"workspace"`
+
+	PasswordLoginURL string              `json:"password_login_url,omitempty"`
+	PasswordPolicy   *PasswordPolicyView `json:"password_policy,omitempty"`
+}
+
+// PasswordPolicyView tells the login and change-password forms the password rules.
+type PasswordPolicyView struct {
+	MinLength int `json:"min_length"`
+}
+
+// ConfigContributor adds members to /auth/config for a login mode (password mode adds its URL and policy).
+type ConfigContributor interface {
+	Contribute(resp *ConfigResponse)
 }
 
 // ConfigHandler serves GET /auth/config (public).
@@ -44,6 +57,9 @@ func (h *ConfigHandler) Serve(w http.ResponseWriter, _ *http.Request) error {
 		if m == config.AuthModeDev {
 			resp.DevLoginURL = string(PathDevLogin)
 		}
+	}
+	for _, c := range h.d.ConfigContributors {
+		c.Contribute(&resp)
 	}
 	return h.d.Responder.JSON(w, http.StatusOK, resp)
 }

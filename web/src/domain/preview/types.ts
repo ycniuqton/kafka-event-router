@@ -1,3 +1,4 @@
+import type { LookupMocks } from '../lookupStep';
 import type { JsonValue } from '../json';
 
 /** Sample sources of a preview session (mirror of Go `preview.SampleMode`). */
@@ -134,6 +135,8 @@ export type RunRequest = {
   eventSeqs?: number[];
   writeToTopic?: boolean;
   routeId?: string;
+  /** Studio mock answers of lookup source steps by step id (pipeline-engine 00002 §3). */
+  lookupMocks?: LookupMocks;
 };
 
 export type PatchOp = { op: PatchOpKind; path: string; value?: JsonValue };

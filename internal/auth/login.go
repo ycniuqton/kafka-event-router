@@ -20,12 +20,14 @@ type Identity struct {
 	Groups      []string
 }
 
-// User is the persisted user an identity maps to; Disabled users cannot authenticate.
+// User is the persisted user an identity maps to; Disabled users cannot authenticate and
+// MustChangePassword users may only change their password until they do.
 type User struct {
-	ID          uuid.UUID
-	Email       string
-	DisplayName string
-	Disabled    bool
+	ID                 uuid.UUID
+	Email              string
+	DisplayName        string
+	Disabled           bool
+	MustChangePassword bool
 }
 
 // LoginFlow is the base of every interactive login (OIDC, dev).

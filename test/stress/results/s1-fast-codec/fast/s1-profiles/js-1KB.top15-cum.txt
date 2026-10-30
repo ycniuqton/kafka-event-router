@@ -1,0 +1,24 @@
+File: js-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 09:13:03 -02
+Duration: 14.20s, Total samples = 14.08s (99.16%)
+Showing nodes accounting for 5.62s, 39.91% of 14.08s total
+Dropped 571 nodes (cum <= 0.07s)
+Showing top 15 nodes out of 204
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%      7.64s 54.26%  github.com/eventrouter/router/pkg/engine_test.pipelineCase.Run
+         0     0%     0%      7.64s 54.26%  testing.(*B).runN
+         0     0%     0%      6.48s 46.02%  testing.(*B).launch
+     5.58s 39.63% 39.63%      5.58s 39.63%  runtime._ExternalCode
+         0     0% 39.63%      5.58s 39.63%  runtime._System
+         0     0% 39.63%      4.36s 30.97%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Run
+     0.01s 0.071% 39.70%      4.36s 30.97%  github.com/eventrouter/router/pkg/engine/compile.TreeRecords.Run
+         0     0% 39.70%      3.77s 26.78%  github.com/eventrouter/router/pkg/engine/compile.(*branch).run
+         0     0% 39.70%      3.77s 26.78%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Process
+     0.01s 0.071% 39.77%      3.73s 26.49%  github.com/eventrouter/router/pkg/engine/step.(*StepChain).Run
+     0.01s 0.071% 39.84%      3.72s 26.42%  github.com/eventrouter/router/pkg/engine/step.(*StepChain).runStep
+         0     0% 39.84%      3.71s 26.35%  github.com/eventrouter/router/pkg/engine/step.(*StepChain).applyAll
+     0.01s 0.071% 39.91%      3.71s 26.35%  github.com/eventrouter/router/pkg/engine/step.(*jsStep).Apply
+         0     0% 39.91%      3.63s 25.78%  github.com/eventrouter/router/pkg/sandbox/enginebind.scriptModule.Call
+         0     0% 39.91%      3.62s 25.71%  github.com/eventrouter/router/pkg/sandbox.(*pooledModule).Call

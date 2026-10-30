@@ -15,6 +15,7 @@ import { MockAuditService } from './MockAuditService';
 import { MockAssistService } from './MockAssistService';
 import { MockLibraryService } from './MockLibraryService';
 import { MockConnectionsService } from './MockConnectionsService';
+import { MockLookupSourcesService } from './MockLookupSourcesService';
 import { MockDeadLettersService } from './MockDeadLettersService';
 import { MockRoutesService } from './MockRoutesService';
 import { MockRuntimeService } from './MockRuntimeService';
@@ -30,6 +31,7 @@ export class MockServicesFactory {
     return {
       routes: new MockRoutesService(backend),
       connections: new MockConnectionsService(backend),
+      lookupSources: new MockLookupSourcesService(backend),
       deadLetters: new MockDeadLettersService(backend),
       activity: new MockActivityService(backend),
       audit: new MockAuditService(backend),

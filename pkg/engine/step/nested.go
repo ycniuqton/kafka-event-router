@@ -40,6 +40,8 @@ func (c *StepCompileCtx) Formula(src string, ptr config.Pointer) (*formula.Progr
 		c.Scope.Fail(config.IssueFormulaInvalid, ptr, "%v", err)
 		return nil, false
 	}
+	fields, ok := p.Fields()
+	c.Scope.Access.Formula(src, fields, ok)
 	return p, true
 }
 

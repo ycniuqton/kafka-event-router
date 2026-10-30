@@ -60,12 +60,14 @@ type Deps struct {
 	Responder  *api.Responder
 }
 
-// NewModule returns every handler (MVP + P2 restore and bulk jobs).
+// NewModule returns every handler (MVP + P2 restore and bulk jobs + 00001 workflow).
 func NewModule(d Deps) api.Module {
 	return api.Modules{
 		&ListHandler{d: d}, &SummaryHandler{d: d}, &DetailHandler{d: d}, &RetryHandler{d: d}, &DiscardHandler{d: d}, &RestoreHandler{d: d},
 		&ExportHandler{d: d}, &StudioHandler{d: d}, &GlobalListHandler{d: d}, &GlobalSummaryHandler{d: d},
 		&CreateJobHandler{d: d}, &RouteJobsHandler{d: d}, &JobStatusHandler{d: d}, &CancelJobHandler{d: d},
+		&GroupsHandler{d: d}, &GlobalGroupsHandler{d: d}, &ReplayHandler{d: d}, &DryRunHandler{d: d},
+		&ApproveJobHandler{d: d}, &RejectJobHandler{d: d}, &PendingJobsHandler{d: d},
 	}
 }
 
@@ -85,6 +87,23 @@ func (Caller) Viewer(r *http.Request) dlq.Viewer {
 // Actor returns the request principal as an actor.
 func (Caller) Actor(r *http.Request) dlq.Actor {
 	return dlq.Actor{UserID: auth.PrincipalFrom(r.Context()).UserID.String()}
+}
+
+// CallerJobs marks jobs requested by the caller.
+type CallerJobs struct{}
+
+// One returns j marked for the request's principal.
+func (CallerJobs) One(r *http.Request, j jobs.Job) jobs.Job {
+	return j.ForCaller(Caller{}.Actor(r).UserID)
+}
+
+// All returns list marked for the request's principal.
+func (c CallerJobs) All(r *http.Request, list []jobs.Job) []jobs.Job {
+	out := make([]jobs.Job, 0, len(list))
+	for _, j := range list {
+		out = append(out, c.One(r, j))
+	}
+	return out
 }
 
 // ReadableRoutes keeps the routes whose dead letters the caller may read.

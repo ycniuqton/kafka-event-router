@@ -89,8 +89,8 @@ type SourceConsumer struct {
 }
 
 // OpenSourceConsumer opens the consumer of v's source with manual commits and rebalance callbacks,
-// through the source mode of the route's delivery mode.
-func OpenSourceConsumer(ctx context.Context, opener ClientOpener, v CompiledVersion, l RebalanceListener, mode SourceMode) (*SourceConsumer, error) {
+// through the source mode of the route's delivery mode, with fetch buffering sized by fetch.
+func OpenSourceConsumer(ctx context.Context, opener ClientOpener, v CompiledVersion, l RebalanceListener, mode SourceMode, fetch SourceFetch) (*SourceConsumer, error) {
 	src := v.Config.Source
 	opts := []kgo.Opt{
 		kgo.ConsumerGroup(ConsumerGroups{}.Of(v)),
@@ -104,6 +104,7 @@ func OpenSourceConsumer(ctx context.Context, opener ClientOpener, v CompiledVers
 		kgo.OnPartitionsLost(func(_ context.Context, _ *kgo.Client, m map[string][]int32) { l.Lost(TopicPartitions{}.Of(m)) }),
 	}
 	opts = append(opts, TopicSelection{}.Options(src)...)
+	opts = append(opts, fetch.Options(v)...)
 	return mode.Open(ctx, opener, v, opts)
 }
 

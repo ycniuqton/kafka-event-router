@@ -1,4 +1,4 @@
-import { FilterMode, LookupMode, StepFieldList, TransformStepKind, ValueSourceKind, type TransformStep } from '../../../../domain';
+import { FilterMode, LookupMode, LookupStepDefaults, LookupStepIssue, LookupStepRules, StepFieldList, TransformStepKind, ValueSourceKind, type TransformStep } from '../../../../domain';
 
 /** Why a step cannot run yet; such steps are skipped by the preview and flagged on their card. */
 export const IncompleteReason = {
@@ -13,6 +13,11 @@ export const IncompleteReason = {
   Library: 'Pick a library transform.',
   Header: 'Enter the header name.',
   NewHeader: 'Enter the new header name.',
+  LookupSource: LookupStepIssue.Source,
+  LookupRequest: LookupStepIssue.Request,
+  LookupMapping: LookupStepIssue.Mapping,
+  LookupPick: LookupStepIssue.Pick,
+  LookupMock: LookupStepIssue.Mock,
 } as const;
 export type IncompleteReason = (typeof IncompleteReason)[keyof typeof IncompleteReason];
 
@@ -41,7 +46,7 @@ export class StepCompleteness {
     [TransformStepKind.DropIf]: (s) => (StepCompleteness.hasCondition(s) ? null : IncompleteReason.Condition),
     [TransformStepKind.SetKey]: (s) => StepCompleteness.keySource(s),
     [TransformStepKind.Map]: (s) => StepCompleteness.mapping(s),
-    [TransformStepKind.Lookup]: (s) => StepCompleteness.field(s) ?? StepCompleteness.lookupTable(s),
+    [TransformStepKind.Lookup]: (s) => StepCompleteness.lookup(s),
     [TransformStepKind.SplitArray]: StepCompleteness.field,
     [TransformStepKind.Wrap]: StepCompleteness.field,
     [TransformStepKind.Unwrap]: StepCompleteness.field,
@@ -56,6 +61,11 @@ export class StepCompleteness {
 
   static reason(step: TransformStep): IncompleteReason | null {
     return StepCompleteness.checks[step.kind](step);
+  }
+
+  private static lookup(step: TransformStep): IncompleteReason | null {
+    if (step.lookupMode === LookupMode.Source) return LookupStepRules.issue(step.lookupSource ?? LookupStepDefaults.step());
+    return StepCompleteness.field(step) ?? StepCompleteness.lookupTable(step);
   }
 
   private static lookupTable(step: TransformStep): IncompleteReason | null {

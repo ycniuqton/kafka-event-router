@@ -98,7 +98,7 @@ func (a *AccessAssembly) Build(ctx context.Context) (*AccessWiring, error) {
 	admins := rbac.NewPostgresAdminStore(w.Deps.DB)
 	w.Logins.SetHook(a.bootstrapper(admins))
 	trail := rbac.NewAuditTrail(w.Deps.Audit)
-	go rbac.NewInvalidationListener(w.Deps.DB.Pool(), cache, w.Deps.Log).Run(ctx)
+	go rbac.NewInvalidationListener(w.Deps.DB.Notifications(), cache, w.Deps.Log).Run(ctx)
 	reader := audit.NewManager(audit.NewPostgresReader(w.Deps.DB), catalog)
 	teams := rbac.NewPostgresTeamStore(w.Deps.DB)
 	settings := rbac.NewSettingsService(rbac.SettingsServiceDeps{Tx: w.Tx, Store: rbac.NewPostgresSettingsStore(w.Deps.DB),
@@ -154,7 +154,7 @@ func (a *AccessAssembly) module(p AccessParts) api.Module {
 	inviter := rbac.NewInviter(rbac.InviterDeps{Tx: w.Tx, Invites: rbac.NewPostgresInvitationStore(w.Deps.DB), Bindings: bindingStore,
 		Teams: p.Teams, Users: userStore, Assignable: p.Assignable, Trail: p.Trail})
 	return rbachttp.NewModule(rbachttp.Deps{Users: users, Bindings: bindings, Teams: teams, Grants: grants, Inviter: inviter,
-		Settings: p.Settings, Responder: w.Responder, Pages: w.Pages})
+		Settings: p.Settings, Responder: w.Responder, Pages: w.Pages, Passwords: a.passwordUsers(p, userStore, bindingStore)})
 }
 
 // MeContributors is the list of /auth/me contributors gathered during wiring.
@@ -170,6 +170,7 @@ func (l EndpointList) Keys() []string { return l }
 // session, and collections that filter each object by permission themselves (global DLQ list/summary: dlq.read).
 var PublicEndpoints = EndpointList{
 	"GET /auth/config", "GET /auth/oidc/login", "GET /auth/oidc/callback", "POST /auth/dev/login", "POST /auth/logout",
-	"GET /api/v1/auth/me", "GET /api/v1/dlq", "GET /api/v1/dlq/summary",
+	"GET /api/v1/auth/me", "GET /api/v1/dlq", "GET /api/v1/dlq/summary", "GET /api/v1/dlq/groups", "GET /api/v1/dlq/jobs",
 	"GET /api/v1/auth/tokens", "POST /api/v1/auth/tokens", "DELETE /api/v1/auth/tokens/{id}",
+	"POST /auth/password/login", "POST /api/v1/auth/password",
 }

@@ -23,7 +23,8 @@ type routeSandbox struct {
 	scope     RouteScope
 	builder   moduleBuilder
 	observer  Observer
-	onClose   func(*routeSandbox)
+	onClose   func(*routeSandbox, []string)
+	publish   func(RouteScope)
 	mu        sync.Mutex
 	modules   map[ModuleKey]*pooledModule
 	paths     map[string]*pooledModule
@@ -31,7 +32,7 @@ type routeSandbox struct {
 	closeOnce sync.Once
 }
 
-func newRouteSandbox(scope RouteScope, builder moduleBuilder, observer Observer, onClose func(*routeSandbox)) *routeSandbox {
+func newRouteSandbox(scope RouteScope, builder moduleBuilder, observer Observer, onClose func(*routeSandbox, []string)) *routeSandbox {
 	return &routeSandbox{scope: scope, builder: builder, observer: observer, onClose: onClose,
 		modules: map[ModuleKey]*pooledModule{}, paths: map[string]*pooledModule{}}
 }
@@ -83,8 +84,13 @@ func (r *routeSandbox) Usage() RouteUsage {
 	return u
 }
 
-// observePools reports the summed pool gauges of the route version.
+// observePools reports the pool gauges of the route version, summed over every sandbox of the version
+// when the manager publishes them (one JS step = one sandbox), else over this sandbox.
 func (r *routeSandbox) observePools() {
+	if r.publish != nil {
+		r.publish(r.scope)
+		return
+	}
 	u := r.Usage()
 	r.observer.PoolObserved(r.scope, PoolStats{Size: u.Instances, MemoryBytes: u.MemoryBytes, Calls: u.Calls, CPUTime: u.CPUTime})
 }
@@ -103,10 +109,11 @@ func (r *routeSandbox) Close(ctx context.Context) error {
 		for _, m := range modules {
 			m.close(ctx)
 		}
-		r.observer.ScopeClosed(r.scope, steps)
 		if r.onClose != nil {
-			r.onClose(r)
+			r.onClose(r, steps)
+			return
 		}
+		r.observer.ScopeClosed(r.scope, steps)
 	})
 	return nil
 }
@@ -115,7 +122,7 @@ func (r *routeSandbox) Close(ctx context.Context) error {
 type pooledModule struct {
 	scope      RouteScope
 	program    Program
-	pool       Pool
+	pool       ScalablePool
 	marshaller boundary.Marshaller
 	classifier ErrorClassifier
 	observer   Observer
@@ -146,7 +153,9 @@ func (m *pooledModule) Call(ctx context.Context, inv Invocation) (Result, error)
 	if err != nil {
 		return m.done(start, Result{}, m.classifier.Classify(err))
 	}
+	waitStart := time.Now()
 	inst, err := m.pool.Acquire(ctx)
+	m.observer.QueueWaitObserved(m.scope, time.Since(waitStart))
 	if err != nil {
 		return m.done(start, Result{}, m.classifier.Classify(err))
 	}

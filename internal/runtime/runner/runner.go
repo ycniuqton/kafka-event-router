@@ -13,6 +13,7 @@ import (
 	"github.com/eventrouter/router/internal/runtime/delivery"
 	"github.com/eventrouter/router/internal/runtime/domain"
 	"github.com/eventrouter/router/internal/runtime/failures"
+	"github.com/eventrouter/router/internal/runtime/membudget"
 	"github.com/eventrouter/router/internal/runtime/producers"
 	"github.com/eventrouter/router/internal/runtime/retry"
 	"github.com/eventrouter/router/pkg/config"
@@ -32,6 +33,8 @@ type Deps struct {
 	Log        *slog.Logger
 	Now        func() time.Time
 	Tail       TailTap
+	Budget     *membudget.Budget
+	InFlight   InFlightTuning
 }
 
 // RouteRunnerFactory builds RouteRunners.
@@ -61,6 +64,8 @@ type RouteRunner struct {
 	tracker    *OffsetTracker
 	gate       *BackpressureGate
 	committer  *CommitScheduler
+	account    *membudget.Account
+	tuner      *InFlightTuner
 	lanes      map[TopicPartition]*PartitionLane
 	watermarks map[TopicPartition]int64
 	probed     ProbedLag
@@ -70,6 +75,7 @@ type RouteRunner struct {
 	stopFlow   context.CancelFunc
 	pollDone   chan struct{}
 	stopOnce   sync.Once
+	retries    *RetryRuntime
 }
 
 // Version implements Runner.
@@ -101,6 +107,11 @@ func (r *RouteRunner) Start(ctx context.Context) error {
 	v := r.Version()
 	r.partitions = SourceTopology{Opener: r.deps.Opener}.Partitions(ctx, v)
 	mode := delivery.DeliveryModes{}.Of(v.Config)
+	tuner, err := NewInFlightTuner(r.deps.InFlight, v.Config.Limits.InFlight(), r.deps.Metrics.For(v))
+	if err != nil {
+		return r.startFailed(err)
+	}
+	r.tuner = tuner
 	if err := r.openSource(ctx, v, mode); err != nil {
 		return r.startFailed(err)
 	}
@@ -113,6 +124,9 @@ func (r *RouteRunner) Start(ctx context.Context) error {
 	if err := r.ensureDestinations(ctx, v); err != nil {
 		return r.startFailed(err)
 	}
+	if err := r.startRetryTopics(ctx, v); err != nil {
+		return r.startFailed(err)
+	}
 	r.launch(v)
 	return nil
 }
@@ -123,7 +137,7 @@ func (r *RouteRunner) openSource(ctx context.Context, v CompiledVersion, mode co
 	if err != nil {
 		return ModeRefusal{}.Halt(err)
 	}
-	consumer, err := OpenSourceConsumer(ctx, r.deps.Opener, v, r, source)
+	consumer, err := OpenSourceConsumer(ctx, r.deps.Opener, v, r, source, SourceFetch{Budget: r.deps.Budget})
 	if err != nil {
 		return ModeRefusal{}.Halt(err)
 	}
@@ -153,23 +167,26 @@ func (ModeRefusal) Halt(err error) error {
 	return err
 }
 
-// launch builds the per-runner pipeline objects and starts the poll and commit loops.
+// launch builds the per-runner pipeline objects and starts the poll, commit and in-flight tuning loops.
 func (r *RouteRunner) launch(v CompiledVersion) {
+	tuner := r.tuner
 	runCtx, stopPoll := context.WithCancel(context.Background())
 	flowCtx, stopFlow := context.WithCancel(context.Background())
 	r.runCtx, r.stopPoll, r.stopFlow = runCtx, stopPoll, stopFlow
 	r.tracker = NewOffsetTracker()
 	r.gate = NewBackpressureGate(r.consumer.Client())
+	r.account = r.openAccount(v)
 	r.committer = NewCommitScheduler(r.tracker, r.strategy, r.deps.Timings.Commit, r.deps.Log)
 	r.flow = &RecordFlow{delivery: r.strategy, classifier: r.deps.Classifier, tracker: r.tracker, gate: r.gate,
-		limiter: NewInFlightLimiter(v.Config.Limits.Resolved().MaxInFlight), retry: r.deps.Retry, halt: r.signalHalt,
-		barrier: r.barrier, tail: NewTailHook(r.deps.Tail)}
+		limiter: tuner.Limiter(), retry: r.deps.Retry, halt: r.signalHalt, barrier: r.barrier, tail: NewTailHook(r.deps.Tail)}
 	r.flow.useBase(flowCtx, stopFlow)
 	r.flow.state.Store(r.versionState(v))
 	r.cycle = NewPollCycles().For(r.strategy.Batching())
 	r.setState(domain.RunnerRunning)
 	go r.poll(runCtx)
 	go r.committer.Run(runCtx)
+	go tuner.Run(runCtx)
+	r.launchRetries(runCtx)
 	if r.deps.Timings.LagProbe > 0 {
 		go LagProbeLoop{Probe: NewLagProbe(r.consumer.Client(), ConsumerGroups{}.Of(v)), Interval: r.deps.Timings.LagProbe, Apply: r.applyProbe}.Run(runCtx)
 	}
@@ -188,9 +205,8 @@ func (r *RouteRunner) applyProbe(p ProbedLag) {
 
 // versionState builds the swappable part of the flow for v.
 func (r *RouteRunner) versionState(v CompiledVersion) *versionState {
-	writer := failures.KafkaDLQWriter{Target: r.deps.DLQTargets.Resolve(v.Config), Route: failures.RouteIdentity{RouteID: v.Ref.RouteID, VersionNo: v.Ref.VersionNo},
-		Producer: r.strategy, Encoder: r.deps.Encoder, Retry: r.deps.Retry, Now: r.deps.Now}
-	return &versionState{version: v, processor: NewRecordProcessor(v), policies: failures.NewDefaultPolicyManager(writer), metrics: r.deps.Metrics.For(v)}
+	return &versionState{version: v, processor: NewRecordProcessor(v), policies: failures.NewDefaultPolicyManager(r.dlqWriter(v, r.strategy)),
+		metrics: r.deps.Metrics.For(v), retries: r.retryRoute(v)}
 }
 
 // ensureDLQ creates the DLQ topic when the route's policy writes dead letters.
@@ -237,6 +253,7 @@ func (r *RouteRunner) startFailed(err error) error {
 	if r.consumer != nil {
 		r.consumer.Close()
 	}
+	r.closeRetries(context.Background())
 	r.recordError(err)
 	close(r.pollDone)
 	return err
@@ -285,7 +302,7 @@ func (r *RouteRunner) laneFor(ctx context.Context, tp TopicPartition) *Partition
 	if l, ok := r.lanes[tp]; ok {
 		return l
 	}
-	l := NewPartitionLane(tp, r.gate)
+	l := NewPartitionLane(tp, r.gate).WithAccount(r.account)
 	r.lanes[tp] = l
 	go l.Run(ctx, r.flow)
 	return l

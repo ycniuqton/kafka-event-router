@@ -47,6 +47,7 @@ export function WorkspaceSection() {
         <span className={styles.hint}>MVP / P2 / P3 markers in the navigation</span>
       </SettingRow>
       <AssistRow />
+      <RouterAlertRow />
       <Can permission={Permission.AuditRead}>
         <AuditExportRow />
       </Can>
@@ -78,6 +79,34 @@ function AssistRow() {
         <Mono size="md">{current.aiAssistEnabled ? WorkspaceText.assistOn : WorkspaceText.assistOff}</Mono>
       )}
       <span className={styles.hint}>{WorkspaceText.assistHint}</span>
+    </SettingRow>
+  );
+}
+
+/** Default alert rule of every route: router-caused dead letters > 0 (absent from older servers = on). */
+function RouterAlertRow() {
+  const canManage = useCan(Permission.SettingsManage);
+  const { data } = useServiceQuery(() => services.access.settings(), []);
+  const [saved, setSaved] = useState<WorkspaceSettings | null>(null);
+  const current = saved ?? data;
+  if (!current) return null;
+  const on = current.routerCausedAlertDefault ?? true;
+  const change = async (choice: AssistChoice) => {
+    try {
+      setSaved(await services.access.updateSettings(current, { routerCausedAlertDefault: choice === AssistChoice.On }));
+      actions.toast.show(WorkspaceText.saved);
+    } catch (e) {
+      actions.toast.show((e as Error).message);
+    }
+  };
+  return (
+    <SettingRow label="Router-bug alerts">
+      {canManage ? (
+        <SegmentedControl size="md" options={AssistOptions} value={on ? AssistChoice.On : AssistChoice.Off} onChange={(v) => void change(v)} ariaLabel="Router-bug alerts" />
+      ) : (
+        <Mono size="md">{on ? WorkspaceText.assistOn : WorkspaceText.assistOff}</Mono>
+      )}
+      <span className={styles.hint}>{WorkspaceText.routerAlertHint}</span>
     </SettingRow>
   );
 }

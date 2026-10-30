@@ -38,6 +38,9 @@ type User struct {
 	Teams          []UserTeam       `json:"teams"`
 	LastLoginAt    *time.Time       `json:"lastLoginAt"`
 	RowVersion     store.RowVersion `json:"rowVersion"`
+
+	PasswordLogin      bool `json:"passwordLogin"`
+	MustChangePassword bool `json:"mustChangePassword"`
 }
 
 // UserFilter narrows user lists.
@@ -78,7 +81,8 @@ func NewPostgresUserStore(db *store.DB) *PostgresUserStore {
 
 // selectUsersSQL is the projection shared by user reads.
 const selectUsersSQL = `SELECT u.id, u.email, u.display_name, u.is_workspace_admin, u.disabled_at IS NOT NULL,
-	u.sso_subject IS NULL, u.row_version FROM users u`
+	u.sso_subject IS NULL, u.row_version, p.user_id IS NOT NULL, COALESCE(p.must_change, false)
+	FROM users u LEFT JOIN user_passwords p ON p.user_id = u.id`
 
 // UserSort names the keyset columns of user lists (ordered by email).
 type UserSort string
@@ -138,7 +142,8 @@ func (s *PostgresUserStore) query(ctx context.Context, sql string, args ...any) 
 		var u User
 		var disabled, invited bool
 		var version int64
-		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName, &u.WorkspaceAdmin, &disabled, &invited, &version); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.DisplayName, &u.WorkspaceAdmin, &disabled, &invited, &version,
+			&u.PasswordLogin, &u.MustChangePassword); err != nil {
 			return nil, err
 		}
 		u.Status, u.RowVersion, u.Teams = UserStatusOf{}.Derive(disabled, invited), store.RowVersion(version), []UserTeam{}

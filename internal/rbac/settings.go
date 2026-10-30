@@ -15,12 +15,14 @@ type WorkspaceSettingKey string
 const (
 	SettingAIAssistEnabled            WorkspaceSettingKey = "ai_assist_enabled"
 	SettingDefaultRequireProdApproval WorkspaceSettingKey = "default_require_prod_approval"
+	SettingRouterCausedAlertDefault   WorkspaceSettingKey = "router_caused_alert_default"
 )
 
 // WorkspaceSettings is the typed view of every workspace setting plus the aggregate version (ETag).
 type WorkspaceSettings struct {
 	AIAssistEnabled            bool             `json:"aiAssistEnabled"`
 	DefaultRequireProdApproval bool             `json:"defaultRequireProdApproval"`
+	RouterCausedAlertDefault   bool             `json:"routerCausedAlertDefault"`
 	RowVersion                 store.RowVersion `json:"rowVersion"`
 }
 
@@ -28,6 +30,7 @@ type WorkspaceSettings struct {
 type SettingsPatch struct {
 	AIAssistEnabled            *bool `json:"aiAssistEnabled"`
 	DefaultRequireProdApproval *bool `json:"defaultRequireProdApproval"`
+	RouterCausedAlertDefault   *bool `json:"routerCausedAlertDefault"`
 }
 
 // SettingDefinition binds one key to its default and to its field in the typed view and in a patch.
@@ -41,7 +44,8 @@ type SettingDefinition struct {
 // SettingCatalog lists every workspace setting (AI assist is off until an admin enables it).
 type SettingCatalog []SettingDefinition
 
-// DefaultSettingCatalog returns the built-in settings (design §3: ai_assist_enabled, default_require_prod_approval).
+// DefaultSettingCatalog returns the built-in settings (design §3: ai_assist_enabled, default_require_prod_approval;
+// dead-letters 00001: router_caused_alert_default, on by default).
 func DefaultSettingCatalog() SettingCatalog {
 	return SettingCatalog{
 		{Key: SettingAIAssistEnabled, Default: false,
@@ -50,6 +54,9 @@ func DefaultSettingCatalog() SettingCatalog {
 		{Key: SettingDefaultRequireProdApproval, Default: DefaultTeamDefaults.RequireProdApproval,
 			Field:   func(s *WorkspaceSettings) *bool { return &s.DefaultRequireProdApproval },
 			Patched: func(p SettingsPatch) *bool { return p.DefaultRequireProdApproval }},
+		{Key: SettingRouterCausedAlertDefault, Default: true,
+			Field:   func(s *WorkspaceSettings) *bool { return &s.RouterCausedAlertDefault },
+			Patched: func(p SettingsPatch) *bool { return p.RouterCausedAlertDefault }},
 	}
 }
 

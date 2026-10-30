@@ -8,6 +8,7 @@ import (
 
 	"github.com/eventrouter/router/internal/metrics/instruments"
 	"github.com/eventrouter/router/internal/runtime/domain"
+	"github.com/eventrouter/router/internal/runtime/retrytopic"
 	"github.com/eventrouter/router/pkg/engine"
 )
 
@@ -15,8 +16,9 @@ import (
 type MetricName string
 
 const (
-	MetricSkipped MetricName = "router_events_skipped_total"
-	MetricReloads MetricName = "router_runner_reloads_total"
+	MetricSkipped       MetricName = "router_events_skipped_total"
+	MetricReloads       MetricName = "router_runner_reloads_total"
+	MetricInFlightLimit MetricName = "router_route_inflight_limit"
 )
 
 // MetricLabel names worker-only metric labels.
@@ -38,9 +40,11 @@ var stateValues = map[domain.RunnerState]instruments.RunnerStateValue{
 
 // Metrics holds the worker-wide metric set: monitoring's RouteInstruments plus worker-only series.
 type Metrics struct {
-	route   *instruments.RouteInstruments
-	skipped *prometheus.CounterVec
-	worker  string
+	route    *instruments.RouteInstruments
+	skipped  *prometheus.CounterVec
+	inflight *prometheus.GaugeVec
+	retry    *retrytopic.Metrics
+	worker   string
 }
 
 // NewMetrics registers the metric set (nil registerer = private registry, for tests).
@@ -51,9 +55,19 @@ func NewMetrics(reg prometheus.Registerer, worker string) *Metrics {
 	labels := []string{string(instruments.LabelRouteID), string(instruments.LabelBranch),
 		string(instruments.LabelVersion), string(instruments.LabelWorker)}
 	m := &Metrics{worker: worker, route: instruments.NewRouteInstrumentsOn(reg),
-		skipped: prometheus.NewCounterVec(prometheus.CounterOpts{Name: string(MetricSkipped)}, labels)}
-	reg.MustRegister(m.skipped)
+		skipped: prometheus.NewCounterVec(prometheus.CounterOpts{Name: string(MetricSkipped)}, labels),
+		inflight: prometheus.NewGaugeVec(prometheus.GaugeOpts{Name: string(MetricInFlightLimit),
+			Help: "Current in-flight record limit of a route runner (adaptive in auto mode)."}, InFlightLabels), retry: retrytopic.NewMetrics(reg)}
+	reg.MustRegister(m.skipped, m.inflight)
 	return m
+}
+
+// InFlightLabels are the labels of router_route_inflight_limit (one series per runner, no branch).
+var InFlightLabels = []string{string(instruments.LabelRouteID), string(instruments.LabelVersion), string(instruments.LabelWorker)}
+
+// RetryLabels are the retry-metric labels of one runner.
+func (r *RunnerMetrics) RetryLabels() retrytopic.Labels {
+	return retrytopic.Labels{RouteID: r.labels.RouteID, Version: r.labels.Version, Worker: r.labels.Worker}
 }
 
 // For binds the metric set to one runner's route version and its branches.
@@ -150,6 +164,7 @@ func (r *RunnerMetrics) State(_, next domain.RunnerState) {
 	v, ok := stateValues[next]
 	if !ok {
 		r.eachBranch(r.m.route.Forget)
+		r.m.inflight.DeleteLabelValues(r.labels.RouteID, r.labels.Version, r.labels.Worker)
 		return
 	}
 	r.eachBranch(r.m.route.Initialise)
@@ -161,4 +176,9 @@ func (r *RunnerMetrics) eachBranch(fn func(instruments.RouteLabels)) {
 	for _, b := range r.branches.All {
 		fn(r.branch(engine.BranchID(b)))
 	}
+}
+
+// InFlightLimit sets router_route_inflight_limit of the runner (implements InFlightGauge).
+func (r *RunnerMetrics) InFlightLimit(limit int) {
+	r.m.inflight.WithLabelValues(r.labels.RouteID, r.labels.Version, r.labels.Worker).Set(float64(limit))
 }

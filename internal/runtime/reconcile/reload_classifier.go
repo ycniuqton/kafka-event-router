@@ -24,6 +24,23 @@ type restartIdentity struct {
 	Delivery         config.DeliveryMode
 	Destinations     []string
 	DLQ              failures.DLQTarget
+	Retry            retryIdentity
+}
+
+// retryIdentity is the part of errorPolicy.retry fixed by the runner's retry consumer (its tier topics).
+type retryIdentity struct {
+	Enabled     bool
+	MaxAttempts int
+	RouteName   string
+}
+
+// retryIdentityOf returns the retry identity of cfg (zero when retry is off).
+func retryIdentityOf(cfg *config.RouteConfig) retryIdentity {
+	p := config.RetryPolicyOf(cfg.ErrorPolicy)
+	if !p.Enabled {
+		return retryIdentity{}
+	}
+	return retryIdentity{Enabled: true, MaxAttempts: p.MaxAttempts, RouteName: cfg.Name}
 }
 
 // ConfigReloadClassifier compares restart identities, then whole documents.
@@ -45,7 +62,7 @@ func (c ConfigReloadClassifier) Classify(prev, next *config.RouteConfig) domain.
 
 func (c ConfigReloadClassifier) identity(cfg *config.RouteConfig) restartIdentity {
 	id := restartIdentity{SourceConnection: cfg.Source.ConnectionID, Topics: slices.Sorted(slices.Values(cfg.Source.Topics)),
-		Delivery: delivery.DeliveryModes{}.Of(cfg), DLQ: c.DLQ.Resolve(cfg)}
+		Delivery: delivery.DeliveryModes{}.Of(cfg), DLQ: c.DLQ.Resolve(cfg), Retry: retryIdentityOf(cfg)}
 	if cfg.Source.TopicPattern != nil {
 		id.Pattern = *cfg.Source.TopicPattern
 	}

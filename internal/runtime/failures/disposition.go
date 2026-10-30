@@ -16,6 +16,7 @@ var dispositions = map[domain.ErrorCategory]domain.Disposition{
 	domain.CategoryDestinationPermanent: domain.DispositionHaltRoute,
 	domain.CategorySourceFatal:          domain.DispositionHaltRoute,
 	domain.CategoryCompile:              domain.DispositionHaltRoute,
+	domain.CategoryDependencyTransient:  domain.DispositionApplyPolicy,
 }
 
 // For returns the disposition of a category; unknown categories halt (never silently lose data).

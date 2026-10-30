@@ -15,6 +15,8 @@
     "offset": 1
   },
   "resolution": null,
+  "errorClass": "data",
+  "fingerprint": "b05f046a6623cbfa",
   "stack": "",
   "key": {
     "encoding": "utf8",

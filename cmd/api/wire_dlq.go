@@ -77,6 +77,7 @@ func buildDLQ(s *apiService) (api.Module, error) {
 		Scripts: dlqScripts(root, w, settings, salts), Salts: salts, Metrics: s.registry.Registerer(),
 		Registries: &codec.HTTPRegistryProvider{Source: &preview.SpecRegistryConfigs{Specs: specs, Now: time.Now}},
 		Visibility: dlqVisibility(w), Audit: dlq.ScopeAuditTrail{}, Log: w.Deps.Log, Library: resolver.New(w.Deps.DB),
+		Gate: dlqGate(w), Sources: s.lookupGateway(),
 	}).BuildFeature(root, dlqLeader(s))
 	if err != nil {
 		return nil, err
@@ -111,7 +112,7 @@ func dlqVisibility(w *Wiring) dlq.SampleVisibility {
 	return dlq.RBACVisibility{Access: w.Access.Samples}
 }
 
-// dlqRegisterAudit adds the feature's P2 audit actions (restore, jobs) to the catalog.
+// dlqRegisterAudit adds the feature's audit actions (P2 restore/jobs, 00001 workflow replays) to the catalog.
 func dlqRegisterAudit(w *Wiring) {
 	if w.Access == nil || w.Access.Catalog == nil {
 		return
@@ -147,7 +148,7 @@ func dlqJobs(root context.Context, w *Wiring, settings dlq.Settings, m *dlq.Mana
 	notifier := jobs.Notifiers{jobs.LogNotifier{Log: w.Deps.Log}, jobs.BusNotifier{Bus: w.dlqJobPublisher(), Log: w.Deps.Log}, dlqJobAudit(w, m)}
 	runner := &jobs.Runner{Repo: repo, Pages: m, Notifier: notifier, Log: w.Deps.Log, Now: time.Now}
 	go runner.Run(root)
-	return &jobs.Service{Repo: repo, Preparer: m, Audit: dlq.ScopeAuditTrail{}}, nil
+	return &jobs.Service{Repo: repo, Preparer: m, Audit: dlq.ScopeAuditTrail{}, Gate: m}, nil
 }
 
 // dlqJobAudit records dlq.job_finished as the system job-runner actor (DL-203).

@@ -39,3 +39,6 @@ playwright-report/
 test/acceptance/report/
 test/stress/results/s1-profiles/*.test
 test/stress/results/s1-profiles/*.pprof
+
+# Agent worktrees
+.claude/worktrees/

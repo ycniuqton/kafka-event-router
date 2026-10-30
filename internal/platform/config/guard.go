@@ -21,6 +21,7 @@ func NewEnvironmentGuard() *EnvironmentGuard {
 	return &EnvironmentGuard{rules: []GuardRule{
 		LocalOnlyRule{Mode: string(AuthModeDev), Used: func(c Config) bool { return c.Auth.HasMode(AuthModeDev) }},
 		LocalOnlyRule{Mode: string(SecretsLocal), Used: func(c Config) bool { return c.Secrets.Provider == SecretsLocal }},
+		staticKeyRule(),
 		EnvironmentScopedRule{Mode: string(WorkloadStaticToken), Allowed: NonProductionEnvironments,
 			Used: func(c Config) bool { return c.Internal.Addr != "" && c.Internal.WorkloadAuth == WorkloadStaticToken }},
 		EnvironmentScopedRule{Mode: string(SettingInsecureCookies), Allowed: NonProductionEnvironments,

@@ -1,0 +1,24 @@
+File: recipe-5-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 09:12:35 -02
+Duration: 25.19s, Total samples = 24.97s (99.13%)
+Showing nodes accounting for 0.92s, 3.68% of 24.97s total
+Dropped 261 nodes (cum <= 0.12s)
+Showing top 15 nodes out of 185
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%     24.32s 97.40%  testing.(*B).runN
+     0.03s  0.12%  0.12%     24.31s 97.36%  github.com/eventrouter/router/pkg/engine_test.pipelineCase.Run
+         0     0%  0.12%     24.31s 97.36%  testing.(*B).launch
+     0.01s  0.04%  0.16%     24.28s 97.24%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Run
+     0.03s  0.12%  0.28%     24.27s 97.20%  github.com/eventrouter/router/pkg/engine/compile.ProjectedRecords.Run
+     0.07s  0.28%  0.56%     24.24s 97.08%  github.com/eventrouter/router/pkg/engine/compile.ProjectedRecords.fast
+     0.09s  0.36%  0.92%      9.20s 36.84%  github.com/eventrouter/router/pkg/engine/compile.ProjectedRecords.encode
+     0.05s   0.2%  1.12%      8.64s 34.60%  github.com/eventrouter/router/pkg/engine/compile.(*OutputShaper).EncodeWith
+         0     0%  1.12%      8.34s 33.40%  github.com/eventrouter/router/pkg/engine/compile.ProjectedValue.Encode
+     0.02s  0.08%  1.20%      8.34s 33.40%  github.com/eventrouter/router/pkg/engine/projection.(*Document).Encode
+     0.01s  0.04%  1.24%      7.67s 30.72%  github.com/eventrouter/router/pkg/engine/projection.(*Codec).Decode
+     0.19s  0.76%  2.00%      7.38s 29.56%  github.com/eventrouter/router/pkg/engine/projection.(*Document).patch
+     0.04s  0.16%  2.16%      7.24s 28.99%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Process
+     0.11s  0.44%  2.60%      6.92s 27.71%  github.com/eventrouter/router/pkg/engine/compile.(*branch).run
+     0.27s  1.08%  3.68%         6s 24.03%  runtime.mallocgc

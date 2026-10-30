@@ -32,6 +32,8 @@ type Deps struct {
 	Responder    *api.Responder
 	Config       config.Config
 	Contributors []MeContributor
+
+	ConfigContributors []ConfigContributor
 }
 
 // NewModule returns the auth module; the dev login handler is included only when the dev flow is enabled.

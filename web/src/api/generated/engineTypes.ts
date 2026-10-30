@@ -4,7 +4,15 @@
  * This interface was referenced by `EngineTypes`'s JSON-Schema
  * via the `definition` "errorType".
  */
-export type ErrorType = "decode" | "decode_transient" | "step" | "step_timeout" | "output_invalid" | "limit";
+export type ErrorType =
+  | "decode"
+  | "decode_transient"
+  | "step"
+  | "step_timeout"
+  | "output_invalid"
+  | "limit"
+  | "lookup_unavailable"
+  | "lookup_miss";
 /**
  * This interface was referenced by `EngineTypes`'s JSON-Schema
  * via the `definition` "eventStatus".

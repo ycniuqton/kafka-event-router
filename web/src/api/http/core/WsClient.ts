@@ -43,14 +43,17 @@ export class WsUrl {
   }
 }
 
-export type WsClientOptions = { url: string; socketFactory?: SocketFactory; reconnect?: ReconnectPolicy };
+/** Socket address, or a resolver called on each connect (keeps `window` out of service construction). */
+export type WsAddress = string | (() => string);
+
+export type WsClientOptions = { url: WsAddress; socketFactory?: SocketFactory; reconnect?: ReconnectPolicy };
 
 /**
  * Base WebSocket client: JSON messages dispatched by `type` to handlers, automatic reconnect
  * with backoff until `close()`. Session cookies authenticate the upgrade (same origin).
  */
 export class WsClient {
-  private readonly url: string;
+  private readonly url: WsAddress;
   private readonly socketFactory: SocketFactory;
   private readonly reconnect: ReconnectPolicy;
   private readonly handlers = new Map<string, Set<WsMessageHandler>>();
@@ -71,7 +74,7 @@ export class WsClient {
     this.wanted = true;
     if (this.socket) return;
     this.setState(WsState.Connecting);
-    const socket = this.socketFactory(this.url);
+    const socket = this.socketFactory(typeof this.url === 'function' ? this.url() : this.url);
     socket.onopen = () => this.opened();
     socket.onmessage = (ev) => this.dispatch(ev.data);
     socket.onclose = () => this.closed();

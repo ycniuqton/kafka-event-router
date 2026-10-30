@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -30,7 +31,8 @@ type LeaderCheck time.Duration
 
 const LeaderCheckInterval LeaderCheck = LeaderCheck(2 * time.Second)
 
-// PgLeaderElector holds pg_try_advisory_lock on a dedicated pooled connection; losing the connection loses the lock.
+// PgLeaderElector tries pg_try_advisory_lock on a pooled connection; the winner hijacks that connection out of
+// the pool, so a held lock never occupies a pool slot. Losing the session loses the lock.
 type PgLeaderElector struct {
 	Pool  *pgxpool.Pool
 	Key   LockKey
@@ -48,20 +50,21 @@ func (e PgLeaderElector) Campaign(ctx context.Context) (<-chan struct{}, error) 
 		conn.Release()
 		return nil, errors.Join(err, ErrNotLeader)
 	}
+	session := conn.Hijack()
 	e.Gauge.Set(1)
 	lost := make(chan struct{})
 	go func() {
 		defer close(lost)
 		defer e.Gauge.Set(0)
-		defer conn.Release()
-		e.hold(ctx, conn)
-		_, _ = conn.Exec(context.Background(), `SELECT pg_advisory_unlock($1)`, int64(e.Key))
+		defer func() { _ = session.Close(context.Background()) }()
+		e.hold(ctx, session)
+		_, _ = session.Exec(context.Background(), `SELECT pg_advisory_unlock($1)`, int64(e.Key))
 	}()
 	return lost, nil
 }
 
 // hold pings the lock session until it fails or ctx ends.
-func (e PgLeaderElector) hold(ctx context.Context, conn *pgxpool.Conn) {
+func (e PgLeaderElector) hold(ctx context.Context, conn *pgx.Conn) {
 	t := time.NewTicker(time.Duration(LeaderCheckInterval))
 	defer t.Stop()
 	for {

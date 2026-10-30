@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wave 2 Integration</title>
+<style>
+:root{--bg:#fff;--fg:#1d2128;--muted:#5b6472;--line:#dde1e6;--ok:#1f7a3f;--warn:#9a5b00;--bad:#b42318;--code:#f4f5f7;--hi:#eef6ff}
+@media (prefers-color-scheme:dark){:root{--bg:#15181d;--fg:#e6e8eb;--muted:#9aa3ae;--line:#2c323a;--ok:#5fcf8a;--warn:#e8b45c;--bad:#ff8a80;--code:#1f242b;--hi:#1c2735}}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,sans-serif;margin:0 auto;padding:24px 16px;max-width:1100px}
+h1{font-size:23px;margin:0 0 4px}h2{font-size:17px;margin-top:30px;border-bottom:1px solid var(--line);padding-bottom:4px}h3{font-size:15px;margin:18px 0 6px}
+p.sub{color:var(--muted);margin:0 0 16px}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13.5px;margin:6px 0 10px}
+td,th{border:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}th{background:var(--code)}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+code{background:var(--code);padding:1px 4px;border-radius:3px;font-size:12.5px}
+.ok{color:var(--ok);font-weight:600}.warn{color:var(--warn);font-weight:600}.bad{color:var(--bad);font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:12px 0}
+.card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--hi)}
+.card b{display:block;font-size:20px}.card span{color:var(--muted);font-size:12.5px}
+.note{border-left:3px solid var(--warn);padding:6px 10px;background:var(--code);margin:10px 0}
+.alert{border-left:3px solid var(--bad);padding:6px 10px;background:var(--code);margin:10px 0}
+pre{background:var(--code);padding:10px;overflow-x:auto;font-size:12.5px}
+</style></head><body>
+<h1>Wave 2 integration: F1 + F4 + F5 + F8 + F9</h1>
+<p class="sub">Main tree at <code>560a5c1</code>, all changes uncommitted (staged). Local stack only (router_dev, Redis DB 1, stress Kafka 127.0.0.1:39092). 2026-10-18.</p>
+
+<div class="cards">
+<div class="card"><b>65k → 140k</b><span>S2 one route, 12 partitions, default limits (fast codec + auto in-flight)</span></div>
+<div class="card"><b>30k → 80k</b><span>S2 one route, 1 partition (fast codec, auto in-flight)</span></div>
+<div class="card"><b>16 GB → 0.58 GB</b><span>RSS at 50-route overload (GOMEMLIMIT 512 MiB), lost 0</span></div>
+<div class="card"><b>202 / 1 / 1</b><span>acceptance pass / fail / skip of 239 cases (was 179 / 1 / 1 of 216)</span></div>
+<div class="card"><b>0</b><span>events lost in every stress run</span></div>
+<div class="card"><b>8</b><span>product bugs fixed with unit tests</span></div>
+</div>
+
+<h2>1. Stress results: before (wave 1) → after (wave 2)</h2>
+<div class="note">Method: 1-minute explore steps (20 s warm-up), knee = lag slope or p99 &gt; 1 s, same pinning as wave 1 (worker 0-5, Kafka 6-9, loadgen 10-13). Run-to-run spread on this VM is ±20–30 %. From ~12:45 the host disk degraded (vda write await 100–140 ms, IO pressure "full" ~5 %) and every later throughput run collapsed whatever the build (p99 spikes at 20k with the worker ~1 core busy), so throughput figures use the clean window (10:00–12:40). Degraded runs are kept as <code>*-final-degraded.json</code> / <code>wave2-s2-confirm-fast.json</code> for transparency.</div>
+<h3>S2 single route, 1 KB, at-least-once</h3>
+<div class="tw"><table><tr><th>Case</th><th>Wave 1</th><th>Wave 2 fast</th><th>Wave 2 tree</th><th>Notes</th></tr>
+<tr><td>p12, default limits</td><td class="n">65,000 (fixed 1000)</td><td class="n"><b>140,000</b></td><td class="n">80,000</td><td>auto in-flight replaces the fixed 1000 cap; fast knee is p99 at 160k</td></tr>
+<tr><td>p12, maxInFlight 5000</td><td class="n">80,000</td><td class="n"><b>140,000</b></td><td class="n">80,000</td><td>tree = worker CPU 5.0 of 6; fast CPU 3.9</td></tr>
+<tr><td>p1, default limits</td><td class="n">30,000</td><td class="n">20,000 → <b>80,000</b> after fix</td><td class="n">30,000</td><td>exposed the in-flight ratchet (bug 4); tree p1 = one lane ≈ 1 core of codec</td></tr>
+<tr><td>p1, maxInFlight 5000</td><td class="n">—</td><td class="n">65,000–80,000</td><td class="n">30,000</td><td>single partition lane 2.7× faster with the fast codec</td></tr></table></div>
+<h3>S5 rule complexity (12 p, 1 KB, default auto in-flight)</h3>
+<div class="tw"><table><tr><th>Config</th><th>Wave 1 (mif 1000)</th><th>Wave 1 (mif 5000)</th><th>Wave 2 fast</th><th>Wave 2 tree</th></tr>
+<tr><td>baseline</td><td class="n">65,000</td><td class="n">87,500</td><td class="n">90,000–160,000+</td><td class="n">72,500</td></tr>
+<tr><td>5 set steps</td><td class="n">57,500</td><td class="n">72,500</td><td class="n">90,000–110,000</td><td class="n">57,500</td></tr>
+<tr><td>20 set steps</td><td class="n">50,000</td><td class="n">57,500</td><td class="n">57,500–72,500</td><td class="n">40,000</td></tr>
+<tr><td>identity JS</td><td class="n">5,000</td><td class="n">—</td><td class="n">5,000–6,500</td><td class="n">6,500</td></tr></table></div>
+<p>JS routes run the tree codec (<code>fallback=script</code>); the JS pool now autoscales and is CPU-bound (5.9 of 6 cores), no longer capped at 4 instances.</p>
+<h3>S3 many routes (10 ev/s per route, capacity 1200, fast codec)</h3>
+<div class="tw"><table><tr><th>Routes</th><th>p99 wave 1 → 2</th><th>RSS MB</th><th>Worker CPU</th><th>deploy→running p95</th><th>Lost</th></tr>
+<tr><td>100</td><td class="n">20 → 20 ms</td><td class="n">102 → 108</td><td class="n">0.38 → 0.39</td><td class="n">3.7 → 5.4 s</td><td class="ok">0</td></tr>
+<tr><td>500</td><td class="n">39 → 39 ms</td><td class="n">235 → 251</td><td class="n">1.53 → 1.38</td><td class="n">13.9 → 15.1 s</td><td class="ok">0</td></tr>
+<tr><td>1000</td><td class="n">244 → 307 ms</td><td class="n">416 → 434</td><td class="n">3.00 → 2.75</td><td class="n">32.5 → 48.2 s</td><td class="ok">0</td></tr></table></div>
+<h3>S7 failure under load (45k ev/s, measure includes the DLQ)</h3>
+<div class="tw"><table><tr><th>Case</th><th>Wave 1</th><th>Wave 2 (final build)</th></tr>
+<tr><td>kill -9 worker, restart after 10 s</td><td>lost 0, dup 15,421, output back 50 s</td><td><span class="ok">lost 0</span>, dup 19,766 (14,210 on the mid build), output back ~35 s</td></tr>
+<tr><td>50 % DLQ via recipe error</td><td>lost 0, dup 0, p99 166 ms</td><td><span class="ok">lost 0</span>, dup 0, p99 141 ms</td></tr></table></div>
+<h3>Memory overload (worker GOMEMLIMIT 512 MiB, budget 256 MiB, fan-out routes on one 12-partition input at 5k ev/s)</h3>
+<div class="tw"><table><tr><th>Build</th><th>25 routes RSS</th><th>50 routes RSS</th><th>Lost</th><th>Paused routes</th></tr>
+<tr><td>Wave 1 (no budget)</td><td class="n">4.8 GB</td><td class="n">16 GB</td><td>0</td><td>—</td></tr>
+<tr><td>Wave 2 merged (budget only)</td><td class="n">3.4–4.2 GB</td><td class="n">—</td><td>0</td><td>25</td></tr>
+<tr><td>+ record detach + fetch sizing 2 %</td><td class="n">1.34 GB</td><td class="n">2.2 GB</td><td>0</td><td>50</td></tr>
+<tr><td>+ lane slot clearing + fetch 1 % (always detach)</td><td class="n">—</td><td class="n">544 MB (heap 467)</td><td>0</td><td>50</td></tr>
+<tr><td><b>Final</b> (detach once ≥ 10 % of budget is held)</td><td class="n">375 MB (no overload in that run)</td><td class="n"><b>580 MB</b> (heap 515)</td><td class="ok">0</td><td>50</td></tr></table></div>
+<p>The worker never crashed or restarted. Heap profiles showed 92 % of the heap was franz-go fetch response buffers pinned by queued records (bug 6).</p>
+<h3>Fast vs tree correctness</h3>
+<p>Same 2,000 deterministic events (unicode, escapes, number forms, shuffled keys, missing fields) through one path-bounded route per codec: <span class="ok">1,882 output records, byte-identical</span> (sha256 <code>77ad7830…</code>, <code>results/wave2-bytes/compare.txt</code>). Codec decisions are logged per route (<code>runtime: route codec</code>, <code>results/wave2-codec-log.txt</code>) and counted by <code>router_route_codec_total{codec,fallback}</code> (live: fast 20, tree/script 31).</p>
+
+<h2>2. Acceptance</h2>
+<div class="tw"><table><tr><th>Run (local)</th><th>Cases</th><th>Automated</th><th>Pass</th><th>Fail</th><th>Skip</th></tr>
+<tr><td>Before (2026-10-16)</td><td class="n">216</td><td class="n">181</td><td class="n">179</td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>After merge, full <code>npm run acc:local</code></td><td class="n">239</td><td class="n">204</td><td class="n"><b>202</b></td><td class="n">1</td><td class="n">1</td></tr>
+<tr><td>Final build, runtime/DLQ/workflow/lookup subset</td><td class="n">—</td><td class="n">49 tests</td><td class="n">49</td><td class="n">0</td><td class="n">0</td></tr></table></div>
+<p>Fail = known TC-TS-35 (QuickJS reports property TypeErrors at 1:1), skip = TC-SEC-11 (staging only), both unchanged. New: TC-DLW-01…14 (classes, cause groups, global causes, dry run, edit + replay with an audited diff, invalid edit, group dry run, rate-limited bulk replay, viewer 403, strict 4-eyes into prod, default alert rule, auto-retry with a lookup outage, Causes UI) and TC-LKS-01…09 (write-only token + audit, validation pointer, Test checklist, draft test, If-Match + kept secret, delete blocked / unknown sourceId, live preview, running route enrichment + outage → <code>lookup_unavailable</code>, Lookup sources tab). The lookup cases use a fake CRM served by the test runner (local only). No product bugs were found by the acceptance cases. Two test expectations were corrected to the documented contract: an invalid JSON edit is 400 (422 is reserved for Avro/Protobuf), and prod deploys need an approval before the 4-eyes replay.</p>
+
+<h2>3. Integration tests</h2>
+<p>router_dev was at 2080; <code>2100_dlq_workflow</code> had never been applied there, so the renumber to 3100 needed no fix-up. Migrated to 3100 (3020 + 3100). <code>go test ./...</code> with <code>ROUTER_TEST_DATABASE_URL</code>, <code>ROUTER_TEST_REDIS_URL</code> and <code>ROUTER_IT_DATABASE_URL</code>: <span class="ok">1,033 top-level tests pass</span>, including <code>TestMigrationsUpDownUp</code> (every migration up, down, up), the DLQ job crash-resume IT, the RBAC NOTIFY IT, PG leader failover and the ListenerHub. 6 skips: live-stack replay, schema registry, bench/perf gates.</p>
+
+<h2>4. Bugs fixed (all with unit tests)</h2>
+<div class="tw"><table><tr><th>#</th><th>Bug</th><th>Fix</th><th>Test</th></tr>
+<tr><td>1</td><td>Fast codec × lookup source mode: request placeholders were parsed outside <code>Scope.Path</code>, so projected events missed them (wrong lookups, silent defaults)</td><td><code>enrich.RequestAccess</code> records the step's declared reads</td><td><code>codec_lookup_test.go</code> (fails without the fix), golden parity</td></tr>
+<tr><td>2</td><td>Lookup errors had two contracts; transient lookups were written to the DLQ as <code>step_error</code></td><td>One type, <code>lookup_unavailable</code>, with <code>DependencyError{lookup}</code> → transient, retry-eligible</td><td><code>failures/lookup_test.go</code>, enrich, golden</td></tr>
+<tr><td>3</td><td>Vitest fs cache served a stale <code>import.meta.glob</code>, hiding a real failure: building the push service touched <code>window</code></td><td>Lazy <code>WsClient</code> URL; <code>fsModuleCache: false</code></td><td><code>WsClient.test.ts</code>, HttpServicesFactory</td></tr>
+<tr><td>4</td><td>Auto in-flight ratchet: a lightly used limit shrank on broker latency spikes but only grew when binding (p1 20k)</td><td>Back off only when ≥ 50 % of the limit is in use</td><td><code>TestGradientIgnoresLatencySpikesOfAnUnusedLimit</code></td></tr>
+<tr><td>5</td><td>Auto in-flight death spiral under binding load (1000 → 64)</td><td>Latency back-off never goes below the start limit; only memory pressure reaches the floor</td><td><code>TestGradientLatencyNeverDropsBelowTheStart</code> (fails without the fix)</td></tr>
+<tr><td>6</td><td>Memory budget blind to franz-go zero-copy: queued records pinned whole fetch responses (92 % of the heap)</td><td><code>membudget.RecordDetach</code> once ≥ 10 % of the budget is held (0.9 µs/record only then)</td><td><code>detach_test.go</code>, lane detach test</td></tr>
+<tr><td>7</td><td>Fetched but not yet polled data was outside the budget (50 MiB per consumer)</td><td><code>SourceFetch</code>: 1 % of the budget within [1, 50] MiB; a connection's <code>fetch.max.bytes</code> wins</td><td><code>TestBudgetFetchLimits…</code>, <code>TestSourceFetch…</code></td></tr>
+<tr><td>8</td><td>Lane <code>queue = queue[1:]</code> kept settled records reachable</td><td>Clear the slot before popping</td><td><code>TestLaneDoesNotKeepHandedOutRecordsAlive</code></td></tr>
+<tr><td>—</td><td>Tooling: <code>loadgen measure</code> failed on NOT_LEADER right after creating 50 topics</td><td>Retry retriable list-offsets errors (≤ 30 s)</td><td>kit tests</td></tr></table></div>
+
+<h2>5. Open issues</h2>
+<div class="alert"><b>Shared Postgres crash-recovery during the PC-HD-08 probe.</b> At 16:00:09–10, at the end of a 60 s probe with 48 concurrent DB reads (8 dev users), the API logged "unexpected EOF" and then <code>FATAL: the database system is in recovery mode</code>. That Postgres runs on the staging host and also serves the staging app DB, so this probably meant about 1–2 s of unavailability for staging. It recovered on its own, migrate status was fine afterwards and there were no errors after 16:01. The staging host was not inspected (off-limits). Please check its Postgres log and OOM-killer messages. No further concurrent load was sent.</div>
+<ul>
+<li><span class="warn">Shared request pool under load:</span> during the same probe user reads timed out at 10 s through the tunnel, and the worker's <code>/internal/v1/workers/*/heartbeat|status</code> calls got 500/503. Workload endpoints should get a reserved pool or priority (follow-up for platform-core). <code>/readyz</code> itself stayed 200 throughout (p99 1.6 ms).</li>
+<li><span class="warn">Memory:</span> the 50-route overload peaks at 580 MB RSS for a 512 MiB GOMEMLIMIT (heap 515 MB, ~13 % over). A hard 512 MiB cgroup could OOM-kill it; no cgroup was available here to test. Options: budget ≤ 40 % for heavy fan-out, a lower detach threshold, or charge fetch buffers to the budget.</li>
+<li>Stress spread is large (±20–30 %) on this VM and the host disk degraded in the afternoon. The final build's throughput was therefore not measured cleanly: the clean-window numbers come from builds with the merged code ± the controller fixes, and the memory-path fixes were costed by microbenchmark (detach 0.9 µs per 1 KB record, only under budget pressure). Re-run S2/S5 on a quiet host before quoting final numbers.</li>
+<li>S3 deploy→running p95 rose from 32.5 to 48 s at 1000 routes (p99 244 → 307 ms). Not investigated.</li>
+<li>The Go test <code>loadgen TestProduceThenMeasureIsComplete</code> and the runner chaos test are load-sensitive: each failed once under full-suite load and passes in isolation.</li>
+<li>Still open in the plans: PE-LK-30 lookup batching, PE-FC-61..63, CN-LS-20 cross-team lookup sources, JS-PA-41 filter+steps+JS (only JS-only was re-run).</li>
+</ul>
+
+<h2>6. Decisions in this step</h2>
+<ul>
+<li>F4 × F9: kept F4's compile-time <code>projection.Recorder</code>; F9's <code>step.FieldAccessor</code> declaration now feeds it, and <code>lookup</code> stays path-bounded.</li>
+<li>Auto in-flight invariant: never below the start limit without memory pressure, so auto can't do worse than the old fixed default.</li>
+<li>Memory budget: detach records once the budget is filling instead of always, keeping franz-go zero-copy on the fast path; size fetches from the budget.</li>
+<li>Migration <code>2100_dlq_workflow</code> renumbered to <code>3100_dlq_workflow</code> (P4 range, dead-letters block).</li>
+</ul>
+<p class="sub">Results: <code>test/stress/results/wave2-*</code>. Catalogue: <code>test/acceptance/TEST-CASES.md</code>. Plans updated: pipeline-engine 00001 (PE-FC-60/64) and 00002 (PE-LK-33/34), route-runtime 00002 (RR-MB-08..12) and 00003 (RR-AT-41..44), js-sandbox 00001 (JS-PA-41), platform-core 00001 (PC-HD-08), dead-letters 00001 (DLW-72, 80–82), connections 00001 (CN-LS-17/19).</p>
+</body></html>

@@ -26,7 +26,8 @@ func NewPostgresRepository(db *store.DB) *PostgresRepository {
 // jobColumns are the selected columns in scan order (route name joined for notifications).
 const jobColumns = `j.id, j.route_id, COALESCE(r.name, ''), j.action::text, j.selection, j.status::text, j.total, j.processed,
 	j.counts, COALESCE(j.cursor, ''), COALESCE(j.error, ''), COALESCE(j.requested_by::text, ''), j.heartbeat_at,
-	j.created_at, j.started_at, j.finished_at`
+	j.created_at, j.started_at, j.finished_at, j.rate_per_second, j.note, j.edit, COALESCE(j.decided_by::text, ''),
+	j.decided_at, j.decision_note`
 
 const selectJobSQL = `SELECT ` + jobColumns + ` FROM dlq_jobs j LEFT JOIN routes r ON r.id = j.route_id`
 
@@ -43,9 +44,15 @@ func (p *PostgresRepository) Create(ctx context.Context, n NewJob) (Job, error) 
 	if id, err := uuid.Parse(n.RequestedBy); err == nil {
 		by = &id
 	}
+	edit, err := (EditColumn{}).Value(n.Edit)
+	if err != nil {
+		return Job{}, err
+	}
+	st, rate := n.initial()
 	var id uuid.UUID
-	err = p.db.Q(ctx).QueryRow(ctx, `INSERT INTO dlq_jobs (route_id, action, selection, requested_by)
-		VALUES ($1, $2::dlq_job_action, $3, $4) RETURNING id`, n.RouteID, string(n.Action), sel, by).Scan(&id)
+	err = p.db.Q(ctx).QueryRow(ctx, `INSERT INTO dlq_jobs (route_id, action, selection, requested_by, status, rate_per_second, note, edit)
+		VALUES ($1, $2::dlq_job_action, $3, $4, $5::dlq_job_status, $6, $7, $8) RETURNING id`,
+		n.RouteID, string(n.Action), sel, by, string(st), rate, n.Note, edit).Scan(&id)
 	if err != nil {
 		return Job{}, p.db.Translate(err)
 	}
@@ -119,8 +126,8 @@ func (p *PostgresRepository) Heartbeat(ctx context.Context, id string) error {
 
 // Finish implements Repository.
 func (p *PostgresRepository) Finish(ctx context.Context, id string, st Status, errText string) (Job, error) {
-	_, err := p.db.Q(ctx).Exec(ctx, `UPDATE dlq_jobs SET status = $2::dlq_job_status, error = NULLIF($3, ''), finished_at = now()
-		WHERE id = $1`, id, string(st), errText)
+	_, err := p.db.Q(ctx).Exec(ctx, `UPDATE dlq_jobs SET status = $2::dlq_job_status, error = NULLIF($3, ''), finished_at = now(),
+		edit = NULL WHERE id = $1`, id, string(st), errText)
 	if err != nil {
 		return Job{}, err
 	}
@@ -133,9 +140,10 @@ func (p *PostgresRepository) RequestCancel(ctx context.Context, id string) (Job,
 		return Job{}, ErrNotFound
 	}
 	_, err := p.db.Q(ctx).Exec(ctx, `UPDATE dlq_jobs SET
-		status = CASE WHEN status = 'queued' THEN 'cancelled'::dlq_job_status ELSE 'cancel_requested'::dlq_job_status END,
-		finished_at = CASE WHEN status = 'queued' THEN now() ELSE finished_at END
-		WHERE id = $1 AND status IN ('queued', 'running')`, id)
+		status = CASE WHEN status IN ('queued', 'pending_approval') THEN 'cancelled'::dlq_job_status ELSE 'cancel_requested'::dlq_job_status END,
+		finished_at = CASE WHEN status IN ('queued', 'pending_approval') THEN now() ELSE finished_at END,
+		edit = CASE WHEN status IN ('queued', 'pending_approval') THEN NULL ELSE edit END
+		WHERE id = $1 AND status IN ('queued', 'running', 'pending_approval')`, id)
 	if err != nil {
 		return Job{}, err
 	}
@@ -160,6 +168,66 @@ func (p *PostgresRepository) one(ctx context.Context, sql string, args ...any) (
 	return j, err
 }
 
+// Decide implements Repository: pending → queued (approved) or rejected, under the row lock of the UPDATE.
+func (p *PostgresRepository) Decide(ctx context.Context, id string, d Decision) (Job, error) {
+	if _, err := uuid.Parse(id); err != nil {
+		return Job{}, ErrNotFound
+	}
+	var by *uuid.UUID
+	if u, err := uuid.Parse(d.By); err == nil {
+		by = &u
+	}
+	tag, err := p.db.Q(ctx).Exec(ctx, `UPDATE dlq_jobs SET status = $2::dlq_job_status, decided_by = $3, decided_at = now(),
+		decision_note = $4, finished_at = CASE WHEN $5 THEN NULL ELSE now() END, edit = CASE WHEN $5 THEN edit ELSE NULL END
+		WHERE id = $1 AND status = 'pending_approval'`, id, string(d.StatusOf()), by, d.Note, d.Approve)
+	if err != nil {
+		return Job{}, p.db.Translate(err)
+	}
+	j, err := p.Get(ctx, id)
+	if err == nil && tag.RowsAffected() == 0 {
+		return j, dlq.ErrJobNotPending
+	}
+	return j, err
+}
+
+// ListPending implements Repository (oldest first).
+func (p *PostgresRepository) ListPending(ctx context.Context, limit int) ([]Job, error) {
+	rows, err := p.db.Q(ctx).Query(ctx, selectJobSQL+` WHERE j.status = 'pending_approval' ORDER BY j.created_at LIMIT $1`, limit)
+	if err != nil {
+		return nil, p.db.Translate(err)
+	}
+	defer rows.Close()
+	out := []Job{}
+	for rows.Next() {
+		j, err := (JobScanner{}).Scan(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, j)
+	}
+	return out, rows.Err()
+}
+
+// EditColumn converts the stored edit of a pending replay.
+type EditColumn struct{}
+
+// Value returns the jsonb value of e (nil = SQL NULL).
+func (EditColumn) Value(e *dlq.RecordEdit) ([]byte, error) {
+	if e == nil {
+		return nil, nil
+	}
+	return json.Marshal(e)
+}
+
+// Parse reads a stored edit.
+func (EditColumn) Parse(raw []byte) (*dlq.RecordEdit, error) {
+	if raw == nil {
+		return nil, nil
+	}
+	var e dlq.RecordEdit
+	return &e, json.Unmarshal(raw, &e)
+}
+
 // JobScanner reads one dlq_jobs row.
 type JobScanner struct{}
 
@@ -168,12 +236,17 @@ func (JobScanner) Scan(row pgx.Row) (Job, error) {
 	var j Job
 	var id, route uuid.UUID
 	var action, status string
-	var sel, counts []byte
+	var sel, counts, edit []byte
 	err := row.Scan(&id, &route, &j.RouteName, &action, &sel, &status, &j.Total, &j.Processed, &counts, &j.Cursor,
-		&j.Error, &j.RequestedBy, &j.HeartbeatAt, &j.CreatedAt, &j.StartedAt, &j.FinishedAt)
+		&j.Error, &j.RequestedBy, &j.HeartbeatAt, &j.CreatedAt, &j.StartedAt, &j.FinishedAt, &j.Rate, &j.Note, &edit,
+		&j.Approval.DecidedBy, &j.Approval.DecidedAt, &j.Approval.DecisionNote)
 	if err != nil {
 		return Job{}, err
 	}
+	if j.Edit, err = (EditColumn{}).Parse(edit); err != nil {
+		return Job{}, err
+	}
+	j.Approval.Required = Status(status) == StatusPendingApproval || j.Approval.DecidedAt != nil
 	j.ID, j.RouteID, j.Action, j.Status = id.String(), route.String(), dlq.ActionKind(action), Status(status)
 	j.Counts = map[dlq.Outcome]int{}
 	if err := json.Unmarshal(sel, &j.Match); err != nil {

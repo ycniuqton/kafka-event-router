@@ -10,6 +10,5 @@
 .searchInput::placeholder{color:var(--tx3)}
 .searchHint{position:absolute;right:8px;top:7px}
 .spacer{flex:1}
-.avatar{width:30px;height:30px;flex:none;border-radius:50%;background:var(--p3);border:1px solid var(--ln2);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--tx2)}
 .themeButton{color:var(--tx2);font-size:12px}
 @media (max-width:760px){.brand{width:auto}.name{display:none}.search{display:none}}

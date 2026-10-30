@@ -3,6 +3,7 @@ import { LookupMode, TransformStepKind, type TransformStep } from '../transform'
 import { MapStart } from '../mapper';
 import { ConvertFailure, ConvertTarget, StepConstant, StepFieldList, ValueSourceKind } from '../transformOptions';
 import { FieldPath } from './FieldPath';
+import { LookupAnswerApplier } from './LookupAnswerApplier';
 import { FilterEvaluator } from './FilterEvaluator';
 import { JsSandbox } from './JsSandbox';
 import { ValueHasher, ValueMasker } from './Privacy';
@@ -209,10 +210,11 @@ class MapHandler extends StepHandler {
   }
 }
 
-/** Inline lookup tables run in the browser; named library tables pass the event through (resolved by the engine). */
+/** Inline lookup tables run in the browser; library tables pass through; lookup sources apply the Studio mock (else pass through). */
 class LookupHandler extends StepHandler {
   readonly kind = TransformStepKind.Lookup;
-  apply(event: KafkaEvent, step: TransformStep): KafkaEvent {
+  apply(event: KafkaEvent, step: TransformStep, logs: string[]): KafkaEvent | null {
+    if (step.lookupMode === LookupMode.Source) return step.lookupSource ? LookupAnswerApplier.apply(event, step.lookupSource, logs) : event;
     const v = this.payload(event);
     const key = FieldPath.get(v, step.field);
     if (key === undefined || step.lookupMode === LookupMode.Table) return event;

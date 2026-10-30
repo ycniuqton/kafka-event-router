@@ -1,0 +1,24 @@
+File: filter-only-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 09:11:58 -02
+Duration: 34.03s, Total samples = 33.80s (99.32%)
+Showing nodes accounting for 4.89s, 14.47% of 33.80s total
+Dropped 218 nodes (cum <= 0.17s)
+Showing top 15 nodes out of 138
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%     33.14s 98.05%  testing.(*B).runN
+     0.09s  0.27%  0.27%     33.13s 98.02%  github.com/eventrouter/router/pkg/engine_test.pipelineCase.Run
+         0     0%  0.27%     33.13s 98.02%  testing.(*B).launch
+     0.04s  0.12%  0.38%     33.04s 97.75%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Run
+     0.02s 0.059%  0.44%        33s 97.63%  github.com/eventrouter/router/pkg/engine/compile.ProjectedRecords.Run
+     0.19s  0.56%  1.01%     32.98s 97.57%  github.com/eventrouter/router/pkg/engine/compile.ProjectedRecords.fast
+     0.03s 0.089%  1.09%     20.38s 60.30%  github.com/eventrouter/router/pkg/engine/projection.(*Codec).Decode
+     0.03s 0.089%  1.18%     15.58s 46.09%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).Scan
+     0.53s  1.57%  2.75%     15.44s 45.68%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).value
+        1s  2.96%  5.71%     15.43s 45.65%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).object
+     1.03s  3.05%  8.76%     14.94s 44.20%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).member
+     0.11s  0.33%  9.08%     13.02s 38.52%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).array
+     0.35s  1.04% 10.12%      7.92s 23.43%  runtime.mallocgc
+     0.18s  0.53% 10.65%      6.70s 19.82%  github.com/eventrouter/router/pkg/engine/compile.ProjectedRecords.encode
+     1.29s  3.82% 14.47%      6.31s 18.67%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).str

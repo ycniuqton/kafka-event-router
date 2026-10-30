@@ -1,8 +1,13 @@
-import type { Access, InviteDraft, RoleKey, TeamMember, UserPatch, WorkspaceSettings, WorkspaceSettingsPatch } from '../../../domain';
+import type {
+  Access, CreatedUser, InviteDraft, NewUserDraft, PasswordResetDraft, PasswordResetResult, RoleKey, TeamMember, UserPatch, WorkspaceSettings, WorkspaceSettingsPatch,
+} from '../../../domain';
 import { AccessService } from '../../contracts';
 import { CursorIterator, PageLimit } from '../core/CursorIterator';
 import type { HttpContext } from '../core/HttpContext';
-import { AccessEndpoint, EntityTag, MemberMapper, WorkspaceSettingsMapper, type MeAccessDto, type RoleBindingDto, type UserDto, type WorkspaceSettingsDto } from './MemberDtos';
+import {
+  AccessEndpoint, EntityTag, MemberMapper, PasswordAdminMapper, WorkspaceSettingsMapper,
+  type MeAccessDto, type PasswordResetDto, type RoleBindingDto, type UserCreatedDto, type UserDto, type WorkspaceSettingsDto,
+} from './MemberDtos';
 
 /** Member administration over `/users` and `/role-bindings`; effective access from `/auth/me`. */
 export class HttpAccessService extends AccessService {
@@ -43,6 +48,15 @@ export class HttpAccessService extends AccessService {
       email: draft.email.trim(), displayName: draft.displayName.trim(), teamId: draft.teamId, role: draft.role,
     });
     return MemberMapper.rows([user]);
+  }
+
+  async createUser(draft: NewUserDraft): Promise<CreatedUser> {
+    return PasswordAdminMapper.created(await this.context.api.post<UserCreatedDto>(AccessEndpoint.users, PasswordAdminMapper.createBody(draft)));
+  }
+
+  async resetPassword(member: TeamMember, draft: PasswordResetDraft): Promise<PasswordResetResult> {
+    const dto = await this.context.api.post<PasswordResetDto>(AccessEndpoint.passwordReset(member.userId), PasswordAdminMapper.resetBody(draft));
+    return { generatedPassword: dto.generatedPassword ?? null };
   }
 
   async settings(): Promise<WorkspaceSettings> {

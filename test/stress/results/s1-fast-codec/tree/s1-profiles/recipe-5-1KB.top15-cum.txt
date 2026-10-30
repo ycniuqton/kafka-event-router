@@ -1,0 +1,24 @@
+File: recipe-5-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 08:58:53 -02
+Duration: 25.77s, Total samples = 25.59s (99.29%)
+Showing nodes accounting for 0.30s, 1.17% of 25.59s total
+Dropped 287 nodes (cum <= 0.13s)
+Showing top 15 nodes out of 200
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%     24.76s 96.76%  testing.(*B).runN
+     0.01s 0.039% 0.039%     24.75s 96.72%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Run
+         0     0% 0.039%     24.75s 96.72%  github.com/eventrouter/router/pkg/engine_test.pipelineCase.Run
+         0     0% 0.039%     24.75s 96.72%  testing.(*B).launch
+     0.05s   0.2%  0.23%     24.74s 96.68%  github.com/eventrouter/router/pkg/engine/compile.TreeRecords.Run
+     0.01s 0.039%  0.27%     12.15s 47.48%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Decode
+         0     0%  0.27%     12.14s 47.44%  github.com/eventrouter/router/pkg/engine/codec.JSONCodec.Decode
+     0.01s 0.039%  0.31%     12.14s 47.44%  github.com/eventrouter/router/pkg/engine/codec.TreeReader.Read
+     0.08s  0.31%  0.63%     11.46s 44.78%  github.com/eventrouter/router/pkg/engine/codec.treeBuilder.value
+     0.09s  0.35%  0.98%     11.35s 44.35%  github.com/eventrouter/router/pkg/engine/codec.treeBuilder.object
+     0.02s 0.078%  1.06%      9.81s 38.34%  github.com/eventrouter/router/pkg/engine/compile.(*compiledPipeline).Encode
+         0     0%  1.06%      9.79s 38.26%  github.com/eventrouter/router/pkg/engine/compile.(*OutputShaper).Encode (inline)
+     0.01s 0.039%  1.09%      9.77s 38.18%  github.com/eventrouter/router/pkg/engine/compile.(*OutputShaper).EncodeWith
+     0.01s 0.039%  1.13%      9.69s 37.87%  github.com/eventrouter/router/pkg/engine/compile.NullableEncoder.Encode
+     0.01s 0.039%  1.17%      9.68s 37.83%  github.com/eventrouter/router/pkg/engine/codec.JSONCodec.Encode

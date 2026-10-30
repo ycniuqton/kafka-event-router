@@ -11,13 +11,13 @@ type Deps struct {
 	Options  engine.CompileOptions
 }
 
-// NewRegistry registers schema, delivery_mode and compile validators.
+// NewRegistry registers schema, delivery_mode, limits and compile validators.
 func NewRegistry(d Deps) (*config.ValidatorRegistry, error) {
 	schema, err := NewSchemaValidator()
 	if err != nil {
 		return nil, err
 	}
-	return config.NewValidatorRegistry(schema, DeliveryModeValidator{}, CompileValidator{Compiler: d.Compiler, Options: d.Options}), nil
+	return config.NewValidatorRegistry(schema, DeliveryModeValidator{}, LimitsValidator{}, RetryPolicyValidator{}, CompileValidator{Compiler: d.Compiler, Options: d.Options}), nil
 }
 
 // NewManager builds a ValidatorManager from a profile over the doc-only registry.

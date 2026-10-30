@@ -31,13 +31,15 @@ type NoScriptRuntimes struct{}
 // Runtime implements ScriptRuntimes.
 func (NoScriptRuntimes) Runtime(RunTarget) script.Runtime { return nil }
 
-// RunnerDeps are the runner's collaborators; Salts may be nil (unsalted hashes), Library nil (library steps fail).
+// RunnerDeps are the runner's collaborators; Salts may be nil (unsalted hashes), Library nil (library steps fail),
+// Sources nil (lookup steps in source mode fail as lookup_unavailable).
 type RunnerDeps struct {
 	Compiler    engine.Compiler
 	Scripts     ScriptRuntimes
 	Salts       ctxhelpers.SaltProvider
 	Comparators *ComparatorManager
 	Library     config.LibraryResolver
+	Sources     ctxhelpers.SourceGateway
 }
 
 // TestCaseRunner compiles each branch of a draft once and runs the cases of that branch through it.
@@ -102,7 +104,7 @@ func (r *TestCaseRunner) options(target RunTarget) engine.CompileOptions {
 	return engine.CompileOptions{
 		Scripts: r.d.Scripts.Runtime(target),
 		Library: r.d.Library,
-		Helpers: ctxhelpers.Set{Hash: ctxhelpers.NewSaltedHasher(r.d.Salts, target.TeamID)}.WithDefaults(),
+		Helpers: ctxhelpers.Set{Hash: ctxhelpers.NewSaltedHasher(r.d.Salts, target.TeamID), Sources: r.d.Sources}.WithDefaults(),
 		Meta:    engine.RouteMeta{RouteID: target.RouteID, Name: target.RouteName, TeamID: target.TeamID},
 	}
 }

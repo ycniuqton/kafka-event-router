@@ -9,12 +9,14 @@ import (
 	"github.com/eventrouter/router/pkg/sandbox"
 )
 
-// Failure is one record that could not be processed or delivered.
+// Failure is one record that could not be processed or delivered; RetryAttempts counts the delayed
+// retry-topic attempts already used (written as router.retry_attempts when the record is parked).
 type Failure struct {
-	Source   engine.RawRecord
-	Err      error
-	Category domain.ErrorCategory
-	Attempts int
+	Source        engine.RawRecord
+	Err           error
+	Category      domain.ErrorCategory
+	Attempts      int
+	RetryAttempts int
 }
 
 // Step returns the failing step id from the engine error (empty when not a step failure).

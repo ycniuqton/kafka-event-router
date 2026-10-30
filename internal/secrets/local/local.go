@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/eventrouter/router/internal/platform/config"
 	"github.com/eventrouter/router/internal/secrets"
+	"github.com/eventrouter/router/internal/secrets/keyring"
 )
 
 // FileMode names permissions of the key file and its directory.
@@ -25,28 +25,13 @@ const (
 	KeyDirMode  FileMode = 0o700
 )
 
-// KeyIDPrefix marks key ids produced by this provider.
-type KeyIDPrefix string
-
-const LocalKeyIDPrefix KeyIDPrefix = "local:"
-
-// KeyIDHexLen is how many hex chars of the key fingerprint form the key id.
-type KeyIDHexLen int
-
-const FingerprintLen KeyIDHexLen = 16
-
-// NonceLen is the AES-GCM nonce length prefixed to wrapped keys.
-type NonceLen int
-
-const GCMNonceSize NonceLen = 12
+// LocalKeyIDPrefix marks key ids produced by this provider.
+const LocalKeyIDPrefix keyring.KeyIDPrefix = "local:"
 
 // Provider wraps data keys with AES-256-GCM under a master key read from a file; previous master keys
 // stay available for unwrapping only, so `api secrets rotate` can re-wrap envelopes to the current key.
 type Provider struct {
-	key      []byte
-	keyID    string
-	previous map[string][]byte
-	cipher   secrets.AESGCMCipher
+	*keyring.Ring
 }
 
 // Register adds the local provider to a registry.
@@ -62,57 +47,24 @@ func Open(path string, previous ...string) (*Provider, error) {
 	if err != nil {
 		return nil, err
 	}
-	p := &Provider{key: key, keyID: Fingerprint(key), previous: map[string][]byte{}}
-	for _, old := range previous {
-		oldKey, err := KeyFile{Path: old}.Load()
+	var old [][]byte
+	for _, prev := range previous {
+		oldKey, err := KeyFile{Path: prev}.Load()
 		if err != nil {
 			return nil, err
 		}
-		p.previous[Fingerprint(oldKey)] = oldKey
+		old = append(old, oldKey)
 	}
-	return p, nil
+	return &Provider{Ring: keyring.New(LocalKeyIDPrefix, key, old...)}, nil
 }
 
 // Fingerprint returns the key id of a master key ("local:" + first hex chars of its SHA-256).
 func Fingerprint(key []byte) string {
-	sum := sha256.Sum256(key)
-	return string(LocalKeyIDPrefix) + hex.EncodeToString(sum[:])[:FingerprintLen]
+	return LocalKeyIDPrefix.Fingerprint(key)
 }
 
 // Kind implements secrets.Provider.
 func (p *Provider) Kind() secrets.ProviderKind { return secrets.ProviderLocal }
-
-// KeyID implements secrets.Provider.
-func (p *Provider) KeyID() string { return p.keyID }
-
-// WrapKey seals dek as nonce||ciphertext.
-func (p *Provider) WrapKey(_ context.Context, dek []byte) ([]byte, error) {
-	nonce, ct, err := p.cipher.Seal(p.key, dek)
-	if err != nil {
-		return nil, err
-	}
-	return append(nonce, ct...), nil
-}
-
-// UnwrapKey opens a wrapped key with the current or a previous master key named by keyID.
-func (p *Provider) UnwrapKey(_ context.Context, wrapped []byte, keyID string) ([]byte, error) {
-	key, ok := p.keyFor(keyID)
-	if !ok {
-		return nil, fmt.Errorf("local: key %q not available (have %q)", keyID, p.keyID)
-	}
-	if len(wrapped) < int(GCMNonceSize) {
-		return nil, secrets.ErrDecrypt
-	}
-	return p.cipher.Open(key, wrapped[:GCMNonceSize], wrapped[GCMNonceSize:])
-}
-
-func (p *Provider) keyFor(keyID string) ([]byte, bool) {
-	if keyID == p.keyID {
-		return p.key, true
-	}
-	key, ok := p.previous[keyID]
-	return key, ok
-}
 
 // KeyFile reads or generates the hex-encoded master key.
 type KeyFile struct {

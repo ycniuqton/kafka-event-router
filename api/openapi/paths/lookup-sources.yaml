@@ -1,0 +1,258 @@
+lookupSources:
+  get:
+    tags: [lookup-sources]
+    operationId: listLookupSources
+    summary: Lookup sources (HTTP, Redis, Postgres read-only, static library tables); every member may read.
+    parameters:
+      - { name: kind, in: query, schema: { $ref: "#/components/schemas/LookupSourceKind" } }
+      - { name: env, in: query, schema: { $ref: "#/components/schemas/EnvTag" } }
+      - { name: q, in: query, schema: { type: string }, description: "Matches name or description." }
+      - $ref: "../components/params.yaml#/Limit"
+      - $ref: "../components/params.yaml#/Cursor"
+    responses:
+      "200":
+        description: One page ordered by name; `usedBy.routes` is empty (count only).
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items, next_cursor]
+              properties:
+                items: { type: array, items: { $ref: "#/components/schemas/LookupSource" } }
+                next_cursor: { type: [string, "null"] }
+      "401": { $ref: "../components/problem.yaml#/responses/Unauthenticated" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+  post:
+    tags: [lookup-sources]
+    operationId: createLookupSource
+    summary: Create a lookup source; secrets are write-only and envelope-encrypted (connection.write on the owner team).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/LookupSourceInput" } } }
+    responses:
+      "201":
+        description: Created source (health `unknown` until tested).
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/LookupSource" } } }
+      "403": { $ref: "../components/problem.yaml#/responses/Forbidden" }
+      "409": { $ref: "../components/problem.yaml#/responses/Conflict" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+lookupSource:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  get:
+    tags: [lookup-sources]
+    operationId: getLookupSource
+    summary: One lookup source with the routes using it.
+    responses:
+      "200":
+        description: The source.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/LookupSource" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+  patch:
+    tags: [lookup-sources]
+    operationId: updateLookupSource
+    summary: JSON merge patch; `secrets` keys present replace stored values, absent keys keep them. The kind cannot change.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+      - $ref: "../components/params.yaml#/IfMatch"
+    requestBody:
+      required: true
+      content: { application/merge-patch+json: { schema: { $ref: "#/components/schemas/LookupSourceInput" } } }
+    responses:
+      "200":
+        description: Updated source.
+        headers: { ETag: { $ref: "../components/params.yaml#/ETagHeader" } }
+        content: { application/json: { schema: { $ref: "#/components/schemas/LookupSource" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "412": { $ref: "../components/problem.yaml#/responses/PreconditionFailed" }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+      "428": { $ref: "../components/problem.yaml#/responses/PreconditionRequired" }
+  delete:
+    tags: [lookup-sources]
+    operationId: deleteLookupSource
+    summary: Delete an unused source and its stored secret.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "204": { description: Deleted. }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+      "409":
+        description: "`lookup-source-in-use`: lookup steps of routes (draft or active version) still use it."
+        content: { application/problem+json: { schema: { $ref: "#/components/schemas/LookupSourceProblem" } } }
+lookupSourceTest:
+  parameters:
+    - $ref: "../components/params.yaml#/IdParam"
+  post:
+    tags: [lookup-sources]
+    operationId: testLookupSource
+    summary: Run reachable → authenticated → sample on a saved source; updates health.
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    responses:
+      "200":
+        description: The checklist.
+        content: { application/json: { schema: { $ref: "#/components/schemas/LookupTestResult" } } }
+      "404": { $ref: "../components/problem.yaml#/responses/NotFound" }
+lookupSourceDraftTest:
+  post:
+    tags: [lookup-sources]
+    operationId: testLookupSourceDraft
+    summary: Run the checklist on an unsaved draft (nothing is stored).
+    parameters:
+      - $ref: "../components/params.yaml#/CSRFToken"
+    requestBody:
+      required: true
+      content: { application/json: { schema: { $ref: "#/components/schemas/LookupSourceInput" } } }
+    responses:
+      "200":
+        description: The checklist.
+        content: { application/json: { schema: { $ref: "#/components/schemas/LookupTestResult" } } }
+      "422": { $ref: "../components/problem.yaml#/responses/ValidationFailed" }
+components:
+  schemas:
+    EnvTag: { type: string, enum: [dev, staging, prod] }
+    LookupSourceKind: { type: string, enum: [http, redis, postgres, static] }
+    LookupHealthStatus: { type: string, enum: [unknown, healthy, degraded, unreachable, auth_failed] }
+    LookupHTTPSettings:
+      type: object
+      required: [baseUrl, auth, tls]
+      properties:
+        baseUrl: { type: string, format: uri }
+        auth:
+          type: object
+          required: [mode]
+          properties:
+            mode: { type: string, enum: [none, bearer, basic, header] }
+            username: { type: string }
+            headerName: { type: string }
+        tls:
+          type: object
+          properties:
+            insecureSkipVerify: { type: boolean }
+            caPem: { type: string }
+        headers: { type: object, additionalProperties: { type: string } }
+    LookupRedisSettings:
+      type: object
+      required: [addr, db, tls]
+      properties:
+        addr: { type: string }
+        db: { type: integer, minimum: 0, maximum: 15 }
+        username: { type: string }
+        tls: { type: boolean }
+    LookupPostgresSettings:
+      type: object
+      required: [host, port, database, user, sslMode, statementTimeoutMs]
+      properties:
+        host: { type: string }
+        port: { type: integer, minimum: 1, maximum: 65535 }
+        database: { type: string }
+        user: { type: string }
+        sslMode: { type: string, enum: ["", disable, allow, prefer, require, verify-ca, verify-full] }
+        statementTimeoutMs: { type: integer, minimum: 1, maximum: 60000 }
+    LookupStaticSettings:
+      type: object
+      required: [tableRef, version]
+      properties:
+        tableRef: { type: string }
+        version: { type: integer, minimum: 1 }
+    LookupLimits:
+      type: object
+      required: [maxConcurrency, ratePerSec, burst, breakerFailures, breakerOpenMs]
+      properties:
+        maxConcurrency: { type: integer, minimum: 1, maximum: 256 }
+        ratePerSec: { type: number, minimum: 0 }
+        burst: { type: integer, minimum: 0 }
+        breakerFailures: { type: integer, minimum: 0, maximum: 1000 }
+        breakerOpenMs: { type: integer, minimum: 0, maximum: 600000 }
+    LookupSecretField: { type: string, enum: [token, password, headerValue] }
+    LookupSource:
+      type: object
+      required: [id, name, description, kind, envTag, sensitive, owner, http, redis, postgres, static, limits, secretFields, health, usedBy, version, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        kind: { $ref: "#/components/schemas/LookupSourceKind" }
+        envTag: { $ref: "#/components/schemas/EnvTag" }
+        sensitive: { type: boolean }
+        owner:
+          type: object
+          required: [teamId, teamName]
+          properties: { teamId: { type: string, format: uuid }, teamName: { type: string } }
+        http: { oneOf: [{ $ref: "#/components/schemas/LookupHTTPSettings" }, { type: "null" }] }
+        redis: { oneOf: [{ $ref: "#/components/schemas/LookupRedisSettings" }, { type: "null" }] }
+        postgres: { oneOf: [{ $ref: "#/components/schemas/LookupPostgresSettings" }, { type: "null" }] }
+        static: { oneOf: [{ $ref: "#/components/schemas/LookupStaticSettings" }, { type: "null" }] }
+        limits: { $ref: "#/components/schemas/LookupLimits" }
+        secretFields: { type: array, items: { $ref: "#/components/schemas/LookupSecretField" } }
+        health:
+          type: object
+          required: [status, checkedAt, lastFailure]
+          properties:
+            status: { $ref: "#/components/schemas/LookupHealthStatus" }
+            checkedAt: { type: [string, "null"], format: date-time }
+            lastFailure:
+              oneOf:
+                - { type: "null" }
+                - type: object
+                  properties: { step: { type: string }, message: { type: string }, hint: { type: string } }
+        usedBy:
+          type: object
+          required: [count, routes]
+          properties:
+            count: { type: integer }
+            routes:
+              type: array
+              items: { type: object, properties: { id: { type: string, format: uuid }, name: { type: string } } }
+        version: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    LookupSourceInput:
+      type: object
+      required: [name, kind, envTag]
+      properties:
+        name: { type: string, maxLength: 100 }
+        description: { type: string, maxLength: 1000 }
+        kind: { $ref: "#/components/schemas/LookupSourceKind" }
+        envTag: { $ref: "#/components/schemas/EnvTag" }
+        sensitive: { type: boolean }
+        owner: { type: object, properties: { teamId: { type: string, format: uuid } } }
+        http: { oneOf: [{ $ref: "#/components/schemas/LookupHTTPSettings" }, { type: "null" }] }
+        redis: { oneOf: [{ $ref: "#/components/schemas/LookupRedisSettings" }, { type: "null" }] }
+        postgres: { oneOf: [{ $ref: "#/components/schemas/LookupPostgresSettings" }, { type: "null" }] }
+        static: { oneOf: [{ $ref: "#/components/schemas/LookupStaticSettings" }, { type: "null" }] }
+        limits: { $ref: "#/components/schemas/LookupLimits" }
+        secrets:
+          type: object
+          description: Write-only; never returned.
+          properties: { token: { type: string }, password: { type: string }, headerValue: { type: string } }
+    LookupTestResult:
+      type: object
+      required: [ok, health, checkedAt, steps]
+      properties:
+        ok: { type: boolean }
+        health: { $ref: "#/components/schemas/LookupHealthStatus" }
+        checkedAt: { type: string, format: date-time }
+        steps:
+          type: array
+          items:
+            type: object
+            required: [step, state, durationMs]
+            properties:
+              step: { type: string, enum: [reachable, authenticated, sample] }
+              state: { type: string, enum: [passed, failed, skipped] }
+              durationMs: { type: integer }
+              message: { type: string }
+              hint: { type: string }
+    LookupSourceProblem:
+      allOf:
+        - { $ref: "../components/problem.yaml#/Problem" }
+        - type: object
+          properties:
+            routes:
+              type: array
+              items: { type: object, properties: { id: { type: string, format: uuid }, name: { type: string } } }

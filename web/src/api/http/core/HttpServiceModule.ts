@@ -7,6 +7,7 @@ export type ServiceKey = keyof Services;
 export const ServiceKeys = {
   Routes: 'routes',
   Connections: 'connections',
+  LookupSources: 'lookupSources',
   DeadLetters: 'deadLetters',
   Activity: 'activity',
   Audit: 'audit',

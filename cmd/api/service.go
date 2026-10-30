@@ -61,10 +61,10 @@ func (s *apiService) MountInternal(r chi.Router, _ app.Deps) {
 
 // publicModules lists every feature module served on /api/v1 and /auth (features append here).
 func (s *apiService) publicModules() []api.Module {
-	return []api.Module{s.wiring.AuthModule, s.platformModule(), s.wiring.Access.Module, s.wiring.previewModule(), s.connectionsModule(), s.routesModule(), s.monitoringModule(), s.sandboxModule(), s.studioModule(), s.dlqModule(), s.runtimeModule(), s.approvalsModule(), s.auditExportModule()}
+	return []api.Module{s.wiring.AuthModule, s.platformModule(), s.wiring.Access.Module, s.wiring.previewModule(), s.connectionsModule(), s.lookupSourcesModule(), s.routesModule(), s.monitoringModule(), s.sandboxModule(), s.studioModule(), s.dlqModule(), s.runtimeModule(), s.approvalsModule(), s.auditExportModule()}
 }
 
 // internalModules lists the modules served on the internal listener.
 func (s *apiService) internalModules() []api.Module {
-	return []api.Module{s.wiring.SecretsModule, s.connectionsInternalModule(), s.sandboxInternalModule(), s.runtimeInternalModule(), s.libraryInternalModule()}
+	return []api.Module{s.wiring.SecretsModule, s.connectionsInternalModule(), s.lookupSourcesInternalModule(), s.sandboxInternalModule(), s.runtimeInternalModule(), s.libraryInternalModule()}
 }

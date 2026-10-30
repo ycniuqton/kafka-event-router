@@ -19,7 +19,7 @@ type MatrixSandbox int
 
 const matrixParallelism MatrixSandbox = 1
 
-// pipelineCase runs decode → process → encode of one shape × payload cell.
+// pipelineCase runs decode → process → encode (RecordRunner.Run) of one shape × payload cell.
 type pipelineCase struct {
 	shape   enginetest.BenchShape
 	payload []byte
@@ -28,6 +28,7 @@ type pipelineCase struct {
 // options returns the golden compile options, with the real QuickJS runtime for JS shapes.
 func (c pipelineCase) options(b *testing.B) engine.CompileOptions {
 	opts := enginetest.GoldenOptions()
+	opts.Codec = enginetest.BenchCodec(b)
 	if c.shape.NeedsJS {
 		opts.Scripts = sandboxtest.WorkerScriptRuntime{Parallelism: int(matrixParallelism)}.Runtime(b)
 	}
@@ -36,24 +37,19 @@ func (c pipelineCase) options(b *testing.B) engine.CompileOptions {
 
 // Run measures the cell and reports events/s.
 func (c pipelineCase) Run(b *testing.B) {
-	p := enginetest.MustCompileWith(b, c.shape.Route(), c.options(b))
+	p := enginetest.MustCompileWith(b, c.shape.Route(), c.options(b)).(engine.RecordRunner)
 	ctx := context.Background()
 	b.SetBytes(int64(len(c.payload)))
 	b.ReportAllocs()
 	b.ResetTimer()
+	cpu := enginetest.StartCPUClock()
 	for i := 0; i < b.N; i++ {
-		ev, err := p.Decode(ctx, engine.RawRecord{Value: c.payload, Topic: "in"})
-		if err != nil {
-			b.Fatal(err)
-		}
-		outs, err := p.Process(ctx, ev, nil)
+		outs, err := p.Run(ctx, engine.RawRecord{Value: c.payload, Topic: "in"})
 		if err != nil || len(outs) != 1 {
-			b.Fatalf("process: %d outputs, %v", len(outs), err)
-		}
-		if _, err := p.Encode(ctx, outs[0]); err != nil {
-			b.Fatal(err)
+			b.Fatalf("run: %d outputs, %v", len(outs), err)
 		}
 	}
+	cpu.Report(b, b.N)
 	b.ReportMetric(float64(b.N)/b.Elapsed().Seconds(), string(metricEventsPerSec))
 }
 
@@ -63,6 +59,21 @@ func BenchmarkS1Engine(b *testing.B) {
 		b.Run("shape="+string(shape.Name), func(b *testing.B) {
 			for _, size := range enginetest.BenchPayloadSizes {
 				c := pipelineCase{shape: shape, payload: enginetest.OrderPayload{Size: size}.Bytes()}
+				b.Run("payload="+size.Label(), c.Run)
+			}
+		})
+	}
+}
+
+// BenchmarkS1EngineCanonicalInput is the S1 matrix for inputs already in the tree writer's
+// form (sorted keys, compact: what the router itself produces), where unchanged values pass
+// through without encoding.
+func BenchmarkS1EngineCanonicalInput(b *testing.B) {
+	shapes := enginetest.BenchShapeSet(enginetest.BenchShapes).Only(enginetest.ShapeFilterOnly, enginetest.ShapeRecipe5)
+	for _, shape := range shapes {
+		b.Run("shape="+string(shape.Name), func(b *testing.B) {
+			for _, size := range enginetest.BenchPayloadSizes {
+				c := pipelineCase{shape: shape, payload: enginetest.OrderPayload{Size: size}.Canonical()}
 				b.Run("payload="+size.Label(), c.Run)
 			}
 		})

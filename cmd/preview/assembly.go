@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/eventrouter/router/internal/library/resolver"
+	"github.com/eventrouter/router/internal/lookups/specclient"
 	"github.com/eventrouter/router/internal/platform/api"
 	"github.com/eventrouter/router/internal/platform/app"
 	"github.com/eventrouter/router/internal/platform/controlplane"
@@ -16,6 +17,7 @@ import (
 	pkgconfig "github.com/eventrouter/router/pkg/config"
 	"github.com/eventrouter/router/pkg/engine/compile"
 	"github.com/eventrouter/router/pkg/kafka"
+	"github.com/eventrouter/router/pkg/lookup"
 	"github.com/eventrouter/router/pkg/sandbox/enginebind"
 	"github.com/eventrouter/router/pkg/sandbox/host"
 )
@@ -59,6 +61,8 @@ func (a Assembly) Build(ctx context.Context) (Built, error) {
 		return Built{}, err
 	}
 	builder.Registries = registries
+	builder.Sources = lookup.NewGateway(lookup.GatewayDeps{Specs: link.lookupSpecs(), Factories: lookup.DefaultFactories(builder.Library),
+		Observer: lookup.NewPromObserver(a.registry.Registerer())})
 	testTopics, err := a.testTopics(ctx, link)
 	if err != nil {
 		return Built{}, err
@@ -191,6 +195,14 @@ func (l ControlPlaneLink) specs() preview.ConnectionSpecSource {
 		return preview.UnreachableSpecs{Err: l.Err}
 	}
 	return preview.ControlPlaneSpecs{Fetcher: l.Client}
+}
+
+// lookupSpecs reads lookup source specs from the API (live lookups of preview runs).
+func (l ControlPlaneLink) lookupSpecs() lookup.SpecProvider {
+	if l.Err != nil {
+		return specclient.Unreachable{Err: l.Err}
+	}
+	return specclient.RemoteSpecs{Fetcher: l.Client}
 }
 
 // Salts reads team hash salts from the API (selected by ROUTER_PREVIEW_SALTS).

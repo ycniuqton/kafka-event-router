@@ -26,6 +26,9 @@ func (l *Loader) extend(cfg *Config) error {
 	cfg.Internal.MTLSAllowed = l.list(EnvWorkloadMTLSAllowed, "")
 	cfg.ControlPlane.ClientCertFile = l.str(EnvControlPlaneCertFile, "")
 	cfg.ControlPlane.ClientKeyFile = l.str(EnvControlPlaneKeyFile, "")
+	if err := l.extendPassword(cfg); err != nil {
+		return err
+	}
 	return l.extendP3(cfg)
 }
 

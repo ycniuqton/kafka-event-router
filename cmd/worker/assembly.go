@@ -9,6 +9,7 @@ import (
 
 	"github.com/eventrouter/router/internal/dlq/record"
 	"github.com/eventrouter/router/internal/library/resolver"
+	"github.com/eventrouter/router/internal/lookups/specclient"
 	"github.com/eventrouter/router/internal/platform/app"
 	"github.com/eventrouter/router/internal/platform/config"
 	"github.com/eventrouter/router/internal/platform/controlplane"
@@ -20,15 +21,18 @@ import (
 	"github.com/eventrouter/router/internal/runtime/delivery"
 	"github.com/eventrouter/router/internal/runtime/domain"
 	"github.com/eventrouter/router/internal/runtime/failures"
+	"github.com/eventrouter/router/internal/runtime/membudget"
 	"github.com/eventrouter/router/internal/runtime/producers"
 	"github.com/eventrouter/router/internal/runtime/reconcile"
 	"github.com/eventrouter/router/internal/runtime/retry"
 	"github.com/eventrouter/router/internal/runtime/runner"
 	"github.com/eventrouter/router/internal/sandboxinfo"
 	pkgconfig "github.com/eventrouter/router/pkg/config"
+	"github.com/eventrouter/router/pkg/engine"
 	"github.com/eventrouter/router/pkg/engine/compile"
 	"github.com/eventrouter/router/pkg/engine/ctxhelpers"
 	"github.com/eventrouter/router/pkg/kafka"
+	"github.com/eventrouter/router/pkg/lookup"
 	"github.com/eventrouter/router/pkg/sandbox"
 	"github.com/eventrouter/router/pkg/sandbox/enginebind"
 	"github.com/eventrouter/router/pkg/sandbox/engines"
@@ -74,14 +78,31 @@ func (a Assembly) Build(ctx context.Context) (Built, error) {
 		return Built{}, err
 	}
 	library := resolver.NewControlPlaneResolver(cp)
+	codecMode, err := engine.CodecModes{}.Parse(config.NewRuntimeLoader().EngineCodec())
+	if err != nil {
+		return Built{}, fmt.Errorf("worker: %s: %w", config.EnvEngineCodec, err)
+	}
 	compiler := reconcile.EngineVersionCompiler{Engine: compile.NewDefaultCompiler(), Specs: reconcile.NewSpecVault(api),
-		Scripts: a.scripts(ctx, salts, library), Salts: salts, DLQ: dlq, Library: library}
+		Scripts: a.scripts(ctx, salts, library), Salts: salts, DLQ: dlq, Library: library, Sources: a.lookupSources(cp, library),
+		Codec: codecMode}
 	rec := reconcile.New(reconcile.Deps{ControlPlane: api, Cache: store, Runners: runners, Compiler: compiler,
 		Reload: reconcile.ConfigReloadClassifier{DLQ: dlq}, Halts: halts, Timings: domain.DefaultTimings(), Retry: retry.DefaultPolicy(),
 		Identity: domain.WorkerIdentity{ID: wc.ID, Host: wc.ID, Zone: wc.Zone, Version: wc.Version, Capacity: wc.Capacity},
 		Metrics:  reconcile.NewMetrics(a.Registry.Registerer()), Log: a.Deps.Log})
 	halts.OnHalt(rec.Trigger)
 	return Built{Reconciler: rec}, nil
+}
+
+// lookupSources is the worker's lookup gateway: specs from the control plane, static tables from the library,
+// router_lookup_* metrics on the worker registry.
+func (a Assembly) lookupSources(cp *controlplane.Client, library pkgconfig.LibraryResolver) *lookup.Gateway {
+	return lookup.NewGateway(lookup.GatewayDeps{Specs: specclient.RemoteSpecs{Fetcher: cp}, Factories: lookup.DefaultFactories(library),
+		Observer: lookup.NewPromObserver(a.Registry.Registerer())})
+}
+
+// inFlightTuning makes the worker memory budget the pressure signal of every runner's adaptive in-flight limit.
+func (Assembly) inFlightTuning(budget *membudget.Budget) runner.InFlightTuning {
+	return runner.InFlightTuning{Pressure: budget}
 }
 
 // cache opens the configured cache directory, falling back to a temp directory when it is not writable.
@@ -113,7 +134,11 @@ func (a Assembly) runnerDeps(wc config.WorkerConfig, dlq failures.DLQTargetResol
 		return runner.Deps{}, err
 	}
 	a.Deps.Log.Info("worker: producer pool ready", string(producers.AttrSharing), string(sharing))
-	return runner.Deps{Opener: opener, Producers: pool,
+	budget, err := membudget.NewBuilder(a.Deps.Log).Build(a.Registry.Registerer(), wc.ID)
+	if err != nil {
+		return runner.Deps{}, err
+	}
+	return runner.Deps{Opener: opener, Producers: pool, Budget: budget, InFlight: a.inFlightTuning(budget),
 		Delivery: delivery.NewDefaultManager(), Classifier: failures.DefaultClassifier{}, DLQTargets: dlq, Encoder: record.Codec{},
 		Metrics: runner.NewMetrics(a.Registry.Registerer(), wc.ID), Timings: domain.DefaultTimings(), Retry: policy, Log: a.Deps.Log, Now: time.Now, Tail: a.tailTap()}, nil
 }

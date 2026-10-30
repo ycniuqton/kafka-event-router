@@ -1,0 +1,8 @@
+.editor{display:flex;flex-direction:column;gap:10px}
+.masked{font-size:12px;color:var(--warn);padding:6px 10px;border-radius:var(--radius-md, 6px);background:color-mix(in oklab, var(--warn) 12%, transparent)}
+.section{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.label{font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em}
+.note{font-size:12px;color:var(--tx3);margin-top:8px}
+.results{display:flex;flex-direction:column;max-height:420px;overflow:auto;margin-top:8px}
+.pending{margin-top:12px;font-size:12px;color:var(--info);padding:8px 10px;border-radius:var(--radius-md, 6px);background:color-mix(in oklab, var(--info) 12%, transparent)}
+.done{margin-top:12px;font-size:12px;color:var(--ok)}

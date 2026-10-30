@@ -8,6 +8,7 @@ import (
 	"github.com/eventrouter/router/pkg/engine"
 	"github.com/eventrouter/router/pkg/engine/trace"
 	"github.com/eventrouter/router/pkg/kafka"
+	"github.com/eventrouter/router/pkg/lookup"
 )
 
 // SessionDTO is the public view of a session.
@@ -72,6 +73,8 @@ type RunRequest struct {
 	EventSeqs       []int         `json:"eventSeqs,omitempty"`
 	WriteToTopic    bool          `json:"writeToTopic,omitempty"`
 	RouteID         string        `json:"routeId,omitempty"`
+	// LookupMocks answers lookup steps by step id instead of calling their source ("mock lookup").
+	LookupMocks map[string]lookup.MockAnswer `json:"lookupMocks,omitempty"`
 }
 
 // MaskingSession is the session whose source decides the run's masking ("" = none: the draft source decides).

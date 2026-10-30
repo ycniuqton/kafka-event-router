@@ -26,6 +26,22 @@ export class DeadLetterEndpoint {
     return `${DeadLetterEndpoint.job(jobId)}/${DeadLetterAction.Cancel}`;
   }
 
+  static groups(routeId?: string): string {
+    return `${routeId ? DeadLetterEndpoint.route(routeId) : DeadLetterEndpoint.global}/${DeadLetterAction.Groups}`;
+  }
+
+  static replay(routeId: string, id: string): string {
+    return `${DeadLetterEndpoint.item(routeId, id)}/${DeadLetterAction.Replay}`;
+  }
+
+  static jobs(): string {
+    return `${DeadLetterEndpoint.global}/${DeadLetterAction.Jobs}`;
+  }
+
+  static decideJob(jobId: string, decision: typeof DeadLetterAction.Approve | typeof DeadLetterAction.Reject): string {
+    return `${DeadLetterEndpoint.job(jobId)}/${decision}`;
+  }
+
   static summary(routeId?: string): string {
     return `${routeId ? DeadLetterEndpoint.route(routeId) : DeadLetterEndpoint.global}/${DeadLetterAction.Summary}`;
   }
@@ -41,6 +57,11 @@ export const DeadLetterAction = {
   Summary: 'summary',
   Jobs: 'jobs',
   Cancel: 'cancel',
+  Groups: 'groups',
+  Replay: 'replay',
+  DryRun: 'dry-run',
+  Approve: 'approve',
+  Reject: 'reject',
 } as const;
 export type DeadLetterAction = (typeof DeadLetterAction)[keyof typeof DeadLetterAction];
 
@@ -56,7 +77,13 @@ export const DeadLetterParam = {
   Version: 'version',
   Text: 'q',
   IncludeResolved: 'includeResolved',
+  Class: 'class',
+  Fingerprint: 'fingerprint',
+  Status: 'status',
 } as const;
+
+/** Problem code of a sync retry that the strict 4-eyes gate turns into an approval request. */
+export const ReplayApprovalRequiredCode = 'replay_approval_required';
 
 /** Separator of multi-value query parameters. */
 export const DeadLetterListSeparator = ',';
@@ -71,6 +98,14 @@ export const DeadLetterErrorTypeDto = {
   Timeout: 'timeout',
   OutputInvalid: 'output_invalid',
   Unknown: 'unknown',
+  LookupUnavailable: 'lookup_unavailable',
+  DependencyUnavailable: 'dependency_unavailable',
+  ProduceRetriable: 'produce_retriable',
+  Internal: 'internal_error',
+  SandboxCrash: 'sandbox_crash',
+  Encode: 'encode_error',
+  Produce: 'produce_error',
+  Config: 'config_error',
 } as const;
 export type DeadLetterErrorTypeDto = (typeof DeadLetterErrorTypeDto)[keyof typeof DeadLetterErrorTypeDto];
 
@@ -94,6 +129,9 @@ export type DeadLetterItemDto = {
   source: SourcePositionDto;
   resolution: ResolutionDto | null;
   deliveryMode?: string;
+  errorClass?: string;
+  fingerprint?: string;
+  attempts?: number;
 };
 
 export type ResolutionDto = { state: string; by: string; at: string; jobId?: string };
@@ -135,7 +173,61 @@ export type JobDto = {
   error?: string;
   createdAt: string;
   finishedAt: string | null;
+  ratePerSecond?: number;
+  note?: string;
+  edited?: boolean;
+  idsCount?: number;
+  requestedBy?: string;
+  requestedByMe?: boolean;
+  approval?: { required: boolean; decidedBy?: string; decidedAt?: string; decisionNote?: string };
 };
+
+export type JobListDto = { items: JobDto[] };
+
+export type DryRunOutputDto = { branch: string; connectionId: string; topic: string; key: EncodedValueDto | null; value: EncodedValueDto; headers: { key: string; value: string; encoding?: EncodingDto }[] };
+
+export type DryRunResultDto = { id: string; outcome: string; errorType?: string; message?: string; outputs: DryRunOutputDto[] | null };
+
+export type DiffEntryDto = { path: string; op: string };
+
+export type ReplayResponseDto = {
+  dryRun: boolean;
+  status?: string;
+  activeVersionNo?: number;
+  masked?: boolean;
+  diff: DiffEntryDto[] | null;
+  result?: DryRunResultDto;
+  report?: RetryReportDto;
+  job?: JobDto;
+};
+
+export type DryRunReportDto = { activeVersionNo: number; sampled: number; results: DryRunResultDto[]; counts: Record<string, number> };
+
+/** Body of `POST …/{dlqId}/replay`; omitted members keep the original. */
+export type ReplayBodyDto = {
+  edit?: { key?: EncodedValueDto | null; value?: EncodedValueDto; headers?: { key: string; value: string; encoding: EncodingDto }[] };
+  dryRun: boolean;
+  note: string;
+};
+
+export type GroupDto = {
+  fingerprint: string;
+  routeId: string;
+  routeName: string;
+  step: string;
+  stepLabel?: string;
+  errorType: DeadLetterErrorTypeDto;
+  errorClass: string;
+  pattern: string;
+  count: number;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  versions: number[] | null;
+  sample: { id: string; message: string; failedAt: string };
+  trend: { since: string; bucketSeconds: number; counts: number[] };
+};
+
+export type GroupPageDto = { items: GroupDto[]; scanned: number; truncated: boolean; approximate: boolean; byClass: Record<string, number> | null };
 
 export type StudioLinkDto = { sessionId: string; sampleIndex: number; builderUrl: string };
 
@@ -143,13 +235,22 @@ export type StudioLinkDto = { sessionId: string; sampleIndex: number; builderUrl
 export const OutcomeDto = { Sent: 'sent', Filtered: 'filtered', Failed: 'failed', Skipped: 'skipped', Discarded: 'discarded', Restored: 'restored' } as const;
 
 /** Body filter of a match selection (`POST …/retry {match}`). */
-export type MatchDto = { errorType: DeadLetterErrorTypeDto[]; since?: string; until?: string; step?: string; version?: number; q?: string };
+export type MatchDto = {
+  errorType: DeadLetterErrorTypeDto[];
+  since?: string;
+  until?: string;
+  step?: string;
+  version?: number;
+  q?: string;
+  fingerprint?: string;
+  errorClass?: string[];
+};
 
 export type ListPageDto = { items: DeadLetterItemDto[]; next_cursor: string | null; scanned: number; truncated: boolean };
 
 export type ByErrorTypeDto = Partial<Record<DeadLetterErrorTypeDto, number>>;
 
-export type RouteSummaryDto = { unresolved: number; byErrorType: ByErrorTypeDto | null; approximate: boolean };
+export type RouteSummaryDto = { unresolved: number; byErrorType: ByErrorTypeDto | null; approximate: boolean; byErrorClass?: Record<string, number> | null };
 
 export type GlobalSummaryDto = RouteSummaryDto & {
   routes: (RouteSummaryDto & { routeId: string; routeName: string })[];

@@ -1,4 +1,5 @@
 import { DeliveryMode } from './routeSettings';
+import type { DeadLetterErrorClass } from './deadLetterClass';
 import { Tone } from './tone';
 
 /** Why an event was sent to the dead-letter topic. */
@@ -8,6 +9,14 @@ export const DeadLetterKind = {
   InvalidOutput: 'Invalid output',
   DecodeError: 'Decode error',
   Unreadable: 'Unreadable record',
+  LookupUnavailable: 'Lookup unavailable',
+  DependencyUnavailable: 'Dependency unavailable',
+  ProduceRetriable: 'Produce retriable',
+  InternalError: 'Internal error',
+  SandboxCrash: 'Sandbox crash',
+  EncodeError: 'Encode error',
+  ProduceError: 'Produce error',
+  ConfigError: 'Config error',
 } as const;
 export type DeadLetterKind = (typeof DeadLetterKind)[keyof typeof DeadLetterKind];
 
@@ -44,11 +53,20 @@ export type DeadLetter = {
   resolution?: DeadLetterResolution | null;
   /** Delivery mode of the route's active version (P3: retries of exactly-once routes are at-least-once). */
   deliveryMode?: DeliveryMode;
+  /** Whose fault (server-classified; derived from `kind` when absent). */
+  errorClass?: DeadLetterErrorClass;
+  /** Cause fingerprint (route + step + error type + normalized message). */
+  fingerprint?: string;
+  /** Delayed attempts an auto-retry policy used before parking the event (0 = none). */
+  attempts?: number;
 };
 
 /** The original record of a dead letter, decoded (JSON, text, Avro/Protobuf via the schema registry, or base64 for raw bytes);
  * `masked` = values hidden for this viewer (types kept). */
 export type DeadLetterOriginal = {
+  /** Wire encodings of key / value (`json`, `utf8`, `base64`, `avro`, `protobuf`); edits are sent back in the same encoding. */
+  keyEncoding?: string;
+  valueEncoding?: string;
   key: unknown;
   value: unknown;
   headers: { key: string; value: string }[];
@@ -89,7 +107,12 @@ export type DeadLetterActionReport = {
   remaining: number;
   /** The route is exactly-once, but the retried events were produced outside its transaction (at-least-once). */
   deliveredAtLeastOnce?: boolean;
+  /** Events of routes whose replay needs a second person (strict 4-eyes on prod destinations); nothing was sent. */
+  approvalRequired?: DeadLetterApprovalRequest[];
 };
+
+/** Events of one route that can only be replayed through an approved job. */
+export type DeadLetterApprovalRequest = { routeId: string; ids: string[] };
 
 /** Retry guarantee of exactly-once routes (FR-21): retries run outside the consumer transaction. */
 export class DeadLetterDelivery {
@@ -167,6 +190,9 @@ export type DeadLetterFilter = {
   versionNo?: number;
   text?: string;
   includeResolved?: boolean;
+  /** Error classes (data / router / transient) and one cause fingerprint. */
+  classes?: DeadLetterErrorClass[];
+  fingerprint?: string;
 };
 
 /** Export file formats (P2: NDJSON). */
@@ -191,6 +217,8 @@ export const DeadLetterJobStatus = {
   Cancelled: 'cancelled',
   Succeeded: 'succeeded',
   Failed: 'failed',
+  PendingApproval: 'pending_approval',
+  Rejected: 'rejected',
 } as const;
 export type DeadLetterJobStatus = (typeof DeadLetterJobStatus)[keyof typeof DeadLetterJobStatus];
 
@@ -207,16 +235,35 @@ export type DeadLetterJob = {
   error: string | null;
   createdAt: string;
   finishedAt: string | null;
+  /** Events per second the job replays at. */
+  ratePerSecond?: number;
+  note?: string;
+  /** Replay of one edited record. */
+  edited?: boolean;
+  /** Size of an explicit id selection (0 / absent for a filter). */
+  idsCount?: number;
+  requestedBy?: string;
+  /** The caller requested it (never approves it: strict 4-eyes). */
+  requestedByMe?: boolean;
+  approval?: DeadLetterJobApproval;
 };
+
+/** 4-eyes state of a replay job. */
+export type DeadLetterJobApproval = { required: boolean; decidedBy?: string; decidedAt?: string; decisionNote?: string };
 
 /** Job rules shared by services, store and screens. */
 export class DeadLetterJobs {
-  static readonly terminal: DeadLetterJobStatus[] = [DeadLetterJobStatus.Cancelled, DeadLetterJobStatus.Succeeded, DeadLetterJobStatus.Failed];
+  static readonly terminal: DeadLetterJobStatus[] = [DeadLetterJobStatus.Cancelled, DeadLetterJobStatus.Succeeded, DeadLetterJobStatus.Failed, DeadLetterJobStatus.Rejected];
   static readonly pollMs = 2000;
   static readonly percentScale = 100;
 
   static done(job: DeadLetterJob): boolean {
     return DeadLetterJobs.terminal.includes(job.status);
+  }
+
+  /** Waits for a second person; nothing runs until it is approved. */
+  static awaitingApproval(job: DeadLetterJob): boolean {
+    return job.status === DeadLetterJobStatus.PendingApproval;
   }
 
   /** Progress 0–100 (0 while the total is unknown). */
@@ -241,7 +288,14 @@ export type DeadLetterKindCount = { kind: DeadLetterKind; count: number };
 export type DeadLetterRouteCount = { routeId: string; routeName: string; unresolved: number; byKind: DeadLetterKindCount[] };
 
 /** Unresolved counts for the nav badge, route tab label, dashboard card and filter chips (approximate on large queues). */
-export type DeadLetterSummary = { unresolved: number; approximate: boolean; byKind: DeadLetterKindCount[]; routes: DeadLetterRouteCount[] };
+export type DeadLetterSummary = {
+  unresolved: number;
+  approximate: boolean;
+  byKind: DeadLetterKindCount[];
+  routes: DeadLetterRouteCount[];
+  /** Unresolved per error class (absent from older servers: derive from `byKind`). */
+  byClass?: Partial<Record<DeadLetterErrorClass, number>>;
+};
 
 /** Export selection: explicit ids, or everything matching a filter. */
 export type DeadLetterSelection = { ids: string[] } | { filter: DeadLetterFilter };

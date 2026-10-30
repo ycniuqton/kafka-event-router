@@ -78,7 +78,11 @@ func (r *Reconciler) compile(ctx context.Context, a domain.Assignment) (runner.C
 			r.d.Log.Warn("runtime: version cache write failed", string(logging.AttrError), err)
 		}
 	}
-	return r.d.Compiler.Compile(ctx, a, doc)
+	v, err := r.d.Compiler.Compile(ctx, a, doc)
+	if err == nil {
+		r.d.Metrics.Codec(r.d.Log, a, v)
+	}
+	return v, err
 }
 
 // refuse marks a new route refused when one more replica would exceed this worker's capacity.

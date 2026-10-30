@@ -12,10 +12,11 @@ const (
 	KindErrorRateAbove  AlertRuleKind = "error_rate_above"
 	KindThroughputZero  AlertRuleKind = "throughput_zero"
 	KindMatchRateChange AlertRuleKind = "match_rate_change"
+	KindRouterCausedDLQ AlertRuleKind = "router_caused_dead_letters"
 )
 
 // Kinds lists every rule kind in form order.
-var Kinds = []AlertRuleKind{KindLagAbove, KindErrorRateAbove, KindThroughputZero, KindMatchRateChange}
+var Kinds = []AlertRuleKind{KindLagAbove, KindErrorRateAbove, KindThroughputZero, KindMatchRateChange, KindRouterCausedDLQ}
 
 // Valid reports whether k is a known kind.
 func (k AlertRuleKind) Valid() bool {
@@ -76,6 +77,7 @@ var KindLimits = map[AlertRuleKind]Bound{
 	KindErrorRateAbove:  {Min: 0.01, Max: 100},
 	KindThroughputZero:  {Min: 0, Max: 0},
 	KindMatchRateChange: {Min: 1, Max: 100},
+	KindRouterCausedDLQ: {Min: 0, Max: 1e6},
 }
 
 // WindowLimits bound the evaluation window in minutes.

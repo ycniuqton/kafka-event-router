@@ -74,7 +74,14 @@ export class ProblemReader {
       ? parsed
       : { type: ProblemReader.blankType, title: response.statusText, status: response.status };
     problem.request_id ??= response.headers.get(HttpHeader.RequestId) ?? undefined;
+    problem.retry_after ??= ProblemReader.retryAfter(response.headers);
     return ApiError.fromProblem(problem);
+  }
+
+  /** `Retry-After` in seconds (the HTTP-date form is not used by this API). */
+  private static retryAfter(headers: Headers): number | undefined {
+    const seconds = Number(headers.get(HttpHeader.RetryAfter) ?? Number.NaN);
+    return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined;
   }
 
   private static async parse(response: Response): Promise<unknown> {

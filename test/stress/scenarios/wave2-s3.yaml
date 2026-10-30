@@ -1,0 +1,16 @@
+name: wave2-s3
+description: >
+  Wave-2 S3 quick pass: 100 -> 500 -> 1000 routes (incremental) at 10 ev/s/route, 2-min steps. Worker restarted with
+  ROUTER_WORKER_CAPACITY=1200 (fast codec, default auto in-flight, memory budget on).
+target: local
+incremental: true
+criteria: {p99Limit: 1s, lagSlopeAbs: 50, lagSlopeRel: 0.01, warmup: 30s, minSamples: 6}
+defaults:
+  partitions: 1
+  routes: {topology: per_route, deployConcurrency: 16}
+  load: {size: 1024, lanes: 2, streams: 1000}
+  drain: {timeout: 3m}
+cases:
+  - {name: r100, routes: {count: 100}, load: {steps: [{rate: 1000, duration: 2m}]}}
+  - {name: r500, routes: {count: 500}, load: {steps: [{rate: 5000, duration: 2m}]}}
+  - {name: r1000, routes: {count: 1000}, load: {steps: [{rate: 10000, duration: 2m}]}}

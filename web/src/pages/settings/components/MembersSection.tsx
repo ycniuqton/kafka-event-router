@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { services } from '../../../api';
 import { accessStore, useCan } from '../../../access';
+import { PasswordMode, useAuthConfig } from '../../../app/auth';
 import { Button, ButtonSize, ButtonVariant, ToneBadge } from '../../../components/ui';
 import { Permission, Tone, type TeamMember } from '../../../domain';
 import { actions, useServiceQuery } from '../../../store';
@@ -17,7 +18,8 @@ const MemberColumns = '1fr 140px 120px 170px';
 /** Members with one row per team role (admins edit roles, add to teams, remove, invite by email). */
 export function MembersSection({ members, onChanged }: { members: TeamMember[]; onChanged: () => void }) {
   const { data: teams } = useServiceQuery(() => services.teams.list(), []);
-  const canInvite = useCan(Permission.UserManage);
+  const authConfig = useAuthConfig();
+  const canInvite = useCan(Permission.UserManage) && PasswordMode.invitesApply(authConfig);
   const [inviting, setInviting] = useState(false);
   const [adding, setAdding] = useState<TeamMember | null>(null);
   const hint = (

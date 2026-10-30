@@ -70,6 +70,16 @@ export class ApiError extends Error {
     return this.problem?.request_id;
   }
 
+  /** Machine-readable reason (`problem.code`, e.g. `last_admin`, `login_locked`). */
+  get code(): string | undefined {
+    return this.problem?.code;
+  }
+
+  /** Seconds to wait before retrying (429/503: body `retry_after` or the `Retry-After` header). */
+  get retryAfter(): number | undefined {
+    return this.problem?.retry_after;
+  }
+
   get currentEtag(): string | undefined {
     return this.problem?.current_etag;
   }

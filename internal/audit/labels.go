@@ -24,12 +24,13 @@ type ObjectLabeler struct {
 // connections, users, teams, transforms, lookup tables, sample sessions as "<connection> · <topics>").
 func NewObjectLabeler() *ObjectLabeler {
 	return &ObjectLabeler{sources: map[ObjectType]LabelSource{
-		ObjectRoute:       `SELECT name FROM routes WHERE id::text = a.object_id`,
-		ObjectConnection:  `SELECT name FROM connections WHERE id::text = a.object_id`,
-		ObjectUser:        `SELECT display_name FROM users WHERE id::text = a.object_id`,
-		ObjectTeam:        `SELECT name FROM teams WHERE id::text = a.object_id`,
-		ObjectTransform:   `SELECT name FROM transforms WHERE id::text = a.object_id`,
-		ObjectLookupTable: `SELECT name FROM lookup_tables WHERE id::text = a.object_id`,
+		ObjectRoute:        `SELECT name FROM routes WHERE id::text = a.object_id`,
+		ObjectConnection:   `SELECT name FROM connections WHERE id::text = a.object_id`,
+		ObjectUser:         `SELECT display_name FROM users WHERE id::text = a.object_id`,
+		ObjectTeam:         `SELECT name FROM teams WHERE id::text = a.object_id`,
+		ObjectTransform:    `SELECT name FROM transforms WHERE id::text = a.object_id`,
+		ObjectLookupTable:  `SELECT name FROM lookup_tables WHERE id::text = a.object_id`,
+		ObjectLookupSource: `SELECT name FROM lookup_sources WHERE id::text = a.object_id`,
 		ObjectRouteVersion: `SELECT r.name || ' v' || v.version_no FROM route_versions v JOIN routes r ON r.id = v.route_id
 			WHERE v.id::text = a.object_id`,
 		ObjectDeployment: `SELECT r.name || ' v' || v.version_no FROM deployments d JOIN route_versions v ON v.id = d.version_id
@@ -39,12 +40,13 @@ func NewObjectLabeler() *ObjectLabeler {
 			|| COALESCE(' · ' || (SELECT string_agg(t, ', ') FROM jsonb_array_elements_text(
 			CASE WHEN jsonb_typeof(a.diff->'topics') = 'array' THEN a.diff->'topics' ELSE '[]'::jsonb END) t), '')`,
 	}, finders: map[ObjectType]LabelFinder{
-		ObjectRoute:       `SELECT id::text FROM routes WHERE name ILIKE $%[1]d`,
-		ObjectConnection:  `SELECT id::text FROM connections WHERE name ILIKE $%[1]d`,
-		ObjectUser:        `SELECT id::text FROM users WHERE display_name ILIKE $%[1]d`,
-		ObjectTeam:        `SELECT id::text FROM teams WHERE name ILIKE $%[1]d`,
-		ObjectTransform:   `SELECT id::text FROM transforms WHERE name ILIKE $%[1]d`,
-		ObjectLookupTable: `SELECT id::text FROM lookup_tables WHERE name ILIKE $%[1]d`,
+		ObjectRoute:        `SELECT id::text FROM routes WHERE name ILIKE $%[1]d`,
+		ObjectConnection:   `SELECT id::text FROM connections WHERE name ILIKE $%[1]d`,
+		ObjectUser:         `SELECT id::text FROM users WHERE display_name ILIKE $%[1]d`,
+		ObjectTeam:         `SELECT id::text FROM teams WHERE name ILIKE $%[1]d`,
+		ObjectTransform:    `SELECT id::text FROM transforms WHERE name ILIKE $%[1]d`,
+		ObjectLookupTable:  `SELECT id::text FROM lookup_tables WHERE name ILIKE $%[1]d`,
+		ObjectLookupSource: `SELECT id::text FROM lookup_sources WHERE name ILIKE $%[1]d`,
 		ObjectRouteVersion: `SELECT v.id::text FROM route_versions v JOIN routes r ON r.id = v.route_id
 			WHERE r.name || ' v' || v.version_no ILIKE $%[1]d`,
 		ObjectDeployment: `SELECT d.id::text FROM deployments d JOIN route_versions v ON v.id = d.version_id

@@ -11,17 +11,20 @@ type Set struct {
 	Date   DateFormatter
 	Lookup LookupStore
 	Logs   LogSinkFactory
+	// Sources serves lookup steps in source mode (pkg/lookup); default NoSourceGateway.
+	Sources SourceGateway
 }
 
 // DefaultSet returns helpers with system time, empty salt and empty lookups (dev and tools).
 func DefaultSet() Set {
 	return Set{
-		Mask:   NewStyleMasker(DefaultMaskPolicy()),
-		Hash:   NewSaltedHasher(StaticSaltProvider{}, ""),
-		Clock:  SystemClock{},
-		Date:   LayoutDateFormatter{},
-		Lookup: EmptyLookupStore{},
-		Logs:   CappedLogSinkFactory{MaxBytes: int(LogLimitDefaultBytes)},
+		Mask:    NewStyleMasker(DefaultMaskPolicy()),
+		Hash:    NewSaltedHasher(StaticSaltProvider{}, ""),
+		Clock:   SystemClock{},
+		Date:    LayoutDateFormatter{},
+		Lookup:  EmptyLookupStore{},
+		Logs:    CappedLogSinkFactory{MaxBytes: int(LogLimitDefaultBytes)},
+		Sources: NoSourceGateway{},
 	}
 }
 
@@ -45,6 +48,9 @@ func (s Set) WithDefaults() Set {
 	}
 	if s.Logs == nil {
 		s.Logs = d.Logs
+	}
+	if s.Sources == nil {
+		s.Sources = d.Sources
 	}
 	return s
 }

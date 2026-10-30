@@ -10,10 +10,12 @@ import (
 	"github.com/eventrouter/router/pkg/engine/codec"
 	"github.com/eventrouter/router/pkg/engine/ctxhelpers"
 	"github.com/eventrouter/router/pkg/engine/path"
+	"github.com/eventrouter/router/pkg/engine/projection"
 	"github.com/eventrouter/router/pkg/engine/script"
 )
 
-// Scope collects issues and owns resources created during one compile.
+// Scope collects issues and owns resources created during one compile; Access (optional)
+// records what the route touches for the codec analyser.
 type Scope struct {
 	Ctx          context.Context
 	Issues       config.Issues
@@ -25,6 +27,7 @@ type Scope struct {
 	Limits       config.ResolvedLimits
 	Tables       *ctxhelpers.TableLookupStore
 	Registries   codec.RegistryProvider
+	Access       *projection.Recorder
 }
 
 // Fail records an error issue at ptr.
@@ -39,12 +42,14 @@ func (s *Scope) Path(raw string, ptr config.Pointer) (path.FieldPath, bool) {
 		s.Fail(config.IssuePathInvalid, ptr, "%v", err)
 		return path.FieldPath{}, false
 	}
+	s.Access.Path(p)
 	return p, true
 }
 
 // Script compiles user code bound to the route lookup tables, recording JSCompile at ptr
 // on failure; modules are owned by the scope.
 func (s *Scope) Script(src script.Source, ptr config.Pointer) (script.Module, bool) {
+	s.Access.Script(string(ptr))
 	if s.Scripts == nil {
 		s.Fail(config.IssueJSCompile, ptr, "%v", script.ErrUnavailable)
 		return nil, false

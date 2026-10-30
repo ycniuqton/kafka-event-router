@@ -2,6 +2,7 @@ import {
   ActivityVerb,
   BulkAction,
   DeliveryMode,
+  InFlightMode,
   DeploymentStatus,
   DiffMark,
   DiffSection,
@@ -146,6 +147,7 @@ export class MockRoutesService extends RoutesService {
       replicas: MOCK_ROUTE_DEFAULTS.replicas,
       errorPolicy: RouteSettingsRules.defaultErrorPolicy,
       deliveryMode: DeliveryMode.AtLeastOnce,
+      inFlightMode: InFlightMode.Auto,
       limits: RouteSettingsRules.emptyLimits,
     };
     return this.savedSettings.get(routeId) ?? defaults;

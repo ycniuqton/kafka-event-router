@@ -48,6 +48,7 @@ func (m *ValueSourceManager) Compile(c *StepCompileCtx, ptr config.Pointer, src 
 		c.Scope.Fail(config.IssueFormulaInvalid, ptr.Token(config.TokenFrom), "value source %q is not supported yet", src.From)
 		return nil, false
 	}
+	c.Scope.Access.Source(src.From)
 	return vc.Compile(c, ptr, *src)
 }
 

@@ -1,0 +1,24 @@
+File: recipe-5-1KB.test
+Build ID: e36a7a3942ab592e587c8e6c5d2971408d60142d
+Type: cpu
+Time: 2026-10-18 09:12:35 -02
+Duration: 25.19s, Total samples = 24970ms (99.13%)
+Showing nodes accounting for 8790ms, 35.20% of 24970ms total
+Dropped 261 nodes (cum <= 124.85ms)
+Showing top 15 nodes out of 185
+      flat  flat%   sum%        cum   cum%
+    1420ms  5.69%  5.69%     1870ms  7.49%  runtime.tryDeferToSpanScan
+     880ms  3.52%  9.21%     2010ms  8.05%  slices.insertionSortCmpFunc[go.shape.struct { Key string; Pos int32; Val int32; Any interface {}; Ref interface {} }]
+     720ms  2.88% 12.09%     1150ms  4.61%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).plainRun
+     630ms  2.52% 14.62%     1340ms  5.37%  runtime.scanObject
+     590ms  2.36% 16.98%      590ms  2.36%  runtime.memclrNoHeapPointers
+     560ms  2.24% 19.22%      580ms  2.32%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).skipSpace (inline)
+     540ms  2.16% 21.39%      640ms  2.56%  runtime.typePointers.next
+     500ms  2.00% 23.39%      500ms  2.00%  runtime.memmove
+     480ms  1.92% 25.31%      480ms  1.92%  cmpbody
+     440ms  1.76% 27.07%      790ms  3.16%  slices.partitionCmpFunc[go.shape.struct { Key string; Pos int32; Val int32; Any interface {}; Ref interface {} }]
+     430ms  1.72% 28.79%     2570ms 10.29%  runtime.bulkBarrierPreWrite
+     410ms  1.64% 30.44%     2120ms  8.49%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).str
+     400ms  1.60% 32.04%      430ms  1.72%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).finish (inline)
+     400ms  1.60% 33.64%     1850ms  7.41%  runtime.wbBufFlush1
+     390ms  1.56% 35.20%     5120ms 20.50%  github.com/eventrouter/router/pkg/engine/codec/fastjson.(*Scanner).member

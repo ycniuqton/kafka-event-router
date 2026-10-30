@@ -70,7 +70,7 @@ type processorCase struct {
 
 // processor compiles the shape as the worker does, with the real sandbox for JS shapes.
 func (c processorCase) processor(b *testing.B) *runner.RecordProcessor {
-	opts := engine.CompileOptions{}
+	opts := engine.CompileOptions{Codec: enginetest.BenchCodec(b)}
 	if c.shape.NeedsJS {
 		opts.Scripts = sandboxtest.WorkerScriptRuntime{Parallelism: int(processorParallelism)}.Runtime(b)
 	}
@@ -93,12 +93,14 @@ func (c processorCase) Run(b *testing.B) {
 	b.SetBytes(int64(len(c.raw.Value)))
 	b.ReportAllocs()
 	b.ResetTimer()
+	cpu := enginetest.StartCPUClock()
 	for i := 0; i < b.N; i++ {
 		outs, err := p.Process(ctx, c.raw)
 		if err != nil || len(outs) != 1 {
 			b.Fatalf("process: %d outputs, %v", len(outs), err)
 		}
 	}
+	cpu.Report(b, b.N)
 	b.ReportMetric(float64(b.N)/b.Elapsed().Seconds(), "events/s")
 }
 

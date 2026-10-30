@@ -5,12 +5,13 @@ import { MembersSection } from './components/MembersSection';
 import { NotificationChannelsSection } from './components/NotificationChannelsSection';
 import { RolesSection } from './components/RolesSection';
 import { TeamsSection } from './components/TeamsSection';
+import { UsersSection } from './components/UsersSection';
 import { WorkersSection } from './components/WorkersSection';
 import { WorkspaceSection } from './components/WorkspaceSection';
 import { ApiTokensPanel } from './ApiTokensPanel';
 import styles from './SettingsPage.module.css';
 
-/** Settings: workspace preferences, members & roles, teams and notification channels. */
+/** Settings: workspace preferences, members & roles, users, teams and notification channels. */
 export default function SettingsPage() {
   const { data: members, reload } = useServiceQuery(() => services.access.members(), []);
   return (
@@ -19,6 +20,7 @@ export default function SettingsPage() {
         <PageHeader title="Settings" />
         <WorkspaceSection />
         <MembersSection members={members ?? []} onChanged={reload} />
+        <UsersSection members={members ?? []} onChanged={reload} />
         <RolesSection />
         <TeamsSection onChanged={reload} />
         <NotificationChannelsSection />

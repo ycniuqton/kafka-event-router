@@ -33,7 +33,7 @@ func GoldenOptions() engine.CompileOptions {
 		RegisterBound(string(ScriptCountry), lookupCountry{}.Bind)
 	return engine.CompileOptions{
 		Scripts: rt,
-		Helpers: ctxhelpers.Set{Clock: ctxhelpers.FixedClock{T: GoldenNow}}.WithDefaults(),
+		Helpers: ctxhelpers.Set{Clock: ctxhelpers.FixedClock{T: GoldenNow}, Sources: GoldenSources()}.WithDefaults(),
 	}
 }
 

@@ -6,6 +6,8 @@ import { ConvertFailure, ConvertTarget, StepConstant, StepFieldList, ValueSource
 import { FilterTreeModel } from './FilterTreeModel';
 import { MapTreeCodec } from './MapTreeCodec';
 import { MapStart } from '../mapper';
+import { LookupStepDefaults } from '../lookupStep';
+import { LookupSourceCodec } from './LookupSourceCodec';
 
 /** Prefix of event value paths: builder steps name fields relative to `value`. */
 export class EventPath {
@@ -83,9 +85,10 @@ class StepShape {
   }
 }
 
-/** Lookup step: key field, optional target, inline rows or a pinned library table, optional default. */
+/** Lookup step: key field, optional target, inline rows or a pinned library table, optional default; or a lookup source. */
 class LookupCodec {
   static toStep(s: TransformStep): Step {
+    if (s.lookupMode === LookupMode.Source) return { kind: 'lookup', lookup: LookupSourceCodec.toSpec(s.lookupSource ?? LookupStepDefaults.step()) };
     const step: Step = { kind: 'lookup', field: EventPath.toDocument(s.field) };
     if (s.argument.trim()) step.to = EventPath.toDocument(s.argument);
     if (s.fallback?.trim()) step.defaultValue = StepConstant.parse(s.fallback);
@@ -94,6 +97,7 @@ class LookupCodec {
   }
 
   static fromStep(s: Step): Partial<TransformStep> {
+    if (s.lookup) return { lookupMode: LookupMode.Source, lookupSource: LookupSourceCodec.fromSpec(s.lookup), lookupRows: [] };
     const base: Partial<TransformStep> = { field: EventPath.fromDocument(s.field), argument: EventPath.fromDocument(s.to as string | undefined) };
     if (s.defaultValue !== undefined) base.fallback = StepConstant.format(s.defaultValue);
     if (s.ref) return { ...base, lookupMode: LookupMode.Table, lookupRef: s.ref, lookupVersion: s.version ?? 1, lookupRows: [] };

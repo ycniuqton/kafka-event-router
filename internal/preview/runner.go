@@ -9,6 +9,7 @@ import (
 	"github.com/eventrouter/router/pkg/engine"
 	"github.com/eventrouter/router/pkg/engine/codec"
 	"github.com/eventrouter/router/pkg/engine/ctxhelpers"
+	"github.com/eventrouter/router/pkg/lookup"
 	"github.com/eventrouter/router/pkg/sandbox/enginebind"
 )
 
@@ -27,6 +28,8 @@ type PipelineBuilder struct {
 	Salts      ctxhelpers.SaltProvider
 	Registries codec.RegistryProvider
 	Library    config.LibraryResolver
+	// Sources is the live lookup gateway; runs wrap it in a PreviewGateway (mocks, capped timeout).
+	Sources ctxhelpers.SourceGateway
 }
 
 // NewPipelineBuilder builds the validator manager with the preview profile.
@@ -71,7 +74,8 @@ func (b PipelineBuilder) Build(ctx context.Context, raw RawConfig, scope RunScop
 }
 
 func (b PipelineBuilder) options(scope RunScope, clock ctxhelpers.Clock) engine.CompileOptions {
-	helpers := ctxhelpers.Set{Clock: clock, Hash: ctxhelpers.NewSaltedHasher(b.Salts, scope.TeamID)}.WithDefaults()
+	sources := lookup.NewPreviewGateway(b.Sources, scope.LookupMocks)
+	helpers := ctxhelpers.Set{Clock: clock, Hash: ctxhelpers.NewSaltedHasher(b.Salts, scope.TeamID), Sources: sources}.WithDefaults()
 	return engine.CompileOptions{Scripts: b.Scripts.Runtime(scope), Helpers: helpers, Meta: engine.RouteMeta{RouteID: string(PreviewRouteID), TeamID: scope.TeamID}, SchemaRegistries: b.Registries, Library: b.Library}
 }
 

@@ -18,6 +18,8 @@ const (
 	ValidatorSchema       ValidatorName = "schema"
 	ValidatorDeliveryMode ValidatorName = "delivery_mode"
 	ValidatorCompile      ValidatorName = "compile"
+	ValidatorLimits       ValidatorName = "limits"
+	ValidatorRetryPolicy  ValidatorName = "retry_policy"
 )
 
 // ValidationContext carries the parsed document and request scope through one validation run.

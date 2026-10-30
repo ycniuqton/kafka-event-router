@@ -31,6 +31,7 @@ const (
 	ObjectDeployment   ObjectType = "deployment"
 	ObjectTransform    ObjectType = "transform"
 	ObjectLookupTable  ObjectType = "lookup_table"
+	ObjectLookupSource ObjectType = "lookup_source"
 	ObjectUser         ObjectType = "user"
 	ObjectTeam         ObjectType = "team"
 	ObjectRoleBinding  ObjectType = "role_binding"

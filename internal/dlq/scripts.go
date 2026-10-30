@@ -36,6 +36,6 @@ func NewSandboxScriptRuntimes(ctx context.Context, salts host.SaltProvider) (*Sa
 // Runtime implements ScriptRuntimes.
 func (s *SandboxScriptRuntimes) Runtime(route RouteInfo, v VersionConfig) script.Runtime {
 	return enginebind.ScriptRuntime{Manager: s.Manager, Scope: sandbox.RouteScope{
-		RouteID: route.ID, VersionID: v.ID, TeamID: route.TeamID, Parallelism: int(retrySandboxParallelism), Mode: sandbox.ScopeWorker,
+		RouteID: route.ID, VersionID: v.ID, VersionNo: v.No, TeamID: route.TeamID, Parallelism: int(retrySandboxParallelism), Mode: sandbox.ScopeWorker,
 	}}
 }
