@@ -10,7 +10,11 @@ import (
 )
 
 // Revoked implements RebalanceListener: drain the revoked lanes, commit their marks, forget them.
+// Before launch (consumer open, start still running or failed) nothing was polled, so there is nothing to do.
 func (r *RouteRunner) Revoked(ctx context.Context, tps []TopicPartition) {
+	if !r.launched.Load() {
+		return
+	}
 	lanes := r.takeLanes(tps)
 	r.drain(lanes)
 	if err := r.committer.CommitNow(ctx, tps); err != nil {
@@ -21,6 +25,9 @@ func (r *RouteRunner) Revoked(ctx context.Context, tps []TopicPartition) {
 
 // Lost implements RebalanceListener: partitions are gone, nothing can be committed.
 func (r *RouteRunner) Lost(tps []TopicPartition) {
+	if !r.launched.Load() {
+		return
+	}
 	r.barrier.Fail()
 	for _, l := range r.takeLanes(tps) {
 		l.Stop()

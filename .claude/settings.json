@@ -9,7 +9,26 @@
             "command": "cmd=$(jq -r '.tool_input.command // \"\"' 2>/dev/null); if echo \"$cmd\" | grep -qE '(^|&&|;|\\|\\|)\\s*(git commit|npm publish)'; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"additionalContext\":\"⚠️ Rule reminder: do not commit or publish without explicit user permission.\"},\"continue\":true}'; fi"
           }
         ]
+      },
+      {
+        "matcher": "^Artifact.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Artifact tools are blocked by a global hook.\" >&2; exit 2"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__claude_ai_Claude_Docs__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Claude Docs (claude.ai artifact) tools are blocked by a global hook.\" >&2; exit 2"
+          }
+        ]
       }
     ]
-  }
+  },
+  "enableArtifact": false
 }

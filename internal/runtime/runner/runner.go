@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -76,6 +77,8 @@ type RouteRunner struct {
 	pollDone   chan struct{}
 	stopOnce   sync.Once
 	retries    *RetryRuntime
+	// launched is set once launch built tracker, gate and committer; rebalance callbacks before it are no-ops.
+	launched atomic.Bool
 }
 
 // Version implements Runner.
@@ -182,6 +185,7 @@ func (r *RouteRunner) launch(v CompiledVersion) {
 	r.flow.useBase(flowCtx, stopFlow)
 	r.flow.state.Store(r.versionState(v))
 	r.cycle = NewPollCycles().For(r.strategy.Batching())
+	r.launched.Store(true)
 	r.setState(domain.RunnerRunning)
 	go r.poll(runCtx)
 	go r.committer.Run(runCtx)
